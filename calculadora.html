@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Calculadora gratuita del aval del Estado para comprar primera vivienda: te dice si encajas, con el límite de renta de TU provincia y el enlace a la fuente oficial de cada dato.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0E4F4A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1413" media="(prefers-color-scheme: dark)">
+
+<!-- Cómo se ve cuando alguien comparte el enlace en WhatsApp, Instagram, X o LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="¿Encajo en el aval del Estado para comprar mi primera vivienda?">
+<meta property="og:description" content="Calculadora gratuita del aval del Estado para comprar primera vivienda: te dice si encajas, con el límite de renta de TU provincia y el enlace a la fuente oficial de cada dato.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="¿Encajo en el aval del Estado?">
+<meta name="twitter:description" content="Calculadora gratuita del aval del Estado para comprar primera vivienda: te dice si encajas, con el límite de renta de TU provincia y el enlace a la fuente oficial de cada dato.">
+<!-- ⬇️ CUANDO TENGÁIS DOMINIO Y NOMBRE, DESCOMENTAD ESTAS DOS Y PONED LA DIRECCIÓN REAL
+<meta property="og:url" content="https://EL-DOMINIO-QUE-ELIJÁIS/calculadora/">
+<meta property="og:image" content="https://EL-DOMINIO-QUE-ELIJÁIS/calculadora/portada.png">
+-->
+
+<title>¿Encajo en el aval?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ink:#11201E;
+    --ink-soft:#40514E;
+    --muted:#6A7B77;
+    --paper:#F1F5F3;
+    --card:#FFFFFF;
+    --line:#D6E0DC;
+    --line-soft:#E5ECE9;
+    --brand:#0E4F4A;
+    --brand-ink:#0A3A36;
+    --brand-wash:#E2EDEA;
+    --yes:#1C6E3A;
+    --yes-wash:#E1F0E5;
+    --no:#9E2B2B;
+    --no-wash:#F6E3E1;
+    --almost:#9A5B00;
+    --almost-wash:#F7EBD8;
+    --shadow:0 1px 2px rgba(17,32,30,.05), 0 8px 24px -12px rgba(17,32,30,.18);
+    --r:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#E6EDEA; --ink-soft:#B4C2BE; --muted:#8A9995;
+      --paper:#0B1413; --card:#141F1D; --line:#2A3936; --line-soft:#1E2C2A;
+      --brand:#7FC9C0; --brand-ink:#A7DBD4; --brand-wash:#152A28;
+      --yes:#69C088; --yes-wash:#12241A;
+      --no:#E08C86; --no-wash:#2A1817;
+      --almost:#E0AC5C; --almost-wash:#2A2015;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#E6EDEA; --ink-soft:#B4C2BE; --muted:#8A9995;
+    --paper:#0B1413; --card:#141F1D; --line:#2A3936; --line-soft:#1E2C2A;
+    --brand:#7FC9C0; --brand-ink:#A7DBD4; --brand-wash:#152A28;
+    --yes:#69C088; --yes-wash:#12241A;
+    --no:#E08C86; --no-wash:#2A1817;
+    --almost:#E0AC5C; --almost-wash:#2A2015;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Public Sans","Helvetica Neue",Arial,sans-serif;
+    font-size:16px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:28px 20px 72px;}
+
+  /* ---------- hero ---------- */
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--brand); margin:0 0 14px;
+  }
+  h1{
+    font-family:Newsreader,Georgia,serif; font-weight:500;
+    font-size:clamp(2rem,6vw,2.9rem); line-height:1.08; letter-spacing:-.015em;
+    margin:0 0 14px; text-wrap:balance;
+  }
+  .lede{font-size:1.05rem; color:var(--ink-soft); margin:0; max-width:56ch;}
+
+  .thesis{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px;
+    margin:26px 0 0; padding:18px 20px;
+    background:var(--brand-wash); border-radius:var(--r);
+    border:1px solid var(--line);
+  }
+  .thesis .big{
+    font-family:Newsreader,Georgia,serif; font-size:2rem; font-weight:600;
+    color:var(--brand-ink); line-height:1; font-variant-numeric:tabular-nums;
+  }
+  .thesis .txt{font-size:.94rem; color:var(--ink-soft); flex:1 1 260px; min-width:220px;}
+
+  /* ---------- form ---------- */
+  .card{
+    background:var(--card); border:1px solid var(--line);
+    border-radius:var(--r); box-shadow:var(--shadow);
+    padding:24px; margin-top:28px;
+  }
+  .card h2{
+    font-family:Newsreader,Georgia,serif; font-weight:500; font-size:1.4rem;
+    margin:0 0 4px; letter-spacing:-.01em;
+  }
+  .card .sub{color:var(--muted); font-size:.9rem; margin:0 0 22px;}
+
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px;}
+  @media (max-width:560px){ .grid{grid-template-columns:1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  label{
+    font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  input[type=number], select{
+    font:inherit; font-size:1rem; color:var(--ink);
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:8px; padding:10px 12px; width:100%;
+    font-variant-numeric:tabular-nums;
+  }
+  select{appearance:none; background-image:none;}
+  input:focus-visible, select:focus-visible, button:focus-visible{
+    outline:2px solid var(--brand); outline-offset:2px;
+  }
+  .hint{font-size:12px; color:var(--muted);}
+
+  .checkrow{display:flex; flex-wrap:wrap; gap:18px; margin-top:4px;}
+  .check{display:flex; align-items:center; gap:8px; font-size:.93rem; color:var(--ink-soft);}
+  .check input{width:17px; height:17px; accent-color:var(--brand);}
+
+  button.go{
+    margin-top:22px; width:100%; font:inherit; font-weight:600; font-size:1rem;
+    background:var(--brand); color:#fff; border:0; border-radius:8px;
+    padding:13px 18px; cursor:pointer;
+  }
+  :root[data-theme="dark"] button.go, :root:not([data-theme="light"]) button.go{color:#0B1413;}
+  @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) button.go{color:#fff;} }
+  button.go:hover{background:var(--brand-ink);}
+
+  /* ---------- verdict ---------- */
+  #out{margin-top:28px;}
+  #out[hidden]{display:none;}
+  .verdict{
+    border-radius:var(--r); padding:22px 24px; border:1px solid var(--line);
+    display:flex; gap:16px; align-items:flex-start;
+  }
+  .verdict .mark{
+    font-family:"IBM Plex Mono",monospace; font-size:1.5rem; line-height:1;
+    flex:0 0 auto; margin-top:2px;
+  }
+  .verdict h3{
+    font-family:Newsreader,Georgia,serif; font-weight:600; font-size:1.5rem;
+    margin:0 0 6px; letter-spacing:-.01em;
+  }
+  .verdict p{margin:0; font-size:.97rem; color:var(--ink-soft);}
+  .v-yes{background:var(--yes-wash);} .v-yes .mark,.v-yes h3{color:var(--yes);}
+  .v-no{background:var(--no-wash);} .v-no .mark,.v-no h3{color:var(--no);}
+  .v-almost{background:var(--almost-wash);} .v-almost .mark,.v-almost h3{color:var(--almost);}
+
+  .rules{margin-top:20px; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--card);}
+  .rule{
+    display:grid; grid-template-columns:26px 1fr auto; gap:12px; align-items:baseline;
+    padding:14px 16px; border-bottom:1px solid var(--line-soft);
+  }
+  .rule:last-child{border-bottom:0;}
+  .rule .st{font-family:"IBM Plex Mono",monospace; font-size:.95rem;}
+  .rule .name{font-weight:600; font-size:.95rem;}
+  .rule .detail{font-size:.86rem; color:var(--muted); margin-top:2px;}
+  .rule .val{
+    font-family:"IBM Plex Mono",monospace; font-size:.86rem; color:var(--ink-soft);
+    text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  .ok .st{color:var(--yes);} .bad .st{color:var(--no);}
+  @media (max-width:560px){
+    .rule{grid-template-columns:26px 1fr;}
+    .rule .val{grid-column:2; text-align:left; margin-top:4px;}
+  }
+
+  .money{
+    margin-top:20px; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--r); padding:22px 24px;
+  }
+  .money h4{
+    font-family:Newsreader,Georgia,serif; font-weight:500; font-size:1.2rem; margin:0 0 4px;
+  }
+  .money .sub{color:var(--muted); font-size:.86rem; margin:0 0 18px;}
+  .cmp{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:460px){ .cmp{grid-template-columns:1fr;} }
+  .box{border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .box .k{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);}
+  .box .n{
+    font-family:Newsreader,Georgia,serif; font-size:1.75rem; font-weight:600;
+    font-variant-numeric:tabular-nums; line-height:1.15; margin-top:4px;
+  }
+  .box.hi{background:var(--yes-wash); border-color:var(--yes);}
+  .box.hi .n{color:var(--yes);}
+  .saving{
+    margin-top:14px; font-size:.95rem; color:var(--ink-soft);
+    padding-top:14px; border-top:1px solid var(--line-soft);
+  }
+  .saving strong{color:var(--ink); font-variant-numeric:tabular-nums;}
+
+  /* ---------- sources ---------- */
+  .sources{margin-top:36px; padding-top:24px; border-top:1px solid var(--line);}
+  .sources h5{
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--brand); margin:0 0 14px; font-weight:500;
+  }
+  .sources ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  .sources li{font-size:.88rem; color:var(--ink-soft); line-height:1.5;}
+  .sources a{color:var(--brand); text-decoration:underline; text-underline-offset:2px;}
+  .disclaimer{
+    margin-top:24px; padding:16px 18px; border-radius:8px;
+    background:var(--card); border:1px solid var(--line);
+    font-size:.86rem; color:var(--muted); line-height:1.55;
+  }
+  .disclaimer strong{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="eyebrow">Aval ICO · primera vivienda</p>
+  <h1>¿Encajo en el aval?</h1>
+  <p class="lede">Cuatro datos y te decimos si entras, y si no entras, exactamente por qué. Cada condición viene con la norma que la dice.</p>
+
+  <div class="thesis">
+    <span class="big">2.244 M€</span>
+    <span class="txt">Es lo que queda sin pedir de los 2.500 millones del aval. A cierre de 2025 se habían concedido 10.453 avales sobre un objetivo de más de 50.000. El plazo acaba el 31 de diciembre de 2027.</span>
+  </div>
+
+  <div class="card">
+    <h2>Tus datos</h2>
+    <p class="sub">No se guarda nada. El cálculo ocurre en tu navegador.</p>
+
+    <div class="grid">
+      <div class="field">
+        <label for="edad">Edad al firmar</label>
+        <input type="number" id="edad" min="18" max="99" value="31" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="ingresos">Ingresos brutos al año (€)</label>
+        <input type="number" id="ingresos" min="0" step="1000" value="32000" inputmode="numeric">
+        <span class="hint">De cada comprador por separado</span>
+      </div>
+      <div class="field full">
+        <label for="prov">Provincia donde está la vivienda</label>
+        <select id="prov"></select>
+      </div>
+      <div class="field">
+        <label for="precio">Precio de la vivienda (€)</label>
+        <input type="number" id="precio" min="0" step="5000" value="210000" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="patrimonio">Tu patrimonio neto (€)</label>
+        <input type="number" id="patrimonio" min="0" step="5000" value="20000" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="menores">Menores a cargo</label>
+        <input type="number" id="menores" min="0" max="10" value="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="energia">Calificación energética</label>
+        <select id="energia">
+          <option value="no">E, F, G o no la sé</option>
+          <option value="si">A, B, C o D</option>
+        </select>
+      </div>
+      <div class="field full">
+        <div class="checkrow">
+          <label class="check"><input type="checkbox" id="mono"> Familia monoparental</label>
+          <label class="check"><input type="checkbox" id="dos"> Compramos dos personas</label>
+        </div>
+      </div>
+    </div>
+
+    <button class="go" id="calc">Ver si encajo</button>
+  </div>
+
+  <div id="out" hidden></div>
+
+  <div class="sources">
+    <h5>De dónde sale cada número</h5>
+    <ul>
+      <li><a href="https://www.ico.es/en/linea-avales-hipoteca-primera-vivienda" target="_blank" rel="noopener">ICO · Línea de avales para la adquisición de primera vivienda</a> — condiciones, porcentaje avalado, patrimonio máximo y tabla de precios máximos por comunidad autónoma.</li>
+      <li><a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-14404" target="_blank" rel="noopener">BOE de 2 de julio de 2026</a> — adenda al convenio Ministerio de Vivienda–ICO que prorroga la línea hasta el 31 de diciembre de 2027.</li>
+      <li>Límites de renta por provincia y comunidad: tablas oficiales del ICO vigentes desde el 19 de junio de 2026 (4,5 veces el IPREM en el tramo general, con tramos superiores en las provincias de más demanda).</li>
+      <li>Ejecución del programa a 31 de diciembre de 2025: 10.453 avales y 255,8 M€ sobre una dotación de 2.500 M€.</li>
+    </ul>
+
+    <div class="disclaimer">
+      <strong>Esto es una herramienta privada, no es el ICO ni ninguna administración.</strong>
+      El resultado es orientativo y se basa en las condiciones publicadas: quien concede el aval es la entidad bancaria, que además aplica su propio análisis de riesgo, y quien lo confirma es el ICO. Las tablas de renta y de precio máximo se actualizan, así que comprueba siempre la página oficial antes de decidir nada. Si un dato de aquí no cuadra con el del ICO, manda el del ICO.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Precio máximo de la vivienda, por comunidad autónoma (€)
+  var CCAA = {
+    "Madrid":325000, "Cataluña":300000, "País Vasco":300000, "Navarra":300000,
+    "Illes Balears":275000, "Aragón":275000, "Asturias":250000, "Cantabria":250000,
+    "Castilla y León":250000, "Comunitat Valenciana":250000, "Galicia":250000,
+    "Canarias":250000, "Murcia":250000, "La Rioja":250000, "Ceuta":250000,
+    "Melilla":250000, "Castilla-La Mancha":250000, "Andalucía":225000,
+    "Extremadura":200000
+  };
+
+  // provincia -> [comunidad, límite de renta por comprador]
+  var PROV = {
+    "A Coruña":["Galicia",37800], "Álava":["País Vasco",54600], "Albacete":["Castilla-La Mancha",37800],
+    "Alicante":["Comunitat Valenciana",46200], "Almería":["Andalucía",37800], "Asturias":["Asturias",37800],
+    "Ávila":["Castilla y León",37800], "Badajoz":["Extremadura",37800], "Barcelona":["Cataluña",63000],
+    "Bizkaia":["País Vasco",63000], "Burgos":["Castilla y León",37800], "Cáceres":["Extremadura",37800],
+    "Cádiz":["Andalucía",46200], "Cantabria":["Cantabria",46200], "Castellón":["Comunitat Valenciana",37800],
+    "Ceuta":["Ceuta",46200], "Ciudad Real":["Castilla-La Mancha",37800], "Córdoba":["Andalucía",37800],
+    "Cuenca":["Castilla-La Mancha",37800], "Girona":["Cataluña",63000], "Gipuzkoa":["País Vasco",63000],
+    "Granada":["Andalucía",37800], "Guadalajara":["Castilla-La Mancha",37800], "Huelva":["Andalucía",37800],
+    "Huesca":["Aragón",37800], "Illes Balears":["Illes Balears",63000], "Jaén":["Andalucía",37800],
+    "La Rioja":["La Rioja",37800], "Las Palmas":["Canarias",46200], "León":["Castilla y León",37800],
+    "Lleida":["Cataluña",37800], "Lugo":["Galicia",37800], "Madrid":["Madrid",63000],
+    "Málaga":["Andalucía",63000], "Melilla":["Melilla",46200], "Murcia":["Murcia",37800],
+    "Navarra":["Navarra",46200], "Ourense":["Galicia",37800], "Palencia":["Castilla y León",37800],
+    "Pontevedra":["Galicia",46200], "Salamanca":["Castilla y León",37800],
+    "Santa Cruz de Tenerife":["Canarias",63000], "Segovia":["Castilla y León",37800],
+    "Sevilla":["Andalucía",37800], "Soria":["Castilla y León",37800], "Tarragona":["Cataluña",37800],
+    "Teruel":["Aragón",37800], "Toledo":["Castilla-La Mancha",37800],
+    "Valencia":["Comunitat Valenciana",46200], "Valladolid":["Castilla y León",37800],
+    "Zamora":["Castilla y León",37800], "Zaragoza":["Aragón",46200]
+  };
+
+  var sel = document.getElementById("prov");
+  Object.keys(PROV).sort(function(a,b){return a.localeCompare(b,"es");}).forEach(function(p){
+    var o = document.createElement("option");
+    o.value = p; o.textContent = p + " · " + PROV[p][0];
+    sel.appendChild(o);
+  });
+  sel.value = "Valencia";
+
+  var eur = function(n){
+    return new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Math.round(n));
+  };
+  var esc = function(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  };
+
+  function run(){
+    var edad = +document.getElementById("edad").value || 0;
+    var ing = +document.getElementById("ingresos").value || 0;
+    var prov = sel.value;
+    var precio = +document.getElementById("precio").value || 0;
+    var patr = +document.getElementById("patrimonio").value || 0;
+    var menores = +document.getElementById("menores").value || 0;
+    var eficiente = document.getElementById("energia").value === "si";
+    var mono = document.getElementById("mono").checked;
+    var dos = document.getElementById("dos").checked;
+
+    var ccaa = PROV[prov][0];
+    var topePrecio = CCAA[ccaa];
+    var topeRenta = PROV[prov][1] + (menores * 2520);
+    if (mono) topeRenta = topeRenta * 1.7;
+
+    var rules = [];
+
+    // 1 · edad
+    var edadOK = edad <= 35 || menores > 0;
+    rules.push({
+      ok: edadOK,
+      name: "Edad",
+      detail: menores > 0
+        ? "Con menores a cargo no hay límite de edad."
+        : "Máximo 35 años en el momento de firmar. Con menores a cargo, sin límite.",
+      val: edad + " años"
+    });
+
+    // 2 · renta
+    var rentaOK = ing <= topeRenta;
+    var d2 = "Tope en " + prov + ": " + eur(PROV[prov][1]) + " por comprador";
+    if (menores > 0) d2 += " · +" + eur(menores*2520) + " por " + menores + " menor" + (menores>1?"es":"");
+    if (mono) d2 += " · +70 % por familia monoparental";
+    rules.push({ ok: rentaOK, name:"Ingresos", detail: d2 + ".", val: eur(ing) + " / " + eur(topeRenta) });
+
+    // 3 · patrimonio
+    var patrOK = patr <= 150000;
+    rules.push({ ok:patrOK, name:"Patrimonio neto", detail:"Máximo 150.000 € por comprador.", val: eur(patr) + " / " + eur(150000) });
+
+    // 4 · precio
+    var precioOK = precio <= topePrecio;
+    rules.push({ ok:precioOK, name:"Precio de la vivienda", detail:"Tope en " + ccaa + ".", val: eur(precio) + " / " + eur(topePrecio) });
+
+    // 5 · plazo
+    rules.push({ ok:true, name:"Plazo del programa", detail:"Prorrogado por el BOE de 2 de julio de 2026.", val:"hasta 31/12/2027" });
+
+    var fallos = rules.filter(function(r){ return !r.ok; });
+    var pct = eficiente ? 0.25 : 0.20;
+
+    // dinero
+    var entradaSin = precio * 0.20;
+    var entradaCon = 0;
+    var gastos = precio * 0.10;
+
+    var v, mark, title, msg;
+    if (fallos.length === 0){
+      v="v-yes"; mark="✓"; title="Encajas.";
+      msg = "Cumples las cinco condiciones publicadas. El aval cubriría hasta el " +
+            (pct*100) + " % del préstamo durante los diez primeros años" +
+            (eficiente ? ", por la calificación energética." : ".") +
+            " Ahora te toca llevarlo a una de las 67 entidades adheridas, que es quien decide.";
+    } else if (fallos.length === 1){
+      v="v-almost"; mark="~"; title="Por poco.";
+      msg = "Cumples todo menos una cosa: " + esc(fallos[0].name.toLowerCase()) +
+            ". Mira abajo cuánto te falta — a veces se arregla cambiando de vivienda o de provincia, y a veces no.";
+    } else {
+      v="v-no"; mark="×"; title="Hoy no encajas.";
+      msg = "Hay " + fallos.length + " condiciones que no se cumplen. Están marcadas abajo, con el número exacto que falla.";
+    }
+
+    var html = '<div class="verdict ' + v + '">' +
+      '<span class="mark">' + mark + '</span>' +
+      '<div><h3>' + title + '</h3><p>' + msg + '</p></div></div>';
+
+    html += '<div class="rules">';
+    rules.forEach(function(r){
+      html += '<div class="rule ' + (r.ok?"ok":"bad") + '">' +
+        '<span class="st">' + (r.ok?"✓":"×") + '</span>' +
+        '<div><div class="name">' + esc(r.name) + '</div><div class="detail">' + esc(r.detail) + '</div></div>' +
+        '<div class="val">' + esc(r.val) + '</div></div>';
+    });
+    html += '</div>';
+
+    if (fallos.length === 0 && precio > 0){
+      html += '<div class="money"><h4>Lo que te cambia</h4>' +
+        '<p class="sub">Sin aval, un banco financia como mucho el 80 % y el resto lo pones tú. Con el aval puedes financiar hasta el 100 % del menor valor entre tasación y precio.</p>' +
+        '<div class="cmp">' +
+          '<div class="box"><div class="k">Ahorro necesario sin aval</div><div class="n">' + eur(entradaSin) + '</div></div>' +
+          '<div class="box hi"><div class="k">Ahorro necesario con aval</div><div class="n">' + eur(entradaCon) + '</div></div>' +
+        '</div>' +
+        '<div class="saving">Son <strong>' + eur(entradaSin) + '</strong> que dejas de tener que tener ahorrados. ' +
+        'Pero ojo con una cosa que casi ningún sitio dice: <strong>los impuestos y los gastos de la compra siguen pagándose en efectivo</strong> — ' +
+        'unos <strong>' + eur(gastos) + '</strong> en este caso, contando alrededor de un 10 % entre impuesto, notaría, registro y gestoría. ' +
+        'El aval cubre el préstamo, no la operación.</div></div>';
+    }
+
+    var out = document.getElementById("out");
+    out.innerHTML = html;
+    out.hidden = false;
+    out.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  document.getElementById("calc").addEventListener("click", run);
+  document.querySelectorAll("input, select").forEach(function(el){
+    el.addEventListener("keydown", function(e){ if(e.key === "Enter") run(); });
+  });
+})();
+</script>
+
+
+<!-- ⬇️ AQUÍ VA LA MARCA CUANDO ESTÉ DECIDIDA. Hasta entonces se queda así. -->
+<footer style="max-width:760px;margin:0 auto;padding:0 20px 48px;font-family:'Public Sans',Arial,sans-serif;font-size:13px;line-height:1.6;color:#6A7B77;text-align:center">
+  Herramienta gratuita y sin registro. No se guarda ningún dato: los números que escribes
+  no salen de tu navegador.
+</footer>
+
+</body>
+</html>
