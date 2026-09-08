@@ -19,9 +19,9 @@ var CSS = ".cha{border:1px solid var(--linea,#D8D1BE);border-radius:12px;backgro
 + ".cha-fila textarea{flex:1;min-height:44px;max-height:130px;resize:vertical;padding:10px 12px;font:inherit;font-size:15px;border:1px solid var(--linea,#D8D1BE);border-radius:9px;background:#fff;color:inherit}"
 + ".cha-fila button{flex:0 0 auto;padding:11px 18px;font:inherit;font-weight:600;font-size:15px;border:0;border-radius:9px;background:var(--marca,#13342A);color:#fff;cursor:pointer}"
 + ".cha-fila button[disabled]{opacity:.5;cursor:default}"
-+ ".cha-pie{margin:9px 0 0;font-size:12.5px;color:var(--tinta-2,#635C4B)}" + ".cha-boton{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:center;gap:8px;padding:14px 22px;border:0;border-radius:999px;background:var(--marca,#13342A);color:#fff;font:inherit;font-weight:600;font-size:15.5px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28)}" + ".cha-boton:hover{filter:brightness(1.15)}" + ".cha-boton:focus-visible{outline:3px solid #D4A017;outline-offset:3px}" + "@media print{.cha-boton{display:none}}";
++ ".cha-pie{margin:9px 0 0;font-size:12.5px;color:var(--tinta-2,#635C4B)}" + ".cha-boton{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:center;gap:8px;padding:14px 22px;border:0;border-radius:999px;background:var(--marca,#13342A);color:#fff;font:inherit;font-weight:600;font-size:15.5px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28)}" + ".cha-boton:hover{filter:brightness(1.15)}" + ".cha-mic{flex:0 0 auto;width:54px;height:54px;border-radius:999px;border:0;background:#B3261E;color:#fff;font-size:23px;line-height:1;cursor:pointer;display:grid;place-items:center}" + ".cha-mic[data-oyendo=si]{background:#7A1710}" + ".cha-voz{display:block;background:none;border:0;font:inherit;font-size:13px;color:var(--tinta-2,#635C4B);text-decoration:underline;cursor:pointer;padding:6px 0 0}" + ".cha-aviso{margin:8px 0 0;font-size:13px;color:#7A3B12}" + ".cha-boton:focus-visible{outline:3px solid #D4A017;outline-offset:3px}" + "@media print{.cha-boton{display:none}}";
 
-function esc(s){ var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function esc(s){ var d = document.createElement("div"); d.textContent = s; return d.innerHTML; } var VOZ = "immoia.voz.v1"; function vozEncendida(){ try{ return localStorage.getItem(VOZ) !== "no"; }catch(e){ return true; } } function decir(t){ if(!vozEncendida() || !window.speechSynthesis) return; try{ window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; window.speechSynthesis.speak(u); }catch(e){} }
 
 function pintar(){
 var h = document.getElementById("cha-hilo");
@@ -55,7 +55,7 @@ body: JSON.stringify({codigo: CODIGO, mensajes: historia.filter(function(m){ ret
 d = await r.json();
 }catch(e){ d = null; }
 historia.pop();
-if(d && d.respuesta){ historia.push({papel:"ella", texto:d.respuesta}); }
+if(d && d.respuesta){ historia.push({papel:"ella", texto:d.respuesta}); decir(d.respuesta); }
 else if(d && d.error){ historia.push({papel:"mal", texto:d.error}); }
 else { historia.push({papel:"mal", texto:"No he podido contestar. Intentalo otra vez."}); }
 pensando = false;
@@ -78,13 +78,13 @@ caja.innerHTML = '<p class="cha-tit">Habla con la IA</p>'
 + '<div class="cha-hilo" id="cha-hilo"></div>'
 + '<div class="cha-fila">'
 + '<textarea id="cha-txt" rows="2" placeholder="Ej.: quiero alquilar en Tenerife, por donde empiezo?" aria-label="Escribele a la IA"></textarea>'
-+ '<button type="button" id="cha-ir">Enviar</button>'
++ '<button type="button" id="cha-mic" class="cha-mic" aria-label="Hablar en voz alta">&#127908;</button><button type="button" id="cha-ir">Enviar</button>'
 + '</div>'
 + '<p class="cha-pie">Los importes y los plazos no los da ella: los da la calculadora de aqui abajo, con la norma oficial al lado.</p>';
 ancla.parentNode.insertBefore(caja, ancla); var fb = document.createElement("button"); fb.type = "button"; fb.className = "cha-boton"; fb.id = "cha-boton"; fb.innerHTML = '<span aria-hidden="true">&#128172;</span> Habla con la IA'; fb.addEventListener("click", irAlCuadro); document.body.appendChild(fb);
 historia.push({papel:"ella", texto:"Hola. Cuentame que estas buscando: alquilar, comprar o reformar. Y si quieres, en que zona."});
 pintar();
-document.getElementById("cha-ir").addEventListener("click", mandar);
+document.getElementById("cha-ir").addEventListener("click", mandar); var Rec = window.SpeechRecognition || window.webkitSpeechRecognition; var mic = document.getElementById("cha-mic"); if(!Rec){ if(mic) mic.parentNode.removeChild(mic); var av = document.createElement("p"); av.className = "cha-aviso"; av.textContent = "Este navegador no deja hablarle por voz. En el movil puedes usar la tecla del microfono de tu propio teclado."; caja.appendChild(av); } else if(mic){ var rec = new Rec(); rec.lang = "es-ES"; rec.continuous = false; rec.interimResults = false; rec.maxAlternatives = 1; var oyendo = false; var parar = function(){ oyendo = false; mic.setAttribute("data-oyendo", "no"); }; rec.onresult = function(ev){ var dicho = ev.results[0][0].transcript; var q = document.getElementById("cha-txt"); if(q){ q.value = dicho; mandar(); } }; rec.onend = parar; rec.onerror = parar; mic.addEventListener("click", function(){ if(oyendo){ try{ rec.stop(); }catch(e){} return; } try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); rec.start(); oyendo = true; mic.setAttribute("data-oyendo", "si"); }catch(e){ parar(); } }); } var bv = document.createElement("button"); bv.type = "button"; bv.className = "cha-voz"; bv.id = "cha-voz"; var pintarVoz = function(){ bv.textContent = vozEncendida() ? "Te contesta en voz alta \u2014 tocar para silenciarla" : "Te contesta en silencio \u2014 tocar para que hable"; }; bv.addEventListener("click", function(){ try{ localStorage.setItem(VOZ, vozEncendida() ? "no" : "si"); }catch(e){} if(!vozEncendida() && window.speechSynthesis) window.speechSynthesis.cancel(); pintarVoz(); }); pintarVoz(); caja.appendChild(bv);
 document.getElementById("cha-txt").addEventListener("keydown", function(ev){
 if(ev.key === "Enter" && !ev.shiftKey){ ev.preventDefault(); mandar(); }
 });
