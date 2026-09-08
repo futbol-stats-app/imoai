@@ -28,7 +28,7 @@ var h = document.getElementById("cha-hilo");
 if(!h) return;
 h.innerHTML = historia.map(function(m){
 var c = m.papel === "yo" ? "cha-yo" : (m.papel === "mal" ? "cha-mal" : "cha-ella");
-return '<div class="cha-m ' + c + '">' + esc(m.texto) + "</div>";
+return '<div class="cha-m ' + c + '">' + esc(m.texto).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/[*_#]/g, "") + "</div>";
 }).join("");
 }
 
