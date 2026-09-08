@@ -19,7 +19,7 @@ var CSS = ".cha{border:1px solid var(--linea,#D8D1BE);border-radius:12px;backgro
 + ".cha-fila textarea{flex:1;min-height:44px;max-height:130px;resize:vertical;padding:10px 12px;font:inherit;font-size:15px;border:1px solid var(--linea,#D8D1BE);border-radius:9px;background:#fff;color:inherit}"
 + ".cha-fila button{flex:0 0 auto;padding:11px 18px;font:inherit;font-weight:600;font-size:15px;border:0;border-radius:9px;background:var(--marca,#13342A);color:#fff;cursor:pointer}"
 + ".cha-fila button[disabled]{opacity:.5;cursor:default}"
-+ ".cha-pie{margin:9px 0 0;font-size:12.5px;color:var(--tinta-2,#635C4B)}";
++ ".cha-pie{margin:9px 0 0;font-size:12.5px;color:var(--tinta-2,#635C4B)}" + ".cha-boton{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;align-items:center;gap:8px;padding:14px 22px;border:0;border-radius:999px;background:var(--marca,#13342A);color:#fff;font:inherit;font-weight:600;font-size:15.5px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28)}" + ".cha-boton:hover{filter:brightness(1.15)}" + ".cha-boton:focus-visible{outline:3px solid #D4A017;outline-offset:3px}" + "@media print{.cha-boton{display:none}}";
 
 function esc(s){ var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
@@ -65,7 +65,7 @@ pintar();
 caja.focus();
 }
 
-function montar(){
+function irAlCuadro(){ var q = document.getElementById("cha-txt"); if(!q) return; q.scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(function(){ q.focus({preventScroll:true}); }, 420); }function montar(){
 var ancla = document.querySelector(".asis");
 if(!ancla || document.getElementById("cha-hilo")) return;
 var e = document.createElement("style");
@@ -81,7 +81,7 @@ caja.innerHTML = '<p class="cha-tit">Habla con la IA</p>'
 + '<button type="button" id="cha-ir">Enviar</button>'
 + '</div>'
 + '<p class="cha-pie">Los importes y los plazos no los da ella: los da la calculadora de aqui abajo, con la norma oficial al lado.</p>';
-ancla.parentNode.insertBefore(caja, ancla);
+ancla.parentNode.insertBefore(caja, ancla); var fb = document.createElement("button"); fb.type = "button"; fb.className = "cha-boton"; fb.id = "cha-boton"; fb.innerHTML = '<span aria-hidden="true">&#128172;</span> Habla con la IA'; fb.addEventListener("click", irAlCuadro); document.body.appendChild(fb);
 historia.push({papel:"ella", texto:"Hola. Cuentame que estas buscando: alquilar, comprar o reformar. Y si quieres, en que zona."});
 pintar();
 document.getElementById("cha-ir").addEventListener("click", mandar);
@@ -120,10 +120,10 @@ return !!(d && typeof d.respuesta === "string" && d.respuesta.trim());
 async function arrancar(){
 var guardado = null;
 try{ guardado = sessionStorage.getItem(LLAVE); }catch(e){}
-if(guardado === "no") return;
+/* si antes dijo que no, se vuelve a preguntar por si ya sabe hablar */
 if(guardado === "si"){ montar(); return; }
 var puede = await preguntarleAlServidor();
-try{ sessionStorage.setItem(LLAVE, puede ? "si" : "no"); }catch(e){}
+if(puede){ try{ sessionStorage.setItem(LLAVE, "si"); }catch(e){} }
 if(puede) montar();
 }
 
