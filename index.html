@@ -1054,7 +1054,7 @@ const CONFIG = {
   formulario: "",                   /* URL .../formResponse del Google Forms */
   campoEmail: "entry.000000000",
   campoPerfil: "entry.000000001",
-  api: "",                          /* opcional: dirección de la API */
+  api: "https://immoia.ley1998ortizz.workers.dev",                          /* opcional: dirección de la API */
   enlacePublico: "https://inmoiaallhouse.com",   /* la dirección de esta página, para compartir */
 };
 
@@ -2106,7 +2106,7 @@ async function leerConElServidor(txt){
     const r = await fetch(CONFIG.api.replace(/\/$/,"") + "/asistente", {
       method:"POST",
       headers:{"content-type":"application/json"},
-      body: JSON.stringify({texto: txt}),
+      body: JSON.stringify({texto: txt, codigo: "leire2026"}),
     });
     if(!r.ok) return null;
     const d = await r.json();
