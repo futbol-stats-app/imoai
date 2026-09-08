@@ -128,5 +128,5 @@ if(puede) montar();
 }
 
 if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", arrancar);
-else arrancar();
+else arrancar(); /* boton flotante v2 */
 })();
