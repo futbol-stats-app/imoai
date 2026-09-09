@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMMO IA · las tres puertas</title>
+<style>
+/* ============================================================
+   IMMO IA · TRES PUERTAS
+   Un solo motor, tres caras segun quien entra.
+   general = teal (el de siempre) · inmobiliaria = azul · vacacional = naranja
+   NO toca index.html. Esta pagina va aparte.
+   ============================================================ */
+
+:root{
+  --marca:#13342A; --marca-2:#1F5A47; --suave:#E8EFEA;
+  --papel:#F7F4EC; --tarjeta:#FFFDF8; --tinta:#1B231F; --tinta2:#635C4B;
+  --linea:#DED6C3;
+  --verde:#1F6B48; --ambar:#B8860B; --rojo:#9A3B22;
+  --sobre:#F4F1E6;
+}
+body[data-cara="inmobiliaria"]{ --marca:#1a56db; --marca-2:#1e40af; --suave:#E4ECFB; }
+body[data-cara="vacacional"]  { --marca:#e8650c; --marca-2:#b84e07; --suave:#FCEBDD; }
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papel:#111613; --tarjeta:#19201C; --tinta:#ECEAE1; --tinta2:#9FA79E;
+    --linea:#2C3630; --suave:#1B2A22; --sobre:#0F1512;
+    --verde:#69C79A; --ambar:#D8B45C; --rojo:#E08C6E;
+  }
+  body[data-cara="inmobiliaria"]{ --marca:#7DA5F5; --marca-2:#A9C4F8; --suave:#152037; }
+  body[data-cara="vacacional"]  { --marca:#F79350; --marca-2:#F7A25A; --suave:#2A1B10; }
+  body[data-cara="general"]     { --marca:#8FC3A8; --marca-2:#A9D4BC; }
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--papel); color:var(--tinta);
+  font:16.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.env{max-width:900px;margin:0 auto;padding:22px 18px 70px}
+[hidden]{display:none !important}
+
+/* ---------- cabecera ---------- */
+header.top{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 0 18px;border-bottom:1px solid var(--linea);margin-bottom:22px;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--marca)}
+.bolita{width:26px;height:26px;border-radius:50%;background:var(--marca);flex:0 0 auto}
+.quien{font-size:13px;color:var(--tinta2);text-align:right}
+.quien b{display:block;color:var(--tinta);font-size:14.5px}
+.salir{
+  margin-top:4px;background:none;border:0;padding:0;font:inherit;font-size:12.5px;
+  color:var(--tinta2);text-decoration:underline;cursor:pointer;
+}
+
+/* ---------- entrada ---------- */
+h1{font-size:clamp(26px,6vw,38px);line-height:1.08;margin:0 0 8px;letter-spacing:-.015em;text-wrap:balance}
+.sub{color:var(--tinta2);margin:0 0 24px;max-width:52ch}
+
+.puertas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.puerta{
+  text-align:left;background:var(--tarjeta);border:1px solid var(--linea);
+  border-top:4px solid var(--c);border-radius:14px;padding:20px 18px;cursor:pointer;
+  font:inherit;color:inherit;
+}
+.puerta:hover{border-color:var(--c)}
+.puerta:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+.puerta h2{margin:0 0 6px;font-size:19px;color:var(--c)}
+.puerta p{margin:0;font-size:14.5px;color:var(--tinta2)}
+.puerta .etiq{
+  display:inline-block;margin-top:12px;font-size:11.5px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--tinta2);
+}
+
+/* ---------- formulario de acceso ---------- */
+.acceso{max-width:420px;margin:0 auto}
+label{display:block;font-size:13px;font-weight:700;color:var(--tinta2);margin:14px 0 6px}
+input{
+  width:100%;padding:12px 13px;font:inherit;font-size:16.5px;
+  border:1px solid var(--linea);border-radius:10px;background:var(--tarjeta);color:var(--tinta);
+}
+input:focus-visible{outline:2px solid var(--marca);outline-offset:1px}
+.btn{
+  width:100%;margin-top:18px;padding:14px;border:0;border-radius:11px;
+  background:var(--marca);color:var(--sobre);font:inherit;font-weight:700;font-size:17px;cursor:pointer;
+}
+.btn:focus-visible{outline:2px solid var(--marca-2);outline-offset:3px}
+.btn.sec{background:none;color:var(--marca);border:1.5px solid var(--linea);font-weight:600;font-size:15px;padding:11px;margin-top:10px}
+.mal{margin:12px 0 0;padding:10px 12px;border-radius:9px;background:#FBEDE4;color:#7A3B12;font-size:14.5px}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .mal{background:#33211A;color:#E7B79C} }
+
+/* ---------- panel ---------- */
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0 0 20px}
+.dato{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:15px}
+.dato .cifra{font-size:31px;font-weight:800;line-height:1;color:var(--marca);font-variant-numeric:tabular-nums}
+.dato .pie{font-size:13px;color:var(--tinta2);margin-top:5px}
+
+section.caja{
+  background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
+  padding:17px 16px;margin:0 0 16px;
+}
+section.caja > h3{
+  margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--tinta2);
+}
+
+/* ---------- lista de propiedades ---------- */
+.lista{display:flex;flex-direction:column}
+.piso{
+  display:grid;grid-template-columns:14px 1fr auto;gap:12px;align-items:start;
+  padding:13px 0;border-top:1px solid var(--linea);
+}
+.lista .piso:first-child{border-top:0}
+.sem{width:12px;height:12px;border-radius:50%;margin-top:6px}
+.sem.v{background:var(--verde)} .sem.a{background:var(--ambar)} .sem.r{background:var(--rojo)}
+.piso .nom{font-weight:700}
+.piso .det{font-size:14px;color:var(--tinta2);margin-top:2px}
+.piso .plazo{font-size:13px;color:var(--tinta2);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.piso .plazo b{display:block;color:var(--tinta);font-size:14px}
+
+.leyenda{margin:12px 0 0;font-size:13px;color:var(--tinta2)}
+.leyenda span{display:inline-flex;align-items:center;gap:5px;margin-right:14px}
+.leyenda i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* ---------- tabla de trámites ---------- */
+.tabla{width:100%;border-collapse:collapse;font-size:14.5px}
+.tabla th{
+  text-align:left;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta2);padding:0 10px 9px 0;font-weight:700;
+}
+.tabla td{padding:10px 10px 10px 0;border-top:1px solid var(--linea);vertical-align:top}
+.tabla td:last-child,.tabla th:last-child{text-align:right;padding-right:0;white-space:nowrap}
+.pastilla{
+  display:inline-block;padding:3px 9px;border-radius:99px;font-size:12.5px;font-weight:700;
+}
+.pastilla.curso{background:var(--suave);color:var(--marca-2)}
+.pastilla.hecho{background:rgba(31,107,72,.14);color:var(--verde)}
+.pastilla.espera{background:rgba(184,134,11,.16);color:var(--ambar)}
+.envoltorio-tabla{overflow-x:auto}
+
+/* ---------- avisos ---------- */
+.aviso{
+  display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start;
+  padding:12px 13px;border-radius:11px;background:var(--suave);margin-bottom:10px;font-size:14.5px;
+}
+.aviso:last-child{margin-bottom:0}
+.aviso .pun{width:9px;height:9px;border-radius:50%;background:var(--marca);margin-top:7px}
+.aviso b{display:block}
+
+/* ---------- pie ---------- */
+.nota{margin:24px 0 0;font-size:13px;color:var(--tinta2);border-top:1px solid var(--linea);padding-top:14px}
+@media (max-width:520px){ .env{padding:18px 14px 60px} }
+</style>
+</head>
+<body data-cara="general">
+
+<div class="env">
+
+  <!-- ============ PANTALLA 1 · ELEGIR PUERTA ============ -->
+  <div id="p-elegir">
+    <header class="top">
+      <div class="logo"><span class="bolita"></span> IMMO IA</div>
+    </header>
+
+    <h1>¿Quién eres?</h1>
+    <p class="sub">La aplicación es la misma por dentro. Lo que cambia es lo que ves y lo que te avisa.</p>
+
+    <div class="puertas">
+      <button class="puerta" data-cara="general" style="--c:#13342A">
+        <h2>Quiero alquilar o comprar</h2>
+        <p>Consulta lo que quieras sobre tu vivienda y mira qué ayudas te tocan.</p>
+        <span class="etiq">Entrada libre · 3 consultas al mes</span>
+      </button>
+
+      <button class="puerta" data-cara="inmobiliaria" style="--c:#1a56db">
+        <h2>Soy una inmobiliaria</h2>
+        <p>Tus pisos, sus papeles y las ventas que se te caen por financiación.</p>
+        <span class="etiq">Con cuenta</span>
+      </button>
+
+      <button class="puerta" data-cara="vacacional" style="--c:#e8650c">
+        <h2>Tengo vivienda vacacional</h2>
+        <p>Tus apartamentos con su semáforo y el aviso antes de que te venza.</p>
+        <span class="etiq">Con cuenta</span>
+      </button>
+    </div>
+
+    <p class="nota">Esta es la página de las tres puertas. La portada no se toca: se entra aquí después.</p>
+  </div>
+
+  <!-- ============ PANTALLA 2 · ACCESO ============ -->
+  <div id="p-acceso" hidden>
+    <header class="top">
+      <div class="logo"><span class="bolita"></span> IMMO IA</div>
+    </header>
+
+    <div class="acceso">
+      <h1 id="acc-titulo">Entrar</h1>
+      <p class="sub" id="acc-sub"></p>
+
+      <div id="acc-campos-cuenta">
+        <label for="acc-email">Tu correo</label>
+        <input type="email" id="acc-email" autocomplete="email" placeholder="nombre@correo.com">
+        <label for="acc-pass">Tu contraseña</label>
+        <input type="password" id="acc-pass" autocomplete="current-password" placeholder="••••••••">
+      </div>
+
+      <div id="acc-campos-codigo" hidden>
+        <label for="acc-codigo">Código de acceso</label>
+        <input type="text" id="acc-codigo" autocomplete="off" placeholder="el código que te han dado">
+      </div>
+
+      <button class="btn" id="acc-entrar">Entrar</button>
+      <button class="btn sec" id="acc-volver">Volver</button>
+      <p class="mal" id="acc-mal" hidden></p>
+      <p class="nota" id="acc-nota"></p>
+    </div>
+  </div>
+
+  <!-- ============ PANTALLA 3 · PANEL ============ -->
+  <div id="p-panel" hidden>
+    <header class="top">
+      <div class="logo"><span class="bolita"></span> IMMO IA</div>
+      <div class="quien">
+        <b id="pan-nombre">—</b>
+        <span id="pan-cara">—</span>
+        <br><button class="salir" id="salir">Salir</button>
+      </div>
+    </header>
+    <div id="pan-cuerpo"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LLAVE = "immoia.cuenta.v2";
+  var CODIGO_DEMO = "leire2026";
+  var caraElegida = "general";
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ var d=document.createElement("div"); d.textContent = s==null?"":String(s); return d.innerHTML; }
+  function ver(cual){
+    ["p-elegir","p-acceso","p-panel"].forEach(function(id){ $(id).hidden = (id !== cual); });
+    window.scrollTo({top:0});
+  }
+
+  var NOMBRES = { general:"Particular", inmobiliaria:"Inmobiliaria", vacacional:"Vivienda vacacional" };
+
+  /* ---------------- elegir puerta ---------------- */
+  document.querySelectorAll(".puerta").forEach(function(b){
+    b.addEventListener("click", function(){
+      caraElegida = b.getAttribute("data-cara");
+      document.body.setAttribute("data-cara", caraElegida);
+      abrirAcceso();
+    });
+  });
+
+  function abrirAcceso(){
+    var conCuenta = caraElegida !== "general";
+    $("acc-titulo").textContent = conCuenta ? "Entra en tu cuenta" : "Entra con tu código";
+    $("acc-sub").textContent = conCuenta
+      ? "Ves solo lo tuyo: tus propiedades, tus trámites y tus avisos."
+      : "Sin registro. Tres consultas al mes y el buscador de ayudas.";
+    $("acc-campos-cuenta").hidden = !conCuenta;
+    $("acc-campos-codigo").hidden = conCuenta;
+    $("acc-nota").textContent = conCuenta
+      ? "Todavía no hay nube: de momento la cuenta se guarda solo en este navegador."
+      : "";
+    $("acc-mal").hidden = true;
+    ver("p-acceso");
+  }
+
+  $("acc-volver").addEventListener("click", function(){
+    document.body.setAttribute("data-cara","general");
+    ver("p-elegir");
+  });
+
+  $("acc-entrar").addEventListener("click", entrar);
+  ["acc-email","acc-pass","acc-codigo"].forEach(function(id){
+    $(id).addEventListener("keydown", function(ev){ if(ev.key === "Enter") entrar(); });
+  });
+
+  function fallo(t){ var m=$("acc-mal"); m.textContent = t; m.hidden = false; }
+
+  function entrar(){
+    if(caraElegida === "general"){
+      var c = $("acc-codigo").value.trim();
+      if(!c) return fallo("Escribe el código que te han dado.");
+      if(c !== CODIGO_DEMO) return fallo("Ese código no vale. Comprueba que está bien escrito.");
+      guardar({cara:"general", nombre:"Invitado"});
+      return pintarPanel();
+    }
+    var e = $("acc-email").value.trim();
+    var p = $("acc-pass").value;
+    if(!e || e.indexOf("@") < 1) return fallo("Escribe un correo válido.");
+    if(p.length < 4) return fallo("La contraseña es demasiado corta.");
+    guardar({cara:caraElegida, nombre:e});
+    pintarPanel();
+  }
+
+  function guardar(c){
+    try{ localStorage.setItem(LLAVE, JSON.stringify(c)); }catch(err){}
+    cuenta = c;
+  }
+  var cuenta = null;
+  try{ cuenta = JSON.parse(localStorage.getItem(LLAVE) || "null"); }catch(err){ cuenta = null; }
+
+  $("salir").addEventListener("click", function(){
+    try{ localStorage.removeItem(LLAVE); }catch(err){}
+    cuenta = null;
+    caraElegida = "general";
+    document.body.setAttribute("data-cara","general");
+    $("acc-email").value = ""; $("acc-pass").value = ""; $("acc-codigo").value = "";
+    ver("p-elegir");
+  });
+
+  /* ---------------- los paneles ---------------- */
+
+  function panelGeneral(){
+    return ''
+    + '<h1>¿Qué necesitas saber?</h1>'
+    + '<p class="sub">Pregúntale lo que quieras sobre alquilar, comprar o reformar. Los importes y los plazos te los da la calculadora, con la norma al lado.</p>'
+    + '<div class="rejilla">'
+      + tile("3", "consultas que te quedan este mes")
+      + tile("0", "trámites en curso")
+    + '</div>'
+    + caja("Lo que puedes hacer aquí",
+        aviso("Preguntar a la IA", "Sobre tu caso concreto: alquiler, compra, reforma o papeleo.")
+      + aviso("Buscar tus ayudas", "Pon tus datos y te dice cuáles te tocan, con el boletín al lado.")
+      + aviso("Pedir que te lo tramiten", "Si quieres que lo presentemos nosotros, se pasa a cuenta con contraseña."))
+    + '<p class="nota">Esta puerta es gratis. Los trámites se pagan aparte, solo cuando los pidas.</p>';
+  }
+
+  function panelInmobiliaria(){
+    var pisos = [
+      {s:"v", nom:"C/ Ramón Pérez 14, 3ºB · Los Cristianos", det:"Energético al día · nota simple pedida", plazo:"En regla", sub:""},
+      {s:"a", nom:"Avda. Juan Carlos I 8, 1ºA · Arona",      det:"Falta la cédula de habitabilidad",       plazo:"Vence", sub:"en 24 días"},
+      {s:"r", nom:"Urb. Las Américas, bloque 2, 4ºC",        det:"Certificado energético caducado",       plazo:"Caducado", sub:"hace 11 días"},
+      {s:"v", nom:"C/ El Roque 3 · Adeje",                   det:"Expediente completo",                   plazo:"En regla", sub:""}
+    ];
+    return ''
+    + '<h1>Tu oficina</h1>'
+    + '<p class="sub">Tus pisos, sus papeles y las ventas que se te pueden caer por financiación.</p>'
+    + '<div class="rejilla">'
+      + tile("4", "pisos en cartera")
+      + tile("2", "papeles por resolver")
+      + tile("3", "compradores con aval posible")
+      + tile("1", "trámite en curso")
+    + '</div>'
+    + caja("Tus pisos", listaPisos(pisos) + leyenda())
+    + caja("Trámites en curso", tabla([
+        ["Cédula de habitabilidad", "Avda. Juan Carlos I 8", "curso", "En el ayuntamiento"],
+        ["Certificado energético",  "Urb. Las Américas 2",   "espera", "Esperando al técnico"],
+        ["Nota simple",             "C/ Ramón Pérez 14",     "hecho",  "Entregada"]
+      ]))
+    + caja("Lo que te puede desatascar una venta",
+        aviso("3 compradores tuyos podrían llevar aval del Estado",
+              "Menores de 36 o con hijos a cargo. El aval cubre hasta el 20 % del préstamo, y el 25 % si el piso es clase D o mejor. La hipoteca hay que firmarla antes del 31/12/2027.")
+      + aviso("2 de tus propietarios tienen vivienda vacacional sin el papel del ayuntamiento",
+              "Se les puede caducar el número de registro. Es una llamada en la que tú eres el que avisa."))
+    + caja("Este mes", tabla([
+        ["Cuota de la oficina", "septiembre", "hecho", "Al día"],
+        ["Expedientes cerrados", "3 casas", "hecho", "Facturado"],
+        ["Expedientes abiertos", "2 casas", "curso", "Se factura al cerrar"]
+      ]))
+    + '<p class="nota">Los pisos y los trámites que ves son de ejemplo, para enseñar cómo queda. Cuando esté la nube, aquí van los tuyos de verdad.</p>';
+  }
+
+  function panelVacacional(){
+    var pisos = [
+      {s:"r", nom:"Apto. 214 · Edif. Los Geranios, Arona",  det:"Sin título municipal de actividad clasificada", plazo:"Plazo", sub:"31 jul 2027"},
+      {s:"a", nom:"Apto. 118 · Edif. Los Geranios, Arona",  det:"Memoria técnica entregada, falta presentar",     plazo:"Plazo", sub:"31 jul 2027"},
+      {s:"v", nom:"Villa El Duque 7 · Adeje",               det:"Comunicación previa presentada y comprobada",    plazo:"En regla", sub:""},
+      {s:"a", nom:"Apto. 3B · Playa Honda, Adeje",          det:"Energético clase F, hay que revisar el agua caliente", plazo:"Revisar", sub:"antes de presentar"}
+    ];
+    return ''
+    + '<h1>Tus apartamentos</h1>'
+    + '<p class="sub">Verde: en regla. Ámbar: le falta algo. Rojo: hay que moverlo ya.</p>'
+    + '<div class="rejilla">'
+      + tile("4", "apartamentos")
+      + tile("1", "en regla")
+      + tile("2", "les falta algo")
+      + tile("1", "sin el papel del ayuntamiento")
+    + '</div>'
+    + caja("El plazo que manda",
+        aviso("31 de julio de 2027 · comunicación previa de actividad clasificada",
+              "Quien no la presente tiene que cesar la actividad turística. Los 88 ayuntamientos de Canarias aprobaron su plan de control el 13 de agosto de 2026 y han empezado cuatro años de inspecciones.")
+      + aviso("Lo que se pierde si no llega",
+              "El número de registro caduca y el piso deja de poder comercializarse en las plataformas."))
+    + caja("Tus apartamentos", listaPisos(pisos) + leyenda())
+    + caja("Lo que le falta a cada uno", '<div class="envoltorio-tabla">' + tabla([
+        ["Comunicación previa actividad clasificada", "Apto. 214 Los Geranios", "espera", "Sin empezar"],
+        ["Memoria técnica",                            "Apto. 118 Los Geranios", "hecho",  "Entregada"],
+        ["Presentar en el ayuntamiento",               "Apto. 118 Los Geranios", "curso",  "La preparamos"],
+        ["Certificado energético",                     "Apto. 3B Playa Honda",   "espera", "Clase F · revisar"],
+        ["Agua caliente con renovables",               "Apto. 3B Playa Honda",   "espera", "Pendiente de mirar"]
+      ]) + '</div>')
+    + caja("Los papeles de cada apartamento", '<div class="envoltorio-tabla">' + tabla([
+        ["Certificado energético", "Villa El Duque 7", "hecho", "Clase D · vigente"],
+        ["Certificado energético", "Apto. 214",        "hecho", "Clase E · vigente"],
+        ["Certificado energético", "Apto. 118",        "hecho", "Clase D · vigente"],
+        ["Certificado energético", "Apto. 3B",         "espera","Clase F · no llega"]
+      ]) + '</div>')
+    + '<p class="nota">Los apartamentos que ves son de ejemplo, para enseñar cómo queda. Los mínimos técnicos (metros, clase energética y porcentaje de renovables) están sin confirmar en el boletín: no se los des a un cliente todavía.</p>';
+  }
+
+  /* ---------------- piezas ---------------- */
+  function tile(c,p){ return '<div class="dato"><div class="cifra">'+esc(c)+'</div><div class="pie">'+esc(p)+'</div></div>'; }
+  function caja(t,c){ return '<section class="caja"><h3>'+esc(t)+'</h3>'+c+'</section>'; }
+  function aviso(t,c){ return '<div class="aviso"><span class="pun"></span><span><b>'+esc(t)+'</b>'+esc(c)+'</span></div>'; }
+
+  function listaPisos(ps){
+    return '<div class="lista">' + ps.map(function(p){
+      return '<div class="piso"><span class="sem '+p.s+'"></span>'
+        + '<span><span class="nom">'+esc(p.nom)+'</span><span class="det">'+esc(p.det)+'</span></span>'
+        + '<span class="plazo"><b>'+esc(p.plazo)+'</b>'+esc(p.sub||"")+'</span></div>';
+    }).join("") + '</div>';
+  }
+
+  function leyenda(){
+    return '<p class="leyenda">'
+      + '<span><i style="background:var(--verde)"></i>en regla</span>'
+      + '<span><i style="background:var(--ambar)"></i>le falta algo</span>'
+      + '<span><i style="background:var(--rojo)"></i>hay que moverlo</span></p>';
+  }
+
+  function tabla(filas){
+    return '<table class="tabla"><thead><tr><th>Trámite</th><th>Dónde</th><th>Estado</th></tr></thead><tbody>'
+      + filas.map(function(f){
+          return '<tr><td>'+esc(f[0])+'</td><td>'+esc(f[1])+'</td>'
+            + '<td><span class="pastilla '+f[2]+'">'+esc(f[3])+'</span></td></tr>';
+        }).join("")
+      + '</tbody></table>';
+  }
+
+  /* ---------------- pintar ---------------- */
+  function pintarPanel(){
+    document.body.setAttribute("data-cara", cuenta.cara);
+    $("pan-nombre").textContent = cuenta.nombre;
+    $("pan-cara").textContent = NOMBRES[cuenta.cara] || "";
+    $("pan-cuerpo").innerHTML =
+        cuenta.cara === "inmobiliaria" ? panelInmobiliaria()
+      : cuenta.cara === "vacacional"   ? panelVacacional()
+      : panelGeneral();
+    ver("p-panel");
+  }
+
+  if(cuenta && cuenta.cara){ caraElegida = cuenta.cara; pintarPanel(); }
+  else { ver("p-elegir"); }
+})();
+</script>
+</body>
+</html>
