@@ -1,0 +1,57 @@
+{
+  "_leeme": "ARCHIVO INTERNO de propiedades de IMMO IA. NO es un escaparate: estas casas no se publican en la web. Solo las usa la IA para recomendar, y el video se abre cuando el cliente dice que si. Para anadir o quitar una casa se edita SOLO este archivo. OJO: cada vez que se cambie esta lista hay que volver a pegar la linea 27 del worker, porque el indice que la IA conoce va escrito ahi dentro. Cuando este la nube esto deja de hacer falta. Las cuatro de ahora son DE EJEMPLO: cambiadlas por las de verdad.",
+  "casas": [
+    {
+      "id": "ej-1",
+      "titulo": "Piso de 2 habitaciones en Los Cristianos",
+      "zona": "Los Cristianos, Arona",
+      "tipo": "alquiler",
+      "precio": 950,
+      "habitaciones": 2,
+      "banos": 1,
+      "metros": 68,
+      "descripcion": "Segunda planta con ascensor, terraza al sur y plaza de garaje. A diez minutos andando de la playa.",
+      "video": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "ejemplo": true
+    },
+    {
+      "id": "ej-2",
+      "titulo": "Apartamento con vistas en Costa Adeje",
+      "zona": "Costa Adeje, Adeje",
+      "tipo": "venta",
+      "precio": 245000,
+      "habitaciones": 1,
+      "banos": 1,
+      "metros": 52,
+      "descripcion": "Reformado en 2024, amueblado, en complejo con piscina. Certificado energetico clase D.",
+      "video": "https://vimeo.com/76979871",
+      "ejemplo": true
+    },
+    {
+      "id": "ej-3",
+      "titulo": "Casa de 3 habitaciones en Granadilla",
+      "zona": "Granadilla de Abona",
+      "tipo": "venta",
+      "precio": 310000,
+      "habitaciones": 3,
+      "banos": 2,
+      "metros": 124,
+      "descripcion": "Casa independiente con patio y trastero. Para entrar a vivir.",
+      "video": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "ejemplo": true
+    },
+    {
+      "id": "ej-4",
+      "titulo": "Estudio en Playa de las Americas",
+      "zona": "Playa de las Americas, Arona",
+      "tipo": "alquiler",
+      "precio": 720,
+      "habitaciones": 1,
+      "banos": 1,
+      "metros": 38,
+      "descripcion": "Estudio amueblado en primera linea, ideal para una persona. Gastos aparte.",
+      "video": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "ejemplo": true
+    }
+  ]
+}
