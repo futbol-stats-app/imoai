@@ -90,6 +90,13 @@ input:focus-visible{outline:2px solid var(--marca);outline-offset:1px}
 }
 .btn:focus-visible{outline:2px solid var(--marca-2);outline-offset:3px}
 .btn.sec{background:none;color:var(--marca);border:1.5px solid var(--linea);font-weight:600;font-size:15px;padding:11px;margin-top:10px}
+.pest{display:flex;gap:0;margin:0 0 4px;border-bottom:1px solid var(--linea)}
+.pest button{flex:1;padding:11px 8px;background:none;border:0;border-bottom:3px solid transparent;
+ font:inherit;font-size:15px;font-weight:600;color:var(--tinta2);cursor:pointer;margin:0}
+.pest button[aria-selected=true]{color:var(--marca);border-bottom-color:var(--marca)}
+.pest button:focus-visible{outline:2px solid var(--marca);outline-offset:-2px}
+.casilla{display:flex;align-items:center;gap:9px;margin:14px 0 0;font-size:14.5px;color:var(--tinta2);cursor:pointer}
+.casilla input{width:18px;height:18px;margin:0;flex:0 0 auto;accent-color:var(--marca)}
 .mal{margin:12px 0 0;padding:10px 12px;border-radius:9px;background:#FBEDE4;color:#7A3B12;font-size:14.5px}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .mal{background:#33211A;color:#E7B79C} }
 
@@ -203,10 +210,26 @@ section.caja > h3{
       <p class="sub" id="acc-sub"></p>
 
       <div id="acc-campos-cuenta">
+        <div class="pest" id="acc-pestanas" role="tablist">
+          <button type="button" id="acc-p-entrar" role="tab" aria-selected="true">Entrar</button>
+          <button type="button" id="acc-p-crear" role="tab" aria-selected="false">Crear cuenta</button>
+        </div>
+
+        <div id="acc-fila-nombre" hidden>
+          <label for="acc-nombre">Tu nombre</label>
+          <input type="text" id="acc-nombre" autocomplete="name" placeholder="Como quieres que te llamemos">
+        </div>
+
         <label for="acc-email">Tu correo</label>
         <input type="email" id="acc-email" autocomplete="email" placeholder="nombre@correo.com">
+
         <label for="acc-pass">Tu contraseña</label>
         <input type="password" id="acc-pass" autocomplete="current-password" placeholder="••••••••">
+
+        <label class="casilla" for="acc-recordar">
+          <input type="checkbox" id="acc-recordar" checked>
+          <span>Mantener la sesión abierta en este navegador</span>
+        </label>
       </div>
 
       <div id="acc-campos-codigo" hidden>
@@ -271,9 +294,10 @@ section.caja > h3{
     $("acc-campos-cuenta").hidden = !conCuenta;
     $("acc-campos-codigo").hidden = conCuenta;
     $("acc-nota").textContent = conCuenta
-      ? "Todavía no hay nube: de momento la cuenta se guarda solo en este navegador."
+      ? "Todavía no hay nube: la cuenta se guarda solo en este navegador. No escribas aquí una contraseña que uses en otro sitio."
       : "";
     $("acc-mal").hidden = true;
+    if(conCuenta) ponerModo(modo || "entrar");
     ver("p-acceso");
   }
 
@@ -297,29 +321,186 @@ section.caja > h3{
       guardar({cara:"general", nombre:"Invitado"});
       return pintarPanel();
     }
-    var e = $("acc-email").value.trim();
+    /* --- cuenta con correo y contraseña --- */
+    var e = $("acc-email").value.trim().toLowerCase();
     var p = $("acc-pass").value;
-    if(!e || e.indexOf("@") < 1) return fallo("Escribe un correo válido.");
-    if(p.length < 4) return fallo("La contraseña es demasiado corta.");
-    guardar({cara:caraElegida, nombre:e});
-    pintarPanel();
+    var n = $("acc-nombre").value.trim();
+
+    if(!e || e.indexOf("@") < 1 || e.indexOf(".") < 0) return fallo("Escribe un correo válido.");
+    if(p.length < 6) return fallo("La contraseña tiene que tener al menos 6 caracteres.");
+
+    var usuarios = leerUsuarios();
+
+    if(modo === "crear"){
+      if(usuarios[e]) return fallo("Ese correo ya tiene cuenta. Dale a «Entrar».");
+      if(!n) return fallo("Escribe tu nombre.");
+      var sal = nuevaSal();
+      hashear(p, sal).then(function(h){
+        usuarios[e] = { nombre:n, sal:sal, hash:h, cara:caraElegida, creado:Date.now() };
+        guardarUsuarios(usuarios);
+        guardar({cara:caraElegida, nombre:n, email:e});
+        pintarPanel();
+      });
+      return;
+    }
+
+    var u = usuarios[e];
+    if(!u) return fallo("No hay ninguna cuenta con ese correo. Dale a «Crear cuenta».");
+    hashear(p, u.sal).then(function(h){
+      if(h !== u.hash) return fallo("La contraseña no es correcta.");
+      guardar({cara:caraElegida, nombre:u.nombre || e, email:e});
+      pintarPanel();
+    });
   }
+
+  /* ---------------- entrar o crear cuenta ---------------- */
+  var modo = "entrar";
+
+  function ponerModo(cual){
+    modo = cual;
+    var creando = (cual === "crear");
+    $("acc-p-entrar").setAttribute("aria-selected", creando ? "false" : "true");
+    $("acc-p-crear").setAttribute("aria-selected", creando ? "true" : "false");
+    $("acc-fila-nombre").hidden = !creando;
+    $("acc-pass").setAttribute("autocomplete", creando ? "new-password" : "current-password");
+    $("acc-entrar").textContent = creando ? "Crear mi cuenta" : "Entrar";
+    $("acc-mal").hidden = true;
+  }
+  $("acc-p-entrar").addEventListener("click", function(){ ponerModo("entrar"); });
+  $("acc-p-crear").addEventListener("click", function(){ ponerModo("crear"); });
+  $("acc-nombre").addEventListener("keydown", function(ev){ if(ev.key === "Enter") entrar(); });
+
+  /* ---------------- las cuentas ----------------
+     AVISO HONESTO: mientras no haya nube, esto vive en el navegador del usuario.
+     Sirve para separar sesiones y recordar quién eres. NO es seguridad de verdad:
+     quien tenga acceso al ordenador puede leerlo. Por eso aquí no se guarda ningún
+     dato sensible. Cuando entre la nube, esto se sustituye entero. */
+
+  var USUARIOS = "immoia.usuarios.v1";
+
+  function leerUsuarios(){
+    try{ return JSON.parse(localStorage.getItem(USUARIOS) || "{}") || {}; }catch(err){ return {}; }
+  }
+  function guardarUsuarios(u){
+    try{ localStorage.setItem(USUARIOS, JSON.stringify(u)); }catch(err){}
+  }
+  function nuevaSal(){
+    try{
+      var a = new Uint8Array(16);
+      window.crypto.getRandomValues(a);
+      return Array.prototype.map.call(a, function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
+    }catch(err){
+      return String(Date.now()) + Math.random().toString(36).slice(2);
+    }
+  }
+  function hashear(clave, sal){
+    var texto = sal + "|" + clave;
+    if(window.crypto && window.crypto.subtle && window.TextEncoder){
+      return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto))
+        .then(function(buf){
+          return Array.prototype.map.call(new Uint8Array(buf), function(b){
+            return ("0"+b.toString(16)).slice(-2);
+          }).join("");
+        })
+        .catch(function(){ return hashSimple(texto); });
+    }
+    return Promise.resolve(hashSimple(texto));   /* navegador viejo o sin https */
+  }
+  function hashSimple(t){
+    var h = 5381;
+    for(var i=0;i<t.length;i++){ h = ((h*33) ^ t.charCodeAt(i)) >>> 0; }
+    return "s" + h.toString(16);
+  }
+
+  /* ---------------- la sesión ----------------
+     Si marca «mantener la sesión», va a localStorage y sobrevive al cierre.
+     Si no la marca, va a sessionStorage y se borra al cerrar la pestaña. */
+
+  var cuenta = null;
 
   function guardar(c){
-    try{ localStorage.setItem(LLAVE, JSON.stringify(c)); }catch(err){}
+    var recordar = $("acc-recordar") ? $("acc-recordar").checked : true;
+    try{
+      localStorage.removeItem(LLAVE);
+      sessionStorage.removeItem(LLAVE);
+      (recordar ? localStorage : sessionStorage).setItem(LLAVE, JSON.stringify(c));
+    }catch(err){}
     cuenta = c;
   }
-  var cuenta = null;
-  try{ cuenta = JSON.parse(localStorage.getItem(LLAVE) || "null"); }catch(err){ cuenta = null; }
+
+  try{
+    cuenta = JSON.parse(sessionStorage.getItem(LLAVE) || localStorage.getItem(LLAVE) || "null");
+  }catch(err){ cuenta = null; }
 
   $("salir").addEventListener("click", function(){
-    try{ localStorage.removeItem(LLAVE); }catch(err){}
+    try{ localStorage.removeItem(LLAVE); sessionStorage.removeItem(LLAVE); }catch(err){}
     cuenta = null;
     caraElegida = "general";
     document.body.setAttribute("data-cara","general");
     $("acc-email").value = ""; $("acc-pass").value = ""; $("acc-codigo").value = "";
+    $("acc-nombre").value = "";
+    ponerModo("entrar");
     ver("p-elegir");
   });
+
+  /* ---------------- LAS FASES DE ACCESO ----------------
+     Hoy estamos en la FASE 1. Las otras dos están escritas y comentadas:
+     cuando toque, se cambia el número de FASE y se descomenta lo de abajo.
+
+       FASE 1  ·      0 - 1.000 usuarios  ·  abierto y gratis
+       FASE 2  ·  1.000 - 2.000 usuarios  ·  33 preguntas por semana
+       FASE 3  ·        + 2.000 usuarios  ·  solo con suscripción de pago
+  */
+
+  var FASE = 1;
+  var TOPE_SEMANA = 33;
+  var CONTADOR = "immoia.consultas.v1";
+
+  /* Hoy solo cuenta, no bloquea nada. */
+  function apuntarConsulta(){
+    try{
+      var c = JSON.parse(localStorage.getItem(CONTADOR) || "null");
+      if(!c || c.semana !== semanaDeHoy()){ c = {semana:semanaDeHoy(), n:0}; }
+      c.n++;
+      localStorage.setItem(CONTADOR, JSON.stringify(c));
+      return c.n;
+    }catch(err){ return 0; }
+  }
+  function consultasEstaSemana(){
+    try{
+      var c = JSON.parse(localStorage.getItem(CONTADOR) || "null");
+      return (c && c.semana === semanaDeHoy()) ? c.n : 0;
+    }catch(err){ return 0; }
+  }
+  function semanaDeHoy(){
+    var f = new Date();
+    var e2 = new Date(Date.UTC(f.getFullYear(), f.getMonth(), f.getDate()));
+    var dia = e2.getUTCDay() || 7;
+    e2.setUTCDate(e2.getUTCDate() + 4 - dia);
+    var uno = new Date(Date.UTC(e2.getUTCFullYear(), 0, 1));
+    return e2.getUTCFullYear() + "-" + Math.ceil((((e2 - uno) / 86400000) + 1) / 7);
+  }
+  window.immoiaConsultas = {
+    apuntar: apuntarConsulta,
+    estaSemana: consultasEstaSemana,
+    fase: function(){ return FASE; },
+    tope: function(){ return TOPE_SEMANA; }
+  };
+
+  /* --- FASE 2: descomentar al pasar de 1.000 usuarios ---
+  function puedePreguntar(){
+    if(FASE < 2) return true;
+    return consultasEstaSemana() < TOPE_SEMANA;
+  }
+  --- fin FASE 2 --- */
+
+  /* --- FASE 3: descomentar al pasar de 2.000 usuarios ---
+  function tienePago(){ return !!(cuenta && cuenta.pago === true); }
+  function puedeEntrar(){
+    if(FASE < 3) return true;
+    return tienePago();
+  }
+  --- fin FASE 3 --- */
 
   /* ---------------- los paneles ---------------- */
 
