@@ -621,15 +621,48 @@ section.caja > h3{
       + '</tbody></table>';
   }
 
+  /* ---------------- IMMO IA Energia ---------------- */
+  /* Se anade DEBAJO del panel de cada puerta. No toca nada de lo de arriba. */
+  var ENERGIA = {
+    general:      ["Placas solares para tu casa",
+                   "Te decimos en cuatro preguntas cuanto pagarias al mes y si te toca la deduccion del 40 %."],
+    vacacional:   ["Placas para tu vivienda vacacional",
+                   "Tu apartamento produce sol todo el ano y tu lo usas media temporada. Mira cuanta luz estas regalando."],
+    inmobiliaria: ["Placas solares para tus clientes",
+                   "Un motivo para llamar a tus propietarios siendo tu la buena noticia. Sacas su numero en un minuto."]
+  };
+
+  function bloqueEnergia(){
+    var e = ENERGIA[cuenta.cara] || ENERGIA.general;
+    var dias = Math.ceil((new Date(2026, 11, 31) - new Date()) / 86400000);
+    return '<section class="caja" style="margin-top:22px;border:1px solid var(--linea);'
+      + 'border-left:4px solid var(--marca);border-radius:14px;background:var(--tarjeta);padding:18px 17px">'
+      + '<h2 style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.13em;'
+      + 'text-transform:uppercase;color:var(--tinta2)">IMMO IA Energia</h2>'
+      + '<p style="margin:0 0 4px;font-size:19px;font-weight:800;line-height:1.2">'
+      + '<span aria-hidden="true">&#9728;&#65039;</span> ' + esc(e[0]) + '</p>'
+      + '<p style="margin:0 0 14px;color:var(--tinta2);font-size:14.5px">' + esc(e[1]) + '</p>'
+      + (dias > 0
+          ? '<p style="margin:0 0 14px;font-size:13.5px;color:var(--tinta2)">'
+            + '<b style="color:var(--marca)">Quedan ' + dias + ' dias</b> para que se acabe la '
+            + 'deduccion del IRPF, el 31 de diciembre de 2026.</p>'
+          : '')
+      + '<a href="energia.html?de=' + encodeURIComponent(cuenta.cara) + '" '
+      + 'style="display:inline-block;background:var(--marca);color:#fff;text-decoration:none;'
+      + 'font-weight:800;font-size:16px;padding:13px 20px;border-radius:12px">Calcularlo ahora</a>'
+      + '</section>';
+  }
+
   /* ---------------- pintar ---------------- */
   function pintarPanel(){
     document.body.setAttribute("data-cara", cuenta.cara);
     $("pan-nombre").textContent = cuenta.nombre;
     $("pan-cara").textContent = NOMBRES[cuenta.cara] || "";
     $("pan-cuerpo").innerHTML =
-        cuenta.cara === "inmobiliaria" ? panelInmobiliaria()
-      : cuenta.cara === "vacacional"   ? panelVacacional()
-      : panelGeneral();
+        (cuenta.cara === "inmobiliaria" ? panelInmobiliaria()
+       : cuenta.cara === "vacacional"   ? panelVacacional()
+       : panelGeneral())
+      + bloqueEnergia();
     ver("p-panel");
   }
 

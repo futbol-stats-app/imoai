@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMMO IA Renovables · lo que te cuesta de verdad</title>
+<meta name="robots" content="noindex">
+<style>
+/* ==========================================================
+   IMMO IA RENOVABLES · la cuarta puerta
+   Mismos tokens que puertas.html. Acento naranja sol.
+   ========================================================== */
+:root{
+  --marca:#B4530E; --marca-2:#8A3F0A; --suave:#FBEADB;
+  --papel:#F7F4EC; --tarjeta:#FFFDF8; --tinta:#1B231F; --tinta2:#635C4B;
+  --linea:#DED6C3; --sobre:#FFF7EF;
+  --verde:#1F6B48; --ambar:#B8860B; --rojo:#9A3B22;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papel:#141110; --tarjeta:#1E1A18; --tinta:#ECEAE1; --tinta2:#A79E92;
+    --linea:#362E29; --suave:#2A1B10; --sobre:#120E0C;
+    --marca:#F0955A; --marca-2:#F7B182;
+    --verde:#69C79A; --ambar:#D8B45C; --rojo:#E08C6E;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--papel); color:var(--tinta);
+  font:16.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.env{max-width:820px;margin:0 auto;padding:22px 18px 80px}
+[hidden]{display:none !important}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ padding:14px 0 18px;border-bottom:1px solid var(--linea);margin-bottom:26px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--marca)}
+.bolita{width:26px;height:26px;border-radius:50%;background:var(--marca);flex:0 0 auto}
+.logo small{display:block;font-size:12px;font-weight:600;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--tinta2)}
+
+h1{font-size:clamp(27px,6vw,40px);line-height:1.06;margin:0 0 10px;letter-spacing:-.015em;text-wrap:balance}
+.sub{color:var(--tinta2);margin:0 0 22px;max-width:54ch}
+
+.reloj{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+ background:var(--suave);border-left:4px solid var(--marca);
+ padding:13px 15px;border-radius:0 11px 11px 0;margin:0 0 26px}
+.reloj b{color:var(--marca-2);font-size:17px}
+.reloj span{font-size:14.5px;color:var(--tinta2)}
+
+section.caja{background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
+ padding:18px 17px;margin:0 0 18px}
+section.caja > h2{margin:0 0 14px;font-size:12px;font-weight:800;letter-spacing:.13em;
+ text-transform:uppercase;color:var(--tinta2)}
+
+label{display:block;font-size:13px;font-weight:700;color:var(--tinta2);margin:14px 0 6px}
+label:first-of-type{margin-top:0}
+select,input[type=number]{width:100%;padding:12px 13px;font:inherit;font-size:16.5px;
+ border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta)}
+select:focus-visible,input:focus-visible{outline:2px solid var(--marca);outline-offset:1px}
+.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 16px}
+.casilla{display:flex;align-items:flex-start;gap:10px;margin:16px 0 0;font-size:14.5px;
+ color:var(--tinta);cursor:pointer;line-height:1.4}
+.casilla input{width:19px;height:19px;margin:1px 0 0;flex:0 0 auto;accent-color:var(--marca)}
+.casilla b{display:block}
+.casilla span{color:var(--tinta2);font-size:13.5px}
+
+.grande{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:0 0 16px}
+.dato{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:15px}
+.dato.eje{border-color:var(--marca);background:var(--suave)}
+.cifra{font-size:32px;font-weight:800;line-height:1;color:var(--marca);
+ font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pie{font-size:13px;color:var(--tinta2);margin-top:5px}
+
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t td{padding:9px 8px 9px 0;border-top:1px solid var(--linea);vertical-align:top}
+table.t tr:first-child td{border-top:0}
+table.t td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:0}
+table.t tr.total td{font-weight:800;border-top:2px solid var(--marca);color:var(--marca);font-size:17px}
+table.t td.resta{color:var(--verde)}
+.envoltorio{overflow-x:auto}
+
+.opciones{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:14px}
+.op{border:1px solid var(--linea);border-radius:13px;padding:17px;background:var(--tarjeta)}
+.op.b{border:2px solid var(--marca);background:var(--suave)}
+.op h3{margin:0 0 3px;font-size:17px;color:var(--marca)}
+.op .quien{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+ color:var(--tinta2);margin:0 0 12px}
+.op ul{margin:0;padding-left:19px;font-size:14.5px}
+.op li{margin-bottom:6px}
+.op .precio{font-size:26px;font-weight:800;color:var(--marca);margin:12px 0 0;
+ font-variant-numeric:tabular-nums}
+.op .precio small{display:block;font-size:13px;font-weight:600;color:var(--tinta2);margin-top:3px}
+
+.aviso{display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start;
+ padding:12px 13px;border-radius:11px;background:var(--suave);margin-bottom:10px;font-size:14.5px}
+.aviso:last-child{margin-bottom:0}
+.aviso .pun{width:9px;height:9px;border-radius:50%;background:var(--marca);margin-top:7px}
+.aviso b{display:block}
+
+.ojo{border:2px dashed var(--ambar);border-radius:12px;padding:14px 15px;margin:0 0 18px;
+ font-size:14.5px;background:transparent}
+.ojo h2{margin:0 0 9px;font-size:12px;font-weight:800;letter-spacing:.13em;
+ text-transform:uppercase;color:var(--ambar)}
+.ojo ul{margin:0;padding-left:19px} .ojo li{margin-bottom:6px}
+
+.nota{margin:26px 0 0;font-size:13px;color:var(--tinta2);
+ border-top:1px solid var(--linea);padding-top:14px}
+.nota a{color:var(--marca)}
+@media (max-width:520px){ .env{padding:18px 14px 70px} }
+</style>
+</head>
+<body>
+
+<div class="env">
+
+  <header class="top">
+    <div class="logo">
+      <span class="bolita"></span>
+      <span>IMMO IA<small>Renovables</small></span>
+    </div>
+  </header>
+
+  <h1>¿Cuánto te cuestan de verdad las placas?</h1>
+  <p class="sub">Pon tus datos y te sale el número: lo que pagas, lo que te devuelven y
+  lo que te queda al mes. Con las ayudas que están abiertas hoy, no las del año pasado.</p>
+
+  <div class="reloj">
+    <b id="reloj-dias">—</b>
+    <span id="reloj-txt">para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
+  </div>
+
+  <!-- ============ LA CALCULADORA ============ -->
+  <section class="caja">
+    <h2>Tus datos</h2>
+
+    <div class="dos">
+      <div>
+        <label for="paneles">¿Cuántos paneles?</label>
+        <select id="paneles">
+          <option value="4">4 paneles · 1,8 kW</option>
+          <option value="6">6 paneles · 2,7 kW</option>
+          <option value="8" selected>8 paneles · 3,6 kW</option>
+          <option value="10">10 paneles · 4,5 kW</option>
+          <option value="12">12 paneles · 5,4 kW</option>
+          <option value="16">16 paneles · 7,2 kW</option>
+        </select>
+      </div>
+      <div>
+        <label for="muni">¿En qué municipio?</label>
+        <select id="muni">
+          <option value="gu">Güímar — 50 % · 25 años</option>
+          <option value="ro">El Rosario — 50 % · 10 años</option>
+          <option value="sc">Santa Cruz de Tenerife — 50 % · 5 años</option>
+          <option value="ll">San Cristóbal de La Laguna — 50 % · 5 años</option>
+          <option value="re">Los Realejos — 50 % · 5 años</option>
+          <option value="pc">Puerto de la Cruz — 50 % · 5 años</option>
+          <option value="ta">Tacoronte — 50 % · 5 años (tope 300 €)</option>
+          <option value="ca">Candelaria — 30 % · 5 años</option>
+          <option value="gr">Granadilla de Abona — 25 % · 5 años</option>
+          <option value="st">Santiago del Teide — 20 % · 3 años</option>
+          <option value="sm">San Miguel de Abona — 50 %, años sin publicar</option>
+          <option value="ar">Arona — no tiene bonificación</option>
+          <option value="ad">Adeje — sin publicar</option>
+          <option value="otro" selected>Otro municipio de Tenerife</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="ibi">¿Cuánto pagas de IBI al año? (si no lo sabes, déjalo)</label>
+    <input type="number" id="ibi" min="0" max="5000" step="10" value="300" inputmode="numeric">
+
+    <p class="ojo" id="aviso-muni" hidden style="margin:10px 0 0;padding:10px 12px;font-size:13.5px"></p>
+
+    <label class="casilla" for="cert">
+      <input type="checkbox" id="cert" checked>
+      <span><b>Quiero los dos certificados energéticos</b>
+      Cuestan unos 200 € y suben la deducción del 10 % al 40 %.</span>
+    </label>
+
+    <h2 style="margin-top:20px">Cómo lo pagas</h2>
+    <div class="dos">
+      <div>
+        <label for="entrada">¿Cuánto pones de entrada?</label>
+        <input type="number" id="entrada" min="0" max="20000" step="100" value="1000" inputmode="numeric">
+      </div>
+      <div>
+        <label for="plazo">¿En cuántos años lo pagas?</label>
+        <select id="plazo">
+          <option value="0">Al contado, no financio</option>
+          <option value="3">3 años</option>
+          <option value="5" selected>5 años</option>
+          <option value="7">7 años</option>
+          <option value="10">10 años</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EL RESULTADO ============ -->
+  <div class="grande">
+    <div class="dato eje">
+      <div class="cifra" id="r-bolsillo">—</div>
+      <div class="pie"><b>te cuesta al mes de tu bolsillo</b>, contando ya lo que te ahorra la luz</div>
+    </div>
+    <div class="dato">
+      <div class="cifra" id="r-cuota">—</div>
+      <div class="pie">la cuota del banco, al mes</div>
+    </div>
+    <div class="dato">
+      <div class="cifra" id="r-mes">—</div>
+      <div class="pie">te ahorra la luz, al mes</div>
+    </div>
+  </div>
+
+  <div class="reloj" id="caja-hacienda" style="border-left-color:var(--verde);background:transparent;border-left-width:4px;border-left-style:solid">
+    <b id="r-hacienda">—</b>
+    <span id="r-hacienda-txt"></span>
+  </div>
+
+  <section class="caja">
+    <h2>La cuenta, línea a línea</h2>
+    <div class="envoltorio">
+      <table class="t" id="tabla"></table>
+    </div>
+  </section>
+
+  <!-- ============ LAS DOS OPCIONES ============ -->
+  <section class="caja">
+    <h2>Y ahora elige tú</h2>
+    <div class="opciones">
+      <div class="op">
+        <h3>Lo pago yo</h3>
+        <p class="quien">Opción A</p>
+        <ul>
+          <li>El papeleo lo llevas tú</li>
+          <li>La subvención la pides tú</li>
+          <li><b>El sobrante de luz es tuyo</b></li>
+        </ul>
+        <p class="precio" id="op-a">—<small>de entrada</small></p>
+      </div>
+      <div class="op b">
+        <h3>Lo ponemos nosotros</h3>
+        <p class="quien">Opción B · IMMO IA Renovables</p>
+        <ul>
+          <li><b>No pones nada de entrada</b></li>
+          <li>Llevamos todo: subvención, certificados, aval y banco</li>
+          <li>Pagas una cuota parecida a lo que ya pagas de luz</li>
+          <li>A cambio, el sobrante es nuestro durante el plazo que firmemos</li>
+        </ul>
+        <p class="precio">0 €<small>de entrada</small></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LO QUE HAY QUE SABER ============ -->
+  <div class="ojo">
+    <h2>Antes de decidir, esto</h2>
+    <ul>
+      <li><b>Hoy no hay ninguna subvención abierta en Tenerife.</b> Las dos convocatorias
+      canarias cerraron el 22 de junio y el 31 de agosto de 2026. Es probable que salga otra,
+      pero <b>no está anunciada</b>.</li>
+      <li><b>La deducción del IRPF se acaba el 31 de diciembre de 2026</b> para una vivienda.
+      En 2027 solo sigue para edificios completos.</li>
+      <li><b>Es una deducción, no un cheque.</b> Si no pagas IRPF, no hay de dónde
+      descontarla.</li>
+      <li><b>Todo por banco.</b> Pagado en efectivo, se pierde la deducción entera.</li>
+      <li><b>Arona y Adeje</b> no tienen publicada la bonificación del IBI. Hay que llamar.</li>
+      <li>La producción es una <b>estimación</b>. Para un tejado concreto se saca de PVGIS
+      con su orientación e inclinación.</li>
+    </ul>
+  </div>
+
+  <section class="caja">
+    <h2>De dónde salen los números</h2>
+    <div class="aviso"><span class="pun"></span><span>
+      <b>Deducción del IRPF: 10 % o 40 %</b>
+      Real Decreto-ley 7/2026, convalidado por el Congreso el 27 de marzo de 2026.
+      Base máxima 5.000 € (10 %) y 7.500 € (40 %).</span></div>
+    <div class="aviso"><span class="pun"></span><span>
+      <b>Bonificación del IBI</b>
+      Ordenanzas municipales, trece municipios de Tenerife. Güímar es el más largo (50 %
+      durante 25 años) y El Rosario le sigue (50 % durante 10). <b>Arona no tiene, y Adeje no
+      lo tiene publicado.</b></span></div>
+    <div class="aviso"><span class="pun"></span><span>
+      <b>Precio de la instalación</b>
+      Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa 750 €.</span></div>
+    <div class="aviso"><span class="pun"></span><span>
+      <b>Lo que se ahorra</b>
+      Se aprovecha en casa un 35 % de lo que produce, a unos 0,19 €/kWh. El sobrante se
+      compensa a unos 0,06 €/kWh, y nunca puede pasar de la factura de ese mes
+      (Real Decreto 244/2019).</span></div>
+  </section>
+
+  <p class="nota">
+    IMMO IA Renovables · demostración. No prestamos ningún servicio todavía ni cobramos a nadie.
+    Los importes son orientativos y la oferta final depende del tejado, del municipio y del banco.
+    Última revisión de los datos: <b>10 de septiembre de 2026</b>.
+    <a href="privacidad.html">Política de privacidad</a>
+  </p>
+
+</div>
+
+<script src="datos.js?v=1"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* Si datos.js cargó, manda él. Si no, valen los de aquí abajo. */
+  var D = window.DATOS_IMMOIA || {};
+  var DN = D.numeros || {};
+  function dato(v, porDefecto){ return (v === undefined || v === null) ? porDefecto : v; }
+
+  /* ---------- los números, todos en un sitio ---------- */
+  var EUR_PANEL   = dato(DN.eurPorPanel, 687.5);      /* 600-900 segun calidad y tejado */
+  var KWP_PANEL   = dato(DN.kwpPorPanel, 0.45);
+  var KWH_POR_KWP = dato(DN.kwhPorKwp, 1700);     /* estimacion Tenerife, no dato publicado */
+  var AUTOCONSUMO = dato(DN.autoconsumo, 0.35);
+  var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
+  var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
+  var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
+  var BASE_10     = 5000;
+  var BASE_40     = 7500;
+  var ICIO        = dato(DN.icio, 150);
+  var TAE         = dato(DN.tae, 0.0625);   /* prestamo verde a plazo largo, dato publicado */
+
+  /* municipio -> [porcentaje, años, tope anual en euros (0 = sin tope), aviso] */
+  /* Los municipios salen de datos.js; esto es el respaldo. */
+  var IBI = D.municipios || {
+    gu:  [0.50, 25, 0,   ""],
+    ro:  [0.50, 10, 0,   ""],
+    sc:  [0.50,  5, 0,   "Hay que pedirlo ANTES del 1 de enero, o se pierde el primer año."],
+    ll:  [0.50,  5, 0,   "Hay que estar al corriente de pagos y tener el IBI domiciliado."],
+    re:  [0.50,  5, 0,   ""],
+    pc:  [0.50,  5, 0,   ""],
+    ta:  [0.50,  5, 300, "Tope de 300 € al año. Los paneles tienen que dar al menos el 30 % de la potencia contratada."],
+    ca:  [0.30,  5, 0,   "Hay que pedirlo ANTES del 30 de noviembre del año anterior."],
+    gr:  [0.25,  5, 0,   "Solo vivienda habitual. Piden empadronamiento y contrato de mantenimiento."],
+    st:  [0.20,  3, 0,   "SIN CONFIRMAR que cubra fotovoltaica: la ordenanza publicada habla de solar térmica. Llamar al ayuntamiento."],
+    sm:  [0,     0, 0,   "El ayuntamiento anunció un 50 % en 2022, pero NO están publicados los años ni los requisitos. Aquí va a cero hasta confirmarlo."],
+    ar:  [0,     0, 0,   "Arona no tiene bonificación de IBI ni de ICIO por placas solares."],
+    ad:  [0,     0, 0,   "Adeje no tiene la bonificación publicada. Hay que llamar al 922 756 200 antes de prometer nada."],
+    otro:[0,     0, 0,   "Si tu municipio no está en la lista, no consta bonificación publicada. Se puede consultar en el Consorcio de Tributos: 922 20 82 00."]
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function eur(n){ return Math.round(n).toLocaleString("es-ES") + " €"; }
+
+  /* ---------- la cuenta atras ---------- */
+  (function reloj(){
+    var fin = new Date(2026, 11, 31);
+    var dias = Math.ceil((fin - new Date()) / 86400000);
+    if(dias > 0){
+      $("reloj-dias").textContent = dias + (dias === 1 ? " día" : " días");
+    } else {
+      $("reloj-dias").textContent = "Se acabó";
+      $("reloj-txt").textContent = "el plazo de la deducción del IRPF para viviendas terminó el 31 de diciembre de 2026";
+    }
+  })();
+
+  /* ---------- calcular ---------- */
+  function calcular(){
+    var n     = Number($("paneles").value);
+    var muni  = $("muni").value;
+    var ibiAn = Math.max(0, Number($("ibi").value) || 0);
+    var cert  = $("cert").checked;
+
+    var coste = n * EUR_PANEL;
+    var kwp   = n * KWP_PANEL;
+    var kwh   = kwp * KWH_POR_KWP;
+
+    var propio    = kwh * AUTOCONSUMO;
+    var sobrante  = kwh - propio;
+    var ahorroAno = propio * PRECIO_LUZ + sobrante * PRECIO_EXC;
+
+    var gastoCert = cert ? COSTE_CERT : 0;
+    var irpf = cert
+      ? 0.40 * Math.min(coste + gastoCert, BASE_40)
+      : 0.10 * Math.min(coste, BASE_10);
+
+    var b = IBI[muni] || IBI.otro;
+    var ibiAnual = ibiAn * b[0];
+    if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];   /* tope anual, p. ej. Tacoronte */
+    var ibiTotal = ibiAnual * b[1];
+
+    var avi = $("aviso-muni");
+    if(b[3]){ avi.textContent = b[3]; avi.hidden = false; } else { avi.hidden = true; }
+
+    var real = coste + gastoCert - irpf - ibiTotal - ICIO;
+    if(real < 0) real = 0;
+    var anos = ahorroAno > 0 ? real / ahorroAno : 0;
+
+    /* ---------- la cuota, que es lo que se nota ---------- */
+    var entrada = Math.max(0, Number($("entrada").value) || 0);
+    var anos_p  = Number($("plazo").value);
+    var aPagar  = coste + gastoCert;                 /* lo que sale del bolsillo el dia 1 */
+    var presta  = Math.max(0, aPagar - entrada);
+
+    var cuota;
+    if(anos_p === 0 || presta <= 0){
+      cuota = 0;
+    } else {
+      var i = TAE / 12, n = anos_p * 12;
+      cuota = presta * i / (1 - Math.pow(1 + i, -n));
+    }
+
+    var ahorroMes = ahorroAno / 12;
+    var bolsillo  = cuota - ahorroMes;
+
+    $("r-cuota").textContent    = anos_p === 0 ? "Al contado" : eur(cuota) + "/mes";
+    $("r-mes").textContent      = eur(ahorroMes) + "/mes";
+    $("r-bolsillo").textContent = (bolsillo <= 0)
+      ? "0 €/mes"
+      : eur(bolsillo) + "/mes";
+
+    var pieBolsillo = document.querySelector("#r-bolsillo").nextElementSibling;
+    if(anos_p === 0){
+      pieBolsillo.innerHTML = "<b>te ahorra " + eur(ahorroMes) + " al mes</b> desde el primer recibo";
+    } else if(bolsillo <= 0){
+      pieBolsillo.innerHTML = "<b>la luz te paga la cuota entera.</b> No pones nada al mes";
+    } else {
+      pieBolsillo.innerHTML = "<b>te cuesta al mes de tu bolsillo</b>, contando ya lo que te ahorra la luz";
+    }
+
+    /* ---------- lo que devuelve Hacienda y lo que quita del prestamo ---------- */
+    var devuelto = irpf + ibiTotal;
+    if(anos_p === 0 || cuota <= 0){
+      $("r-hacienda").textContent = eur(irpf);
+      $("r-hacienda-txt").textContent = "es lo que te devuelve Hacienda en la declaración del año siguiente"
+        + (ibiTotal > 0 ? ", y otros " + eur(ibiTotal) + " en el IBI repartidos en " + b[1] + " años" : "");
+    } else {
+      /* cuantos meses de cuota se quita metiendo la devolucion al prestamo */
+      var i2 = TAE / 12;
+      var saldo = presta, m = 0;
+      while(m < 9 && saldo > 0){ saldo = saldo * (1 + i2) - cuota; m++; }
+      if(saldo < 0) saldo = 0;
+      var resto = Math.max(0, saldo - irpf);
+      var mesesQuedan = 0;
+      if(resto > 0 && cuota > resto * i2){
+        mesesQuedan = Math.ceil(-Math.log(1 - resto * i2 / cuota) / Math.log(1 + i2));
+      }
+      var mesesSin = anos_p * 12 - 9;
+      var ahorrados = Math.max(0, mesesSin - mesesQuedan);
+      $("r-hacienda").textContent = eur(irpf);
+      $("r-hacienda-txt").textContent = "te devuelve Hacienda el verano siguiente. Metidos al préstamo, "
+        + "te quitan " + ahorrados + " cuotas — acabas de pagar en "
+        + (Math.round((9 + mesesQuedan) / 12 * 10) / 10).toString().replace(".", ",") + " años en vez de " + anos_p + ".";
+    }
+
+    var filas = [
+      ["Instalación de " + n + " paneles (" + (kwp).toLocaleString("es-ES") + " kW)", eur(coste), ""],
+      cert ? ["Los dos certificados energéticos", eur(gastoCert), ""] : null,
+      ["Deducción del IRPF (" + (cert ? "40 %" : "10 %") + ")", "− " + eur(irpf), "resta"],
+      b[0] > 0
+        ? ["Bonificación del IBI (" + Math.round(b[0]*100) + " % durante " + b[1] + " años)", "− " + eur(ibiTotal), "resta"]
+        : ["Bonificación del IBI", "sin publicar", ""],
+      ["Bonificación del ICIO", "− " + eur(ICIO), "resta"],
+      ["Subvención de Canarias", "0 € · cerrada", ""],
+      ["__total__", eur(real), ""],
+      ["Produce al año", Math.round(kwh).toLocaleString("es-ES") + " kWh", ""],
+      ["Te ahorra al año", eur(ahorroAno), ""],
+      ["__sep__", "", ""],
+      ["Pones de entrada", eur(entrada), ""],
+      ["Financias", eur(presta), ""],
+      anos_p === 0 ? null : ["Cuota al mes (" + anos_p + " años, 6,25 % TAE)", eur(cuota), ""],
+      ["Se paga sola en", (Math.round(anos * 10) / 10).toString().replace(".", ",") + " años", ""]
+    ].filter(Boolean);
+
+    $("tabla").innerHTML = filas.map(function(f){
+      if(f[0] === "__total__"){
+        return '<tr class="total"><td>TE CUESTA DE VERDAD</td><td>' + f[1] + '</td></tr>';
+      }
+      if(f[0] === "__sep__"){
+        return '<tr><td colspan="2" style="padding-top:14px;font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta2);border-top:0">Cómo lo pagas</td></tr>';
+      }
+      return '<tr><td>' + f[0] + '</td><td class="' + f[2] + '">' + f[1] + '</td></tr>';
+    }).join("");
+  }
+
+  ["paneles","muni","ibi","cert","entrada","plazo"].forEach(function(id){
+    $(id).addEventListener("input", calcular);
+    $(id).addEventListener("change", calcular);
+  });
+  calcular();
+
+  window.immoiaRenovables = { calcular: calcular };
+})();
+</script>
+</body>
+</html>

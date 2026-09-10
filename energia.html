@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMMO IA Energía · te lo calculamos contigo</title>
+<meta name="robots" content="noindex">
+<style>
+/* ==========================================================
+   IMMO IA ENERGÍA · el flujo guiado de las placas
+   Mismos tokens que puertas.html y renovables.html.
+   Añadido un verde azulado solo para las burbujas de la IA.
+   ========================================================== */
+:root{
+  --marca:#B4530E; --marca-2:#8A3F0A; --suave:#FBEADB;
+  --papel:#F7F4EC; --tarjeta:#FFFDF8; --tinta:#1B231F; --tinta2:#635C4B;
+  --linea:#DED6C3; --sobre:#FFF7EF;
+  --verde:#1F6B48; --ambar:#B8860B; --rojo:#9A3B22;
+  --ia:#0E5E5C; --ia-fondo:#E4F1F0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papel:#141110; --tarjeta:#1E1A18; --tinta:#ECEAE1; --tinta2:#A79E92;
+    --linea:#362E29; --suave:#2A1B10; --sobre:#120E0C;
+    --marca:#F0955A; --marca-2:#F7B182;
+    --verde:#69C79A; --ambar:#D8B45C; --rojo:#E08C6E;
+    --ia:#7FD6D2; --ia-fondo:#16302F;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--papel); color:var(--tinta);
+  font:16.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.env{max-width:700px;margin:0 auto;padding:20px 18px 90px}
+[hidden]{display:none !important}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ padding:12px 0 16px;border-bottom:1px solid var(--linea);margin-bottom:20px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--marca)}
+.bolita{width:26px;height:26px;border-radius:50%;background:var(--marca);flex:0 0 auto}
+.logo small{display:block;font-size:12px;font-weight:600;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--tinta2)}
+.atras{font-size:13.5px;color:var(--tinta2);text-decoration:none;border-bottom:1px solid var(--linea)}
+.atras:hover{color:var(--marca);border-color:var(--marca)}
+
+/* ---- la barra de avance ---- */
+.avance{display:flex;gap:5px;margin:0 0 20px}
+.avance i{flex:1;height:4px;border-radius:2px;background:var(--linea);transition:background .25s}
+.avance i.ya{background:var(--marca)}
+
+/* ---- la conversación ---- */
+.charla{display:flex;flex-direction:column;gap:13px;margin:0 0 18px}
+.dice{display:flex;gap:11px;align-items:flex-start;animation:entra .25s ease-out}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ .dice{animation:none} }
+.cara{width:32px;height:32px;border-radius:50%;flex:0 0 auto;background:var(--ia);
+ display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px}
+.globo{background:var(--ia-fondo);border-radius:4px 14px 14px 14px;padding:12px 14px;
+ max-width:min(90%,52ch)}
+.globo p{margin:0 0 9px} .globo p:last-child{margin:0}
+.globo b{color:var(--ia)}
+.dice.yo{flex-direction:row-reverse}
+.dice.yo .cara{background:var(--marca)}
+.dice.yo .globo{background:var(--suave);border-radius:14px 4px 14px 14px;color:var(--marca-2);font-weight:700}
+
+/* ---- lo que se contesta ---- */
+.responder{display:flex;flex-wrap:wrap;gap:9px;margin:2px 0 0}
+.responder.col{flex-direction:column;align-items:stretch}
+button.op{font:inherit;font-size:16px;font-weight:700;cursor:pointer;text-align:left;
+ background:var(--tarjeta);color:var(--tinta);border:1.5px solid var(--linea);
+ border-radius:12px;padding:13px 16px;transition:border-color .15s,background .15s}
+button.op:hover{border-color:var(--marca);background:var(--sobre)}
+button.op:focus-visible{outline:2px solid var(--marca);outline-offset:2px}
+button.op.fuerte{background:var(--marca);border-color:var(--marca);color:#fff}
+button.op.fuerte:hover{background:var(--marca-2);border-color:var(--marca-2)}
+button.op small{display:block;font-size:13px;font-weight:600;color:var(--tinta2);margin-top:2px}
+button.op.fuerte small{color:#FBEADB}
+select.op,input.op{width:100%;font-weight:600}
+label.eti{display:block;font-size:13px;font-weight:700;color:var(--tinta2);margin:0 0 6px}
+
+/* ---- el resultado ---- */
+.grande{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:11px;margin:4px 0 14px}
+.dato{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:14px}
+.dato.eje{border-color:var(--marca);background:var(--suave)}
+.cifra{font-size:30px;font-weight:800;line-height:1;color:var(--marca);
+ font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pie{font-size:12.5px;color:var(--tinta2);margin-top:5px}
+
+.linea-tiempo{border:1px solid var(--linea);border-radius:13px;overflow:hidden;margin:0 0 14px}
+.tramo{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+ padding:12px 15px;border-top:1px solid var(--linea);font-size:15px}
+.tramo:first-child{border-top:0}
+.tramo.hoy{background:var(--sobre)}
+.tramo.fin{background:var(--suave)}
+.tramo b{font-size:19px;color:var(--marca);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tramo span small{display:block;font-size:12.5px;color:var(--tinta2);font-weight:600}
+
+table.t{width:100%;border-collapse:collapse;font-size:14.5px}
+table.t td{padding:8px 8px 8px 0;border-top:1px solid var(--linea);vertical-align:top}
+table.t tr:first-child td{border-top:0}
+table.t td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-right:0}
+table.t tr.total td{font-weight:800;border-top:2px solid var(--marca);color:var(--marca);font-size:16px}
+table.t td.resta{color:var(--verde)}
+.envoltorio{overflow-x:auto;margin:0 0 14px}
+
+details.mas{border:1px solid var(--linea);border-radius:12px;padding:0;margin:0 0 14px;background:var(--tarjeta)}
+details.mas > summary{cursor:pointer;padding:13px 15px;font-weight:700;font-size:14.5px;color:var(--tinta2);list-style:none}
+details.mas > summary::-webkit-details-marker{display:none}
+details.mas > summary::before{content:"▸ ";color:var(--marca)}
+details.mas[open] > summary::before{content:"▾ "}
+details.mas .dentro{padding:0 15px 15px}
+
+/* ---- los papeles ---- */
+ul.papeles{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+ul.papeles li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;
+ background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:12px 14px}
+ul.papeles .ico{font-size:22px;line-height:1.1}
+ul.papeles b{display:block;font-size:15px}
+ul.papeles span{font-size:13.5px;color:var(--tinta2)}
+
+.ojo{border:2px dashed var(--ambar);border-radius:12px;padding:13px 15px;margin:0 0 14px;font-size:14.5px}
+.ojo b{color:var(--ambar)}
+.reloj{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;background:var(--suave);
+ border-left:4px solid var(--marca);padding:12px 14px;border-radius:0 11px 11px 0;margin:0 0 20px}
+.reloj b{color:var(--marca-2);font-size:17px}
+.reloj span{font-size:14.5px;color:var(--tinta2)}
+
+.nota{margin:24px 0 0;font-size:12.5px;color:var(--tinta2);
+ border-top:1px solid var(--linea);padding-top:13px}
+.nota a{color:var(--marca)}
+.reiniciar{background:none;border:0;color:var(--tinta2);font:inherit;font-size:13px;
+ text-decoration:underline;cursor:pointer;padding:0}
+@media (max-width:520px){ .env{padding:16px 14px 80px} .globo{max-width:100%} }
+</style>
+</head>
+<body>
+
+<div class="env">
+
+  <header class="top">
+    <div class="logo">
+      <span class="bolita"></span>
+      <span>IMMO IA<small>Energía</small></span>
+    </div>
+    <a class="atras" href="puertas.html">← Volver</a>
+  </header>
+
+  <div class="avance" id="avance" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i>
+  </div>
+
+  <div class="reloj">
+    <b id="reloj-dias">—</b>
+    <span>para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
+  </div>
+
+  <div class="charla" id="charla"></div>
+  <div class="responder" id="responder"></div>
+
+  <p class="nota">
+    IMMO IA Energía · demostración. Todavía no prestamos el servicio ni cobramos a nadie.
+    Los números son orientativos: la oferta final depende del tejado, del municipio y del banco.
+    <b>Aquí no se sube ningún documento</b>, y lo único que guarda tu navegador son tus
+    respuestas de la calculadora — nunca tu nombre, tu teléfono ni tu correo.
+    Datos revisados el <b>10 de septiembre de 2026</b>.
+    <a href="privacidad.html">Política de privacidad</a> ·
+    <button class="reiniciar" id="reiniciar" type="button">Empezar de nuevo</button>
+  </p>
+
+</div>
+
+<script src="datos.js?v=1"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* Si datos.js cargó, manda él. Si no, valen los de aquí abajo y no pasa nada. */
+  var D = window.DATOS_IMMOIA || {};
+  var DN = D.numeros || {};
+  function dato(v, porDefecto){ return (v === undefined || v === null) ? porDefecto : v; }
+
+  /* ==========================================================
+     1 · LOS NÚMEROS
+     ----------------------------------------------------------
+     PROVISIONALES. Son los mismos que renovables.html y salen del
+     estudio del 10/09/2026. Cuando estén los del banco y las ayudas
+     de cada comunidad, SE CAMBIAN AQUÍ Y SOLO AQUÍ: no hay ningún
+     número suelto por el resto del archivo.
+     ========================================================== */
+  var EUR_PANEL   = dato(DN.eurPorPanel, 687.5);
+  var KWP_PANEL   = dato(DN.kwpPorPanel, 0.45);
+  var KWH_POR_KWP = dato(DN.kwhPorKwp, 1700);
+  var AUTOCONSUMO = dato(DN.autoconsumo, 0.35);
+  var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);
+  var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);
+  var COSTE_CERT  = dato(DN.costeCertificados, 200);
+  var BASE_40     = dato((D.irpfEstatal||{}).conCertificados && D.irpfEstatal.conCertificados.base, 7500);
+  var ICIO        = dato(DN.icio, 150);
+  var TAE         = dato(DN.tae, 0.0625);
+  var PLAZO       = dato(DN.plazoAnos, 10);
+  var DESCUENTO   = dato(DN.descuentoInstalador, 500);
+  var PARTE_ENERGIA = dato(DN.parteEnergiaFactura, 0.70);
+
+  /* ----------------------------------------------------------
+     LAS DOS LÍNEAS PARA HABLAR CON EL CLIENTE
+     El cliente elige por cuál quiere. Si WHATSAPP se deja vacío,
+     esa opción no aparece y solo se ofrece el correo.
+     ---------------------------------------------------------- */
+  var CORREO   = dato((D.contacto||{}).correo, "immoai.contacto@gmail.com");
+  /* El número se pone en datos.js, en contacto.whatsapp. Da igual el formato:
+     "+34 600 11 12 22", "0034600111222" o "34600111222" valen los tres. */
+  var WHATSAPP = dato((D.contacto||{}).whatsapp, "");
+
+  /* wa.me solo traga dígitos. Esto limpia lo que se haya escrito arriba para que
+     un espacio o un "+" no dejen el botón muerto sin que nadie se entere. */
+  function limpiarMovil(x){
+    var d = String(x || "").replace(/\D/g, "");
+    if(d.indexOf("00") === 0) d = d.slice(2);      /* 0034... -> 34... */
+    if(d.length === 9 && /^[6789]/.test(d)) d = "34" + d;   /* 600111222 -> 34600111222 */
+    return d.length >= 11 && d.length <= 15 ? d : "";
+  }
+  WHATSAPP = limpiarMovil(WHATSAPP);
+
+  /* Los municipios salen de datos.js. Lo de aquí abajo es el respaldo por si
+     ese archivo no cargara: son los mismos trece. */
+  var IBI = D.municipios || {
+    gu:  [0.50, 25, 0,   "", "Güímar"],
+    ro:  [0.50, 10, 0,   "", "El Rosario"],
+    sc:  [0.50,  5, 0,   "Hay que pedirlo antes del 1 de enero.", "Santa Cruz de Tenerife"],
+    ll:  [0.50,  5, 0,   "Piden estar al corriente de pagos y el IBI domiciliado.", "La Laguna"],
+    re:  [0.50,  5, 0,   "", "Los Realejos"],
+    pc:  [0.50,  5, 0,   "", "Puerto de la Cruz"],
+    ta:  [0.50,  5, 300, "Tope de 300 € al año.", "Tacoronte"],
+    ca:  [0.30,  5, 0,   "Hay que pedirlo antes del 30 de noviembre del año anterior.", "Candelaria"],
+    gr:  [0.25,  5, 0,   "Solo vivienda habitual, con empadronamiento.", "Granadilla de Abona"],
+    st:  [0.20,  3, 0,   "Sin confirmar que cubra fotovoltaica. Hay que llamar al ayuntamiento.", "Santiago del Teide"],
+    sm:  [0,     0, 0,   "Anunciaron un 50 % en 2022 pero no está publicado. Aquí va a cero.", "San Miguel de Abona"],
+    ar:  [0,     0, 0,   "Arona no tiene bonificación por placas.", "Arona"],
+    ad:  [0,     0, 0,   "Adeje no la tiene publicada. Hay que llamar al 922 756 200.", "Adeje"],
+    otro:[0,     0, 0,   "En tu municipio no consta bonificación publicada.", "otro municipio"]
+  };
+
+  /* ==========================================================
+     2 · LO QUE VA CONTESTANDO
+     ========================================================== */
+  var LLAVE = "immoia.energia.v1";
+  var R = { de:"general", irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, agua:null, aire:null };
+  var PASO = "inicio";   /* dónde está el cliente ahora mismo, para que la IA lo sepa */
+
+  try{
+    var g = JSON.parse(localStorage.getItem(LLAVE) || "null");
+    if(g && typeof g === "object"){
+      /* solo respuestas de la calculadora — nunca nombre, teléfono ni correo */
+      ["irpf","factura","tipo","muni","ccaa","ccaaElegida","pago","agua","aire"].forEach(function(k){
+        if(g[k] !== undefined) R[k] = g[k];
+      });
+    }
+  }catch(e){}
+
+  function guardar(){
+    try{
+      localStorage.setItem(LLAVE, JSON.stringify({
+        irpf:R.irpf, factura:R.factura, tipo:R.tipo, muni:R.muni,
+        ccaa:R.ccaa, ccaaElegida:R.ccaaElegida, pago:R.pago,
+        agua:R.agua, aire:R.aire
+      }));
+    }catch(e){}
+  }
+
+  /* de qué puerta viene */
+  try{
+    var p = new URLSearchParams(location.search).get("de");
+    if(p === "vacacional" || p === "inmobiliaria" || p === "general") R.de = p;
+  }catch(e){}
+
+  /* ==========================================================
+     3 · LA CUENTA
+     ========================================================== */
+  function cuota(P, anos){
+    if(P <= 0 || anos <= 0) return 0;
+    var i = TAE / 12, m = anos * 12;
+    return P * i / (1 - Math.pow(1 + i, -m));
+  }
+  /* Cuantos meses tarda en pagarse un prestamo con una cuota fija dada,
+     metiendo la devolucion de Hacienda por el camino. Es lo que permite
+     decirle al cliente: "sigue pagando lo mismo que ahora, y son N anos". */
+  function mesesPagando(principal, cuotaMes, devolucion, mesDev){
+    if(principal <= 0) return 0;
+    if(cuotaMes <= 0) return null;
+    var i = TAE / 12, s = principal, m = 0;
+    while(s > 0 && m < 480){
+      s = s * (1 + i) - cuotaMes;
+      m++;
+      if(m === mesDev && devolucion > 0) s = Math.max(0, s - devolucion);
+      /* si la cuota no cubre ni los intereses, no se paga nunca */
+      if(m > 60 && cuotaMes <= s * i) return null;
+    }
+    return s <= 0 ? m : null;
+  }
+
+  function saldoTras(P, anos, meses){
+    var i = TAE / 12, c = cuota(P, anos), s = P;
+    for(var k = 0; k < meses; k++){ s = s * (1 + i) - c; }
+    return Math.max(0, s);
+  }
+
+  function calcular(){
+    var factura = R.factura || 100;
+    var consumo = factura * 12 * PARTE_ENERGIA / PRECIO_LUZ;
+
+    /* cuántos paneles pide esa casa */
+    var kwpIdeal = (consumo / KWH_POR_KWP) * 1.4;
+    var n = Math.round(kwpIdeal / KWP_PANEL);
+    n = Math.max(4, Math.min(16, Math.round(n / 2) * 2));
+
+    var kwp   = n * KWP_PANEL;
+    var prod  = kwp * KWH_POR_KWP;
+    var coste = n * EUR_PANEL;
+
+    var auto   = Math.min(prod * AUTOCONSUMO, consumo);
+    var sobra  = Math.max(0, prod - auto);
+
+    /* Lo que le compensan por el sobrante nunca puede pasar del valor de la luz que
+       sigue comprando de la red (RD 244/2019, art. 14). */
+    var compra      = Math.max(0, consumo - auto);
+    var compensa    = Math.min(sobra * PRECIO_EXC, compra * PRECIO_LUZ);
+
+    var ahorroPropio = auto * PRECIO_LUZ;          /* lo que se ahorra por gastar su luz */
+    var ahorroAno    = ahorroPropio + compensa;    /* si se queda el sobrante */
+    var ahorroCede   = ahorroPropio;               /* si nos cede el sobrante */
+    var ahorroMes    = ahorroAno / 12;
+    var luzNueva     = Math.max(0, factura - ahorroMes);
+
+    var CC = (D.comunidades || {})[R.ccaa] || null;
+    var esForal = !!(CC && CC.foral);
+
+    /* 🔴 La deducción no la da poner placas: la da el RESULTADO de comparar los dos
+       certificados, y el certificado solo mide calefacción, clima, agua caliente y
+       ventilación. Si el agua caliente es de bombona y no hay aire acondicionado,
+       las placas no tienen consumo eléctrico que compensar y no hay 40 %.
+       Mientras no lo sepamos, se cuenta a CERO: mejor prometer de menos. */
+    var aptoDeduccion = (R.agua === "electrico") || (R.aire === "si");
+    var gastoCert = (CC && CC.deduccion && CC.deduccion.sinCertificados) ? 0 : COSTE_CERT;
+
+    /* El descuento que le negociamos al instalador se lo pasamos a él. */
+    var descuento = Math.min(DESCUENTO, coste);
+    var gasto = coste + gastoCert - descuento;
+
+    /* --- la del Estado: no vale en territorio foral (Navarra, País Vasco) --- */
+    var irpfEstado = 0;
+    if(R.irpf === "si" && !esForal && aptoDeduccion){
+      irpfEstado = 0.40 * Math.min(gasto, BASE_40);
+    }
+
+    /* --- la de la comunidad, la que muchos no saben ni que existe --- */
+    var irpfCcaa = 0;
+    if(R.irpf === "si" && aptoDeduccion && D.deduccionAutonomica){
+      irpfCcaa = D.deduccionAutonomica(R.ccaa, gasto);
+    }
+    var irpf = irpfEstado + irpfCcaa;
+
+    /* --- la subvención de la comunidad, si la hay abierta --- */
+    var subv = 0, subvNota = "";
+    if(CC && CC.subvencion){
+      subvNota = CC.subvencion.nota || "";
+      if(CC.subvencion.estado === "abierta" && CC.subvencion.importe > 0){
+        subv = CC.subvencion.importe * kwp;     /* €/kW × los kW instalados */
+        if(subv > gasto) subv = gasto;
+      }
+    }
+
+    /* --- el IBI, que es municipal y solo lo tenemos de Tenerife --- */
+    var b = IBI[R.muni] || IBI.otro;
+    var hayMuni = R.ccaa === "cn" && !!R.muni;
+    var ibiAnual = hayMuni ? 350 * b[0] : 0;      /* IBI típico estimado */
+    if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];
+    var ibiTotal = ibiAnual * b[1];
+    var icio = hayMuni ? ICIO : 0;
+
+    var aFinanciar = Math.max(0, gasto - subv);
+    var anos_p = PLAZO;
+    var c1 = cuota(aFinanciar, anos_p);
+
+    var saldo12 = saldoTras(aFinanciar, anos_p, 12);
+    var resto   = Math.max(0, saldo12 - irpf);
+    var c2      = resto > 0 ? cuota(resto, anos_p - 1) : 0;
+
+    var real = Math.max(0, gasto - subv - irpf - ibiTotal - icio);
+
+    return {
+      n:n, kwp:kwp, prod:prod, coste:coste, cert:gastoCert, consumo:consumo,
+      auto:auto, sobra:sobra, compensa:compensa,
+      ahorroPropio:ahorroPropio, ahorroAno:ahorroAno, ahorroCede:ahorroCede,
+      ahorroMes:ahorroMes, factura:factura, luzNueva:luzNueva,
+      irpf:irpf, irpfEstado:irpfEstado, irpfCcaa:irpfCcaa, esForal:esForal,
+      aptoDeduccion:aptoDeduccion,
+      descuento:descuento, gasto:gasto,
+      subv:subv, subvNota:subvNota,
+      ccaaNom: CC ? CC.nombre : "—", ccaaDed: (CC && CC.deduccion) ? CC.deduccion : null,
+      ibiTotal:ibiTotal, ibiPct: hayMuni ? b[0] : 0, ibiAnos:b[1], ibiAviso: hayMuni ? b[3] : "",
+      muniNom: hayMuni ? b[4] : (CC ? CC.nombre : "—"), hayMuni:hayMuni, icio:icio,
+      aFinanciar:aFinanciar, anos:anos_p, c1:c1, c2:c2, real:real,
+      mes1: luzNueva + c1, mes2: luzNueva + c2, mesFin: luzNueva
+    };
+  }
+
+  /* ==========================================================
+     4 · PINTAR
+     ========================================================== */
+  function $(id){ return document.getElementById(id); }
+  function eur(x){ return Math.round(x).toLocaleString("es-ES") + " €"; }
+  function kwh(x){ return Math.round(x).toLocaleString("es-ES") + " kWh"; }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  var charla = $("charla"), responder = $("responder");
+
+  function ia(html){
+    var d = document.createElement("div");
+    d.className = "dice";
+    d.innerHTML = '<span class="cara" aria-hidden="true">IA</span><div class="globo">' + html + '</div>';
+    charla.appendChild(d);
+    d.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+  function yo(texto){
+    var d = document.createElement("div");
+    d.className = "dice yo";
+    d.innerHTML = '<span class="cara" aria-hidden="true">Tú</span><div class="globo">' + esc(texto) + '</div>';
+    charla.appendChild(d);
+    d.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+  function opciones(lista, encolumna){
+    responder.innerHTML = "";
+    responder.className = "responder" + (encolumna ? " col" : "");
+    lista.forEach(function(o){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "op" + (o.fuerte ? " fuerte" : "");
+      b.innerHTML = esc(o.texto) + (o.pie ? "<small>" + esc(o.pie) + "</small>" : "");
+      b.addEventListener("click", function(){ responder.innerHTML = ""; o.hacer(); });
+      responder.appendChild(b);
+    });
+    ponerDictado();
+    pistaDictado();
+    responder.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+
+  /* ==========================================================
+     EL CLIENTE HABLA Y LA IA RELLENA
+     ----------------------------------------------------------
+     Debajo de los botones hay siempre una caja para que lo diga con
+     sus palabras, por escrito o por voz. Lo que diga se entiende aquí
+     mismo, sin depender de internet ni de ninguna API: por eso no
+     puede fallar. Con una frase se pueden rellenar las cuatro
+     preguntas de golpe.
+     ========================================================== */
+  var HAY_VOZ = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  var escuchando = false;
+
+  function sinTildes(t){
+    return String(t).toLowerCase()
+      .replace(/[áàä]/g,"a").replace(/[éèë]/g,"e").replace(/[íìï]/g,"i")
+      .replace(/[óòö]/g,"o").replace(/[úùü]/g,"u");
+  }
+
+  /* cómo se llama cada municipio cuando lo dice una persona (respaldo de datos.js) */
+  var COMO_LO_DICEN = D.comoLoDicen || {
+    gu:["guimar"], ro:["el rosario","rosario"],
+    sc:["santa cruz","santacruz","la capital"],
+    ll:["la laguna","laguna","san cristobal"],
+    re:["los realejos","realejos"], pc:["puerto de la cruz","el puerto"],
+    ta:["tacoronte"], ca:["candelaria"],
+    gr:["granadilla","el medano","medano"], st:["santiago del teide","santiago"],
+    sm:["san miguel","las chafiras","chafiras"],
+    ar:["arona","los cristianos","las americas","playa de las americas","cabo blanco","buzanada"],
+    ad:["adeje","costa adeje","fanabe","la caleta"]
+  };
+
+  /* cómo llama la gente a cada comunidad */
+  var COMO_DICEN_CCAA = {
+    an:["andalucia","sevilla","malaga","cadiz","granada","cordoba","almeria","huelva","jaen"],
+    ar:["aragon","zaragoza","huesca","teruel"],
+    as:["asturias","oviedo","gijon","principado"],
+    ib:["baleares","balears","mallorca","menorca","ibiza","eivissa","formentera","palma"],
+    cn:["canarias","tenerife","gran canaria","lanzarote","fuerteventura","la palma","la gomera","el hierro","las palmas"],
+    ct:["cantabria","santander"],
+    cm:["castilla la mancha","castilla-la mancha","toledo","albacete","ciudad real","cuenca","guadalajara"],
+    cl:["castilla y leon","valladolid","burgos","salamanca","leon","zamora","segovia","avila","palencia","soria"],
+    ca:["cataluña","catalunya","cataluna","barcelona","tarragona","lerida","lleida","gerona","girona"],
+    vc:["valencia","valenciana","comunidad valenciana","alicante","castellon","benidorm","elche"],
+    ex:["extremadura","badajoz","caceres","merida"],
+    ga:["galicia","coruña","coruna","vigo","pontevedra","lugo","ourense","orense","santiago de compostela"],
+    ma:["madrid"],
+    mu:["murcia","cartagena","lorca"],
+    na:["navarra","pamplona","nafarroa"],
+    pv:["pais vasco","euskadi","vizcaya","bizkaia","guipuzcoa","gipuzkoa","alava","araba","bilbao","san sebastian","vitoria","donostia"],
+    ri:["la rioja","logroño","logrono","rioja"]
+  };
+
+  function entender(dicho){
+    var t = sinTildes(dicho);
+    var saco = {};
+
+    /* Los datos personales —nombre, teléfono, correo— NO se sacan de lo que dicta:
+       un correo dictado por voz sale mal casi siempre, y un teléfono a medias no
+       sirve de nada. Esos los escribe él en un campo, de uno en uno. Aquí solo se
+       apartan para que no se confundan con la factura de la luz. */
+    var sinTel = t.replace(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g, " ")
+                  .replace(/(?:\+?34[\s.-]?)?[6789]\d{2}[\s.-]?\d{2,3}[\s.-]?\d{2,3}[\s.-]?\d{0,3}/g, " ");
+
+    /* Lo del IRPF se aparta ANTES de buscar la factura de la luz.
+       Si no, «en la renta pague 900 euros» se colaba como recibo de la luz. */
+    var trozoIrpf = sinTel.match(/(?:irpf|renta|hacienda|declaracion)[^;]{0,45}/);
+    var sinIrpf = trozoIrpf ? sinTel.replace(trozoIrpf[0], " ") : sinTel;
+
+    /* ---- la factura de la luz ---- */
+    var m = sinIrpf.match(/(\d{2,4})\s*(?:€|euros?|eur)?\s*(?:al |por |cada )?mes/)
+         || sinIrpf.match(/(?:luz|factura|recibo|electricidad)\D{0,25}(\d{2,4})/)
+         || sinIrpf.match(/(?:pago|gasto|sale|son|unos|como|sobre)\s*(?:de\s*)?(\d{2,4})/)
+         || sinIrpf.match(/(\d{2,4})\s*(?:€|euros)/);
+    if(m){
+      var v = Number(m[1]);
+      if(v >= 15 && v <= 900) saco.factura = v;
+    }
+
+    /* ---- el IRPF ---- */
+    if(/\b(no se|ni idea|no lo se|no tengo ni idea)\b/.test(t) && /irpf|renta|hacienda|2\.?500/.test(t)){
+      saco.irpf = "nose";
+    } else if(/(pague|pago|salio|me salio|si).{0,30}(mas de|por encima)/.test(t)
+           || /\b(si|claro|efectivamente)\b.{0,20}(irpf|renta|2\.?500|pague)/.test(t)
+           || /(irpf|renta).{0,25}\b(si)\b/.test(t)){
+      saco.irpf = "si";
+    } else if(/(no llego|menos de|no pague|no llegue|que va|no)\b.{0,25}(2\.?500|irpf|renta)/.test(t)
+           || /(2\.?500).{0,20}(no)\b/.test(t)){
+      saco.irpf = "no";
+    }
+    var mi = t.match(/(?:irpf|renta|hacienda)\D{0,25}(\d{1,2}[.,]\d{3}|\d{3,5})/);
+    if(mi){
+      var cuota = Number(String(mi[1]).replace(/[.,]/g, ""));
+      if(cuota > 0) saco.irpf = cuota >= 2500 ? "si" : "no";
+    }
+
+    /* ---- el tipo de vivienda ---- */
+    if(/vacacional|turistic|airbnb|booking|alquilo por dias|apartamento tur/.test(t)) saco.tipo = "vac";
+    else if(/\bpiso\b|apartamento|atico|comunidad|edificio|bloque/.test(t))            saco.tipo = "piso";
+    else if(/casa|chalet|unifamiliar|villa|tejado|azotea|adosad/.test(t))              saco.tipo = "casa";
+
+    /* ---- el municipio de Tenerife ---- */
+    Object.keys(COMO_LO_DICEN).forEach(function(k){
+      COMO_LO_DICEN[k].forEach(function(nombre){
+        if(saco.muni) return;
+        if(t.indexOf(nombre) !== -1) saco.muni = k;
+      });
+    });
+
+    /* ---- la comunidad, si no ha dicho un municipio de Tenerife ---- */
+    if(!saco.muni){
+      Object.keys(COMO_DICEN_CCAA).forEach(function(k){
+        COMO_DICEN_CCAA[k].forEach(function(nombre){
+          if(saco.ccaa) return;
+          if(t.indexOf(nombre) !== -1) saco.ccaa = k;
+        });
+      });
+    }
+
+    /* ---- cómo calienta el agua y si tiene aire ---- */
+    if(/termo electrico|termo|acumulador|agua.{0,15}electric|electric.{0,15}agua/.test(t)) saco.agua = "electrico";
+    else if(/bombona|butano|propano|gas natural|calentador de gas|con gas/.test(t))        saco.agua = "gas";
+    else if(/placas? (solares? )?termicas?|solar termica|termosifon/.test(t))              saco.agua = "termica";
+    if(/(tengo|hay|con)\s+(el\s+)?aire\b|aire acondicionado|split|climatizacion|bomba de calor/.test(t)
+       && !/no tengo aire|sin aire|no hay aire/.test(t))                                  saco.aire = "si";
+    else if(/no tengo aire|sin aire|no hay aire|aire no/.test(t))                          saco.aire = "no";
+
+    /* ---- cómo quiere pagarlo ---- */
+    if(/lo mismo que (ahora|pago|estoy pagando)|igual que ahora|sin gastar de mas|sin pagar de mas|no pagar mas/.test(t)) saco.pago = "igual";
+    else if(/al contado|de una vez|de golpe|pagarlo entero|todo de una/.test(t))        saco.pago = "contado";
+    else if(/(cinco|5) a[nñ]os/.test(t))                                                saco.pago = "plazos5";
+    else if(/(siete|7) a[nñ]os/.test(t))                                                saco.pago = "plazos7";
+    else if(/(diez|10) a[nñ]os/.test(t))                                                saco.pago = "plazos10";
+    else if(/entrada|adelanto|pongo mil|1000|1\.000/.test(t))                           saco.pago = "entrada";
+
+    /* ---- lo que quiere hacer ---- */
+    if(/que me llam(e|en|eis)|llamadme|llamenme|quiero que me llamen|contactadme/.test(t)) saco.intencion = "contacto";
+    else if(/papel|documento|que necesito|que hace falta/.test(t))                          saco.intencion = "papeles";
+    else if(/como (lo )?pago|formas de pago|opciones de pago|financia/.test(t))             saco.intencion = "pago";
+    else if(/empezar de nuevo|empieza de nuevo|borra|de cero|otra vez desde/.test(t))       saco.intencion = "reiniciar";
+    else if(/^(si|vale|venga|adelante|sigue|continua|ok|dale|perfecto)\b/.test(t))          saco.intencion = "seguir";
+
+    return saco;
+  }
+
+  function quitarDictado(){
+    var c = document.getElementById("dic-caja");
+    if(c && c.parentNode) c.parentNode.removeChild(c);
+  }
+
+  /* La caja de hablar está SIEMPRE, en todos los pasos: la idea es que el cliente
+     no tenga que tocar nada, solo hablar, y que la IA vaya rellenando. */
+  function ponerDictado(){
+    if(document.getElementById("dic-caja")) return;
+    var envoltura = document.createElement("div");
+    envoltura.id = "dic-caja";
+    envoltura.style.cssText = "margin-top:14px;border-top:1px dashed var(--linea);padding-top:13px";
+    envoltura.innerHTML =
+        '<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:var(--tinta2)" id="dic-eti">'
+      + 'O dímelo con tus palabras y yo lo relleno</p>'
+      + '<div style="display:flex;gap:8px;align-items:stretch">'
+      + '<input class="op" type="text" id="dic-txt" style="flex:1;font-weight:600" '
+      + 'placeholder="Ej.: tengo una casa en Adeje y pago unos 120 al mes">'
+      + (HAY_VOZ ? '<button class="op" type="button" id="dic-voz" title="Hablar" '
+        + 'aria-label="Hablar" style="flex:0 0 auto;padding:13px 15px">🎙️</button>' : '')
+      + '<button class="op fuerte" type="button" id="dic-ok" style="flex:0 0 auto">Listo</button>'
+      + '</div>';
+    responder.parentNode.insertBefore(envoltura, responder.nextSibling);
+
+    document.getElementById("dic-ok").addEventListener("click", tragar);
+    document.getElementById("dic-txt").addEventListener("keydown", function(e){
+      if(e.key === "Enter") tragar();
+    });
+    if(HAY_VOZ) document.getElementById("dic-voz").addEventListener("click", escuchar);
+    pistaDictado();
+  }
+
+  /* la caja va cambiando lo que sugiere según el paso, para que sepa qué decir */
+  var PISTAS = {
+    inicio:    ["Cuéntamelo todo de una vez y lo relleno yo", "Ej.: casa en Adeje, pago 120 al mes y de IRPF pagué más de 2.500"],
+    irpf:      ["Dímelo con tus palabras", "Ej.: sí, pagué más de 2.500 · o: no lo sé"],
+    agua:      ["Dime cómo calientas el agua", "Ej.: con termo eléctrico · con bombona"],
+    aire:      ["Dime si tienes aire acondicionado", "Ej.: sí tengo aire · no tengo"],
+    factura:   ["Dime lo que pagas de luz", "Ej.: unos 110 al mes"],
+    vivienda:  ["Dime qué tipo de vivienda es", "Ej.: una casa con tejado · un apartamento vacacional"],
+    municipio: ["Dime dónde está la vivienda", "Ej.: en Adeje · en Murcia · en Bilbao"],
+    numeros:   ["Pregúntame lo que quieras o dime cómo quieres pagarlo", "Ej.: enséñame las formas de pago"],
+    pago:      ["Dime cuál eliges, con tus palabras", "Ej.: la de pagar lo mismo que ahora · al contado"],
+    papeles:   ["Si te vale, dime que te llamemos", "Ej.: llamadme"],
+    contacto:  ["Aquí escríbelo tú, que es tu nombre y tu teléfono", "Los datos personales mejor escritos que dictados"]
+  };
+  function pistaDictado(){
+    var eti = document.getElementById("dic-eti");
+    var caja = document.getElementById("dic-txt");
+    var p = PISTAS[PASO] || PISTAS.inicio;
+    if(eti)  eti.textContent = p[0];
+    if(caja) caja.placeholder = p[1];
+  }
+
+  function escuchar(){
+    var boton = document.getElementById("dic-voz");
+    if(escuchando) return;
+    var Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var r;
+    try{ r = new Reco(); }catch(e){ return; }
+    r.lang = "es-ES";
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    escuchando = true;
+    boton.textContent = "●";
+    boton.style.color = "var(--rojo)";
+    r.onresult = function(ev){
+      var dicho = ev.results[0][0].transcript;
+      document.getElementById("dic-txt").value = dicho;
+      tragar();
+    };
+    r.onerror = function(){
+      ia("<p>No te he oído bien. Escríbemelo en la caja y listo.</p>");
+    };
+    r.onend = function(){
+      escuchando = false;
+      boton.textContent = "🎙️";
+      boton.style.color = "";
+    };
+    try{ r.start(); }catch(e){ escuchando = false; boton.textContent = "🎙️"; }
+  }
+
+  function tragar(){
+    var caja = document.getElementById("dic-txt");
+    if(!caja) return;
+    var dicho = (caja.value || "").trim();
+    if(!dicho) return;
+    caja.value = "";
+    yo(dicho);
+
+    var saco = entender(dicho);
+    var puesto = [];
+
+    /* lo que acaba de decir MANDA sobre lo que hubiera de antes */
+    if(saco.factura){ R.factura = saco.factura; puesto.push("pagas <b>" + saco.factura + " € al mes</b> de luz"); }
+    if(saco.tipo){
+      R.tipo = saco.tipo;
+      puesto.push(saco.tipo === "vac" ? "es un <b>apartamento vacacional</b>"
+                : saco.tipo === "piso" ? "es un <b>piso</b>"
+                : "es una <b>casa con tejado</b>");
+    }
+    if(saco.muni){
+      R.muni = saco.muni; R.ccaa = "cn"; R.ccaaElegida = true;
+      puesto.push("estás en <b>" + IBI[saco.muni][4] + "</b>");
+    } else if(saco.ccaa){
+      R.ccaa = saco.ccaa; R.ccaaElegida = true; R.muni = null;
+      var nomC = (D.comunidades || {})[saco.ccaa];
+      puesto.push("estás en <b>" + (nomC ? nomC.nombre : saco.ccaa) + "</b>");
+    }
+    if(saco.agua){
+      R.agua = saco.agua;
+      puesto.push("el agua caliente es <b>" + (saco.agua === "electrico" ? "de termo eléctrico"
+                : saco.agua === "gas" ? "de bombona o gas" : "de placas térmicas") + "</b>");
+    }
+    if(saco.aire){ R.aire = saco.aire; puesto.push(saco.aire === "si" ? "<b>tienes aire acondicionado</b>" : "<b>no tienes aire</b>"); }
+    if(saco.irpf){
+      if(saco.irpf === "nose"){ puesto.push("no sabes lo que pagaste de <b>IRPF</b>"); }
+      else { R.irpf = saco.irpf; puesto.push("de IRPF pagaste <b>" + (saco.irpf === "si" ? "más" : "menos") + " de 2.500 €</b>"); }
+    }
+    if(saco.pago){
+      R.pago = saco.pago;
+      puesto.push("quieres <b>" + (saco.pago === "igual" ? "seguir pagando lo mismo que ahora"
+                : saco.pago === "contado" ? "pagarlo al contado"
+                : saco.pago === "entrada" ? "poner entrada"
+                : "pagarlo en " + saco.pago.replace("plazos", "") + " años") + "</b>");
+    }
+    guardar();
+
+    /* ---- lo que quiere hacer ---- */
+    if(saco.intencion === "reiniciar"){ $("reiniciar").click(); return; }
+    if(saco.intencion === "contacto"){
+      if(puesto.length) ia("<p>Apuntado: " + puesto.join(", ") + ".</p>");
+      responder.innerHTML = ""; paso7(R.tipo === "piso"); return;
+    }
+    if(saco.intencion === "papeles" && R.factura && R.ccaaElegida){
+      responder.innerHTML = ""; paso6(); return;
+    }
+    if((saco.intencion === "pago" || saco.pago) && R.factura && R.ccaaElegida){
+      if(puesto.length) ia("<p>Apuntado: " + puesto.join(", ") + ".</p>");
+      responder.innerHTML = "";
+      if(saco.pago){ setTimeout(paso6, 300); } else { paso5b(); }
+      return;
+    }
+
+    if(!puesto.length){
+      if(saco.intencion === "seguir"){
+        responder.innerHTML = "";
+        seguirDondeToque(false);
+        return;
+      }
+      /* no ha dicho ningún dato: entonces es una pregunta, y va para la IA */
+      var cuadro = document.getElementById("ia-txt");
+      if(cuadro){
+        var cajaIA = $("ia-caja");
+        if(cajaIA) cajaIA.open = true;
+        cuadro.value = dicho;
+        document.getElementById("ia-ir").click();
+        ia("<p>Eso no es un dato, es una pregunta — te la contesto ahí abajo.</p>");
+      } else {
+        ia("<p>No he pillado ningún dato de ahí. Dímelo así: <b>«casa en Adeje, pago 120 al "
+         + "mes»</b>. O usa los botones, que es más rápido.</p>");
+      }
+      return;
+    }
+
+    ia("<p>Apuntado: " + puesto.join(", ") + ".</p>");
+    seguirDondeToque(saco.irpf === "nose");
+  }
+
+  /* después de que la IA rellene, se salta a lo primero que falte */
+  function seguirDondeToque(pidioAyudaIrpf){
+    responder.innerHTML = "";
+    /* si es un piso, eso va primero: cambia todo lo demás */
+    if(R.tipo === "piso"){ esPiso(); return; }
+    if(pidioAyudaIrpf && !R.irpf){ noLoSe(); return; }
+    if(!R.irpf)    { paso1(); return; }
+    if(!R.agua)    { paso1b(); return; }
+    if(!R.aire)    { paso1c(); return; }
+    if(!R.factura) { paso2(); return; }
+    if(!R.tipo)    { paso3(); return; }
+    if(!R.muni && R.ccaa === "cn" && !R.ccaaElegida){ paso4(); return; }
+    if(!R.ccaaElegida){ paso4(); return; }
+    if(!R.pago){
+      if(PASO === "numeros" || PASO === "pago"){ paso5b(); return; }
+      ia("<p>Ya tengo todo lo que necesitaba. Mira lo que te sale:</p>");
+      setTimeout(paso5, 300);
+      return;
+    }
+    setTimeout(paso6, 300);
+  }
+
+  function avance(k){
+    var barras = $("avance").children;
+    for(var i = 0; i < barras.length; i++){
+      barras[i].className = i < k ? "ya" : "";
+    }
+  }
+
+  /* ---------- la cuenta atrás ---------- */
+  (function(){
+    var dias = Math.ceil((new Date(2026, 11, 31) - new Date()) / 86400000);
+    $("reloj-dias").textContent = dias > 0
+      ? dias + (dias === 1 ? " día" : " días")
+      : "Se acabó el plazo";
+  })();
+
+  /* ==========================================================
+     5 · EL FLUJO
+     ========================================================== */
+
+  var ENTRADA = {
+    general:      "Vamos a ver si te salen las placas solares y cuánto pagarías al mes.",
+    vacacional:   "Vamos a ver qué te sale con placas en tu vivienda vacacional.",
+    inmobiliaria: "Vamos a ver qué le sale a un cliente tuyo con placas. Contesta por él y te queda el número para enseñárselo."
+  };
+
+  function paso0(){
+    PASO = "inicio"; avance(0);
+
+    /* si ya estuvo aquí, se le dice: nunca se dan por buenos datos viejos en silencio */
+    var yaHabia = [];
+    if(R.factura) yaHabia.push(R.factura + " € de luz al mes");
+    if(R.muni && IBI[R.muni]) yaHabia.push(IBI[R.muni][4]);
+    if(R.tipo) yaHabia.push(R.tipo === "vac" ? "apartamento vacacional" : R.tipo === "piso" ? "piso" : "casa");
+
+    if(yaHabia.length >= 2){
+      ia("<p><b>Hola otra vez.</b> La última vez me dijiste: <b>" + esc(yaHabia.join(", "))
+       + "</b>.</p><p>¿Seguimos con eso o lo hacemos de nuevo?</p>");
+      opciones([
+        { texto:"Seguimos con eso", fuerte:true, hacer:function(){ seguirDondeToque(false); } },
+        { texto:"Empezamos de nuevo", hacer:function(){
+            R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+            try{ localStorage.removeItem(LLAVE); }catch(e){}
+            charla.innerHTML = ""; paso0();
+          } }
+      ], true);
+      return;
+    }
+
+    ia("<p><b>Hola.</b> " + esc(ENTRADA[R.de]) + "</p>"
+     + "<p>No hace falta que sepas nada de placas ni de papeleo: para eso estoy. "
+     + "<b>Cuéntamelo con tus palabras</b> —o dímelo por voz— y yo lo relleno todo; "
+     + "y si lo prefieres, te lo voy preguntando con botones.</p>");
+    opciones([{ texto:"Ve preguntándome tú", fuerte:true, hacer:paso1 }]);
+  }
+
+  /* ---------- paso 1 · el filtro del IRPF ---------- */
+  function paso1(){
+    PASO = "irpf"; avance(1);
+    montarIA();
+    ia("<p>Primero una pregunta que lo decide casi todo: <b>en la declaración de la renta del "
+     + "año pasado, ¿te salió a pagar más de 2.500 €?</b></p>"
+     + "<p>Te lo pregunto porque la ayuda buena es una <b>deducción del IRPF del 40 %</b>, y esa "
+     + "deducción se resta de lo que pagas. Si pagaste poco, te devuelven poco — y lo que sobra "
+     + "<b>se pierde</b>, no se guarda para el año siguiente.</p>");
+    opciones([
+      { texto:"Sí, más de 2.500 €", hacer:function(){ yo("Sí, más de 2.500 €"); R.irpf = "si"; guardar(); tras(paso1b, "Bien, entonces la cuota te da. Falta una cosa más."); } },
+      { texto:"No, menos de eso", hacer:function(){ yo("No, menos de eso"); R.irpf = "no"; guardar(); irpfNo(); } },
+      { texto:"No lo sé", pie:"Te digo dónde mirarlo", hacer:function(){ yo("No lo sé"); noLoSe(); } }
+    ], true);
+  }
+
+  function tras(fn, texto){
+    if(texto) ia("<p>" + texto + "</p>");
+    setTimeout(fn, 260);
+  }
+
+  function noLoSe(){
+    ia("<p>Se mira en un minuto. Coge tu declaración del año pasado —la tienes en la web de "
+     + "Hacienda, en «Renta», «Expediente de años anteriores»— y busca la línea que pone "
+     + "<b>«cuota resultante de la autoliquidación»</b>.</p>"
+     + "<p>Ese número es el tope de lo que te pueden devolver. Si pasa de 2.500 €, vamos "
+     + "sobrados.</p>"
+     + "<p>Y si no te apetece buscarlo ahora, seguimos igual: te doy los dos números, con "
+     + "deducción y sin ella.</p>");
+    opciones([
+      { texto:"Sí lo tengo: pagué más de 2.500 €", hacer:function(){ yo("Pagué más de 2.500 €"); R.irpf = "si"; guardar(); tras(paso1b); } },
+      { texto:"Pagué menos", hacer:function(){ yo("Pagué menos"); R.irpf = "no"; guardar(); irpfNo(); } },
+      { texto:"Sigue sin la deducción y ya lo miro", hacer:function(){ yo("Sigue sin ella de momento"); R.irpf = "no"; guardar(); tras(paso1b); } }
+    ], true);
+  }
+
+  function irpfNo(){
+    ia("<p>Vale, y no pasa nada: <b>no te vas sin oferta.</b> Lo que cambia es cuál te conviene.</p>"
+     + "<p>Sin la deducción, comprar tú las placas tarda mucho más en salir a cuenta. Así que en "
+     + "tu caso lo que tiene sentido es la otra fórmula: <b>nosotros ponemos la instalación y tú "
+     + "no pones entrada</b>, y a cambio nos quedamos la luz que te sobra —la que ahora regalas "
+     + "cuando no hay nadie en casa—.</p>"
+     + "<p>Sigue y te enseño igualmente lo que pagarías al mes. El número de la deducción irá a "
+     + "cero, para que veas la verdad.</p>");
+    opciones([{ texto:"Enséñamelo", fuerte:true, hacer:paso1b }]);
+  }
+
+  /* ---------- paso 1b · lo que decide si hay 40 % o no ----------
+     Esto no lo pregunta nadie en el sector y es lo que más reclamaciones evita.
+     Hacienda paga por el resultado de comparar los dos certificados, y el
+     certificado solo mide calefacción, clima, agua caliente y ventilación. */
+  function paso1b(){
+    PASO = "agua"; avance(1);
+    ia("<p>Y ahora una que <b>no te va a preguntar nadie más</b>, y es la que decide si "
+     + "cobras la deducción o no: <b>¿cómo calientas el agua en casa?</b></p>"
+     + "<p>Te lo explico en dos líneas, porque tiene truco. Hacienda no paga por poner "
+     + "placas: paga porque tu casa gaste menos energía de la sucia. Y eso se mide "
+     + "<b>solo</b> en calefacción, aire, agua caliente y ventilación — la nevera y la "
+     + "lavadora no cuentan. Si el agua caliente te la da una bombona, las placas no "
+     + "tienen nada eléctrico que compensar ahí.</p>");
+    opciones([
+      { texto:"Con un termo eléctrico", pie:"El acumulador de la pared",
+        hacer:function(){ yo("Termo eléctrico"); R.agua = "electrico"; guardar(); tras(paso1c); } },
+      { texto:"Con bombona de butano o gas", pie:"O calentador de gas",
+        hacer:function(){ yo("Bombona o gas"); R.agua = "gas"; guardar(); tras(paso1c); } },
+      { texto:"Con placas solares térmicas", pie:"Las de calentar agua, no las de luz",
+        hacer:function(){ yo("Placas solares térmicas"); R.agua = "termica"; guardar(); tras(paso1c); } },
+      { texto:"No lo sé", hacer:function(){ yo("No lo sé"); R.agua = "nose"; guardar(); tras(paso1c); } }
+    ], true);
+  }
+
+  function paso1c(){
+    PASO = "aire"; avance(1);
+    ia("<p>Y la otra mitad: <b>¿tienes aire acondicionado?</b> Cuenta igual que el termo, "
+     + "porque también tira de luz.</p>");
+    opciones([
+      { texto:"Sí, tengo aire", hacer:function(){ yo("Sí tengo aire"); R.aire = "si"; guardar(); trasApto(); } },
+      { texto:"No tengo", hacer:function(){ yo("No tengo aire"); R.aire = "no"; guardar(); trasApto(); } }
+    ], true);
+  }
+
+  function trasApto(){
+    var apto = (R.agua === "electrico") || (R.aire === "si");
+    if(apto){
+      ia("<p>Perfecto: con eso las placas <b>sí tienen de dónde ahorrar</b>, así que la "
+       + "deducción del 40 % te puede salir. Aun así, antes de firmar nada un técnico lo "
+       + "simula y te lo confirma: no te lo doy por hecho, te lo doy por probable.</p>");
+    } else {
+      ia("<p>Te lo digo claro, aunque no me convenga: <b>con el agua de bombona y sin aire, "
+       + "la deducción del 40 % probablemente no te va a salir</b>, y no te la voy a meter "
+       + "en la cuenta. Las placas te van a ahorrar luz igual, pero Hacienda no te va a "
+       + "devolver nada por ellas.</p>"
+       + "<p>Hay una salida y te la digo: si algún día cambias la bombona por un "
+       + "<b>termo eléctrico</b> o pones aire, la cosa cambia — y entonces sí. Un técnico "
+       + "lo simula en una hora antes de que te gastes un euro.</p>");
+    }
+    setTimeout(paso2, 350);
+  }
+
+  /* ---------- paso 2 · la factura ---------- */
+  function paso2(){
+    PASO = "factura"; avance(2);
+    ia("<p>¿Cuánto pagas de luz al mes, más o menos? Con un número aproximado me vale.</p>");
+    var lista = [40, 60, 80, 100, 130, 170, 220].map(function(v){
+      return { texto:v + " € al mes", hacer:function(){ yo(v + " € al mes"); R.factura = v; guardar(); tras(paso3); } };
+    });
+    lista.push({ texto:"Otro número", pie:"Lo escribo yo", hacer:pedirFactura });
+    opciones(lista);
+  }
+
+  function pedirFactura(){
+    responder.className = "responder col";
+    responder.innerHTML =
+        '<label class="eti" for="f-otro">¿Cuánto pagas al mes?</label>'
+      + '<input class="op" type="number" id="f-otro" min="10" max="900" step="5" value="100" inputmode="numeric">'
+      + '<button class="op fuerte" type="button" id="f-ok">Seguir</button>';
+    $("f-ok").addEventListener("click", function(){
+      var v = Math.max(10, Math.min(900, Number($("f-otro").value) || 100));
+      responder.innerHTML = "";
+      yo(v + " € al mes");
+      R.factura = v; guardar();
+      tras(paso3);
+    });
+  }
+
+  /* ---------- paso 3 · la vivienda ---------- */
+  function paso3(){
+    PASO = "vivienda"; avance(3);
+    ia("<p>¿Y qué tipo de vivienda es?</p>");
+    opciones([
+      { texto:"Casa con tejado propio", hacer:function(){ yo("Casa con tejado propio"); R.tipo = "casa"; guardar(); tras(paso4); } },
+      { texto:"Apartamento de alquiler vacacional", hacer:function(){ yo("Apartamento vacacional"); R.tipo = "vac"; guardar(); tras(paso4); } },
+      { texto:"Piso en un edificio", pie:"Tejado compartido", hacer:function(){ yo("Piso en un edificio"); R.tipo = "piso"; guardar(); esPiso(); } }
+    ], true);
+  }
+
+  function esPiso(){
+    ia("<p>Te lo digo claro para no hacerte perder el tiempo: <b>en un piso el tejado es de toda "
+     + "la comunidad</b>, así que tú solo no puedes poner placas ahí. Hace falta acuerdo de la "
+     + "junta.</p>"
+     + "<p>Ahora, dos cosas buenas: en un edificio entero <b>la deducción sube al 60 % y dura "
+     + "hasta el 31 de diciembre de 2027</b>, un año más que las casas. Y existe el "
+     + "<b>autoconsumo colectivo</b>: podéis compartir una instalación entre vecinos, incluso "
+     + "de otro tejado a menos de 5 km.</p>"
+     + "<p>Eso se habla con tu administrador de fincas, y ahí sí te podemos ayudar.</p>");
+    opciones([
+      { texto:"Quiero que me llaméis para verlo", fuerte:true, hacer:function(){ yo("Llamadme"); paso7(true); } },
+      { texto:"Enséñame igual el número de una casa", hacer:function(){ R.tipo = "casa"; guardar(); tras(paso4); } }
+    ], true);
+  }
+
+  /* ---------- paso 4 · dónde ---------- */
+  function paso4(){
+    PASO = "municipio"; avance(4);
+
+    var COM = D.comunidades || {};
+    var claves = Object.keys(COM).sort(function(x, y){
+      return COM[x].nombre.localeCompare(COM[y].nombre, "es");
+    });
+
+    ia("<p>Última pregunta: <b>¿dónde está la vivienda?</b></p>"
+     + "<p>Lo necesito por dos motivos. Uno, porque <b>seis comunidades tienen su propia "
+     + "deducción de la renta</b> además de la del Estado, y mucha gente no sabe ni que existe. "
+     + "Y dos, porque la bonificación del IBI <b>la pone cada ayuntamiento</b>, y no se parecen "
+     + "en nada: Güímar la da 25 años y Arona no la da.</p>");
+
+    var opsC = claves.length
+      ? claves.map(function(k){
+          var c = COM[k], extra = "";
+          if(c.subvencion && c.subvencion.estado === "abierta") extra = " — ✅ con subvención abierta";
+          else if(c.deduccion) extra = " — deducción propia del " + Math.round(c.deduccion.pct * 100) + " %";
+          return '<option value="' + k + '"' + (R.ccaa === k ? " selected" : "")
+               + '>' + esc(c.nombre) + extra + '</option>';
+        }).join("")
+      : '<option value="cn" selected>Canarias</option>';
+
+    var opsM = Object.keys(IBI).map(function(k){
+      var b2 = IBI[k];
+      return '<option value="' + k + '"' + (R.muni === k ? " selected" : "") + '>'
+        + esc(b2[4]) + (b2[0] > 0 ? " — " + Math.round(b2[0]*100) + " % · " + b2[1] + " años"
+                                  : " — sin bonificación publicada")
+        + '</option>';
+    }).join("");
+
+    responder.className = "responder col";
+    responder.innerHTML =
+        '<label class="eti" for="c-sel">Comunidad autónoma</label>'
+      + '<select class="op" id="c-sel">' + opsC + '</select>'
+      + '<div id="fila-muni">'
+      + '<label class="eti" for="m-sel" style="margin-top:12px">Municipio de Tenerife</label>'
+      + '<select class="op" id="m-sel">' + opsM + '</select></div>'
+      + '<p id="nota-ccaa" style="font-size:13.5px;color:var(--tinta2);margin:11px 0 0"></p>'
+      + '<button class="op fuerte" type="button" id="m-ok" style="margin-top:12px">Ver mis números</button>';
+
+    function pintarNota(){
+      var k = $("c-sel").value, c = COM[k];
+      var fila = $("fila-muni");
+      /* el listado de municipios que tenemos es de Tenerife: fuera de Canarias no sirve */
+      if(fila) fila.hidden = (k !== "cn");
+      if(!c){ $("nota-ccaa").textContent = ""; return; }
+      var partes = [];
+      if(c.deduccion){
+        partes.push("En " + c.nombre + " hay <b>deducción propia del "
+          + Math.round(c.deduccion.pct * 100) + " %</b>"
+          + (c.deduccion.tope ? " (hasta " + eur(c.deduccion.tope) + ")" : "")
+          + ", además de la del Estado.");
+      } else if(c.foral){
+        partes.push("<b>" + c.nombre + " tiene su propio IRPF</b>, así que la deducción estatal no aplica: va la foral.");
+      } else {
+        partes.push("En " + c.nombre + " <b>no hay deducción autonómica</b> para placas: solo la del Estado y lo del ayuntamiento.");
+      }
+      if(c.subvencion && c.subvencion.estado === "abierta"){
+        partes.push("Y <b>hay subvención abierta</b>: " + esc(c.subvencion.nota || ""));
+      } else if(c.subvencion && c.subvencion.estado === "reabre"){
+        partes.push("Subvención: " + esc(c.subvencion.nota || ""));
+      }
+      if(k !== "cn") partes.push("El IBI y el ICIO los pone tu ayuntamiento; esos hay que mirarlos con tu recibo delante.");
+      $("nota-ccaa").innerHTML = partes.join(" ");
+    }
+
+    $("c-sel").addEventListener("change", pintarNota);
+    pintarNota();
+
+    $("m-ok").addEventListener("click", function(){
+      R.ccaa = $("c-sel").value;
+      R.muni = (R.ccaa === "cn") ? $("m-sel").value : null;
+      R.ccaaElegida = true;
+      guardar();
+      responder.innerHTML = "";
+      yo(R.muni ? IBI[R.muni][4] : (COM[R.ccaa] ? COM[R.ccaa].nombre : R.ccaa));
+      setTimeout(paso5, 300);
+    });
+  }
+
+  /* ---------- paso 5 · el número ---------- */
+  function paso5(){
+    PASO = "numeros"; avance(5);
+    var d = calcular();
+
+    ia("<p>Pues con lo que me has dicho, esto es lo que te sale. "
+     + "<b>Te haría falta una instalación de " + d.n + " paneles</b> (" + d.kwp.toLocaleString("es-ES")
+     + " kW), que produce unos " + kwh(d.prod) + " al año.</p>"
+     + "<p>Mira el mes, que es lo que se nota:</p>");
+
+    /* El plan por defecto es el que pidió Leidy: que siga pagando lo mismo que ahora. */
+    var plan = null;
+    formasDePago().forEach(function(o){ if(o.id === "igual") plan = o; });
+
+    var caja = document.createElement("div");
+    caja.innerHTML = plan
+      ? ('<div class="grande">'
+        + '  <div class="dato eje"><div class="cifra">' + eur(d.factura) + '</div>'
+        + '    <div class="pie">al mes, <b>lo mismo que pagas hoy</b>. No sube ni un euro</div></div>'
+        + '  <div class="dato"><div class="cifra">' + plan.anos + ' años</div>'
+        + '    <div class="pie">pagando eso, y ya está pagada</div></div>'
+        + '  <div class="dato"><div class="cifra">' + eur(d.luzNueva) + '</div>'
+        + '    <div class="pie">al mes <b>a partir de ahí</b>, para siempre</div></div>'
+        + '</div>'
+        + '<div class="linea-tiempo">'
+        + '  <div class="tramo hoy"><span>Hoy<small>toda la factura es luz que compras</small></span><b>' + eur(d.factura) + '</b></div>'
+        + '  <div class="tramo"><span>Los próximos ' + plan.anos + ' años<small>'
+        + eur(d.luzNueva) + ' de luz + ' + eur(d.ahorroAno/12) + ' de préstamo</small></span><b>' + eur(d.factura) + '</b></div>'
+        + (d.irpf > 0
+            ? '  <div class="tramo"><span>Por el camino<small>entra la devolución de ' + eur(d.irpf)
+              + ' y acorta el plazo</small></span><b>−' + (plan.mesesSinDevolucion
+                  ? Math.round((plan.mesesSinDevolucion - plan.meses)/12*10)/10 + " años" : "") + '</b></div>'
+            : '')
+        + '  <div class="tramo fin"><span>Desde el año ' + plan.anos + '<small>placas pagadas y tuyas</small></span><b>' + eur(d.luzNueva) + '</b></div>'
+        + '</div>')
+      : ('<div class="grande">'
+        + '  <div class="dato eje"><div class="cifra">' + eur(d.mes1) + '</div>'
+        + '    <div class="pie">al mes el <b>primer año</b> — luz ' + eur(d.luzNueva) + ' + cuota ' + eur(d.c1) + '</div></div>'
+        + '  <div class="dato"><div class="cifra">' + eur(d.factura) + '</div>'
+        + '    <div class="pie">es lo que pagas <b>hoy</b> solo de luz</div></div>'
+        + '</div>');
+    charla.appendChild(caja);
+
+    var frase;
+    if(plan){
+      frase = "<p><b>Ese es el trato entero:</b> no pones nada, tu recibo se queda igual que "
+            + "está, y en " + plan.anos + " años las placas están pagadas. Desde ahí pagas "
+            + eur(d.luzNueva) + " al mes en vez de " + eur(d.factura)
+            + " — <b>" + eur(d.factura - d.luzNueva) + " menos, todos los meses</b>.</p>"
+            + "<p>Lo que hacemos nosotros: te negociamos el precio con el instalador —y ese "
+            + "descuento de " + eur(d.descuento) + " <b>te lo quedas tú</b>—, y te peleamos el "
+            + "préstamo con el banco. Tú no llamas a nadie.</p>";
+    } else {
+      frase = "<p>Con tu factura, lo que te ahorras al mes no da para pagar el préstamo sin "
+            + "poner algo de tu bolsillo. Te enseño igualmente las opciones para que lo veas.</p>";
+    }
+    frase += "<p>Las placas <b>son tuyas desde el primer día</b>. La deducción y la bonificación "
+           + "del IBI las pides tú, porque son tuyas: nosotros solo hacemos el papeleo.</p>";
+    ia(frase);
+
+    var det = document.createElement("details");
+    det.className = "mas";
+    det.innerHTML =
+        '<summary>Ver la cuenta completa</summary>'
+      + '<div class="dentro"><div class="envoltorio"><table class="t">'
+      + fila("Instalación de " + d.n + " paneles", eur(d.coste))
+      + fila("Los dos certificados energéticos", eur(d.cert))
+      + (d.descuento > 0
+          ? fila("Descuento que te conseguimos con el instalador", "− " + eur(d.descuento), "resta")
+          : "")
+      + (d.esForal
+          ? fila("Deducción estatal del IRPF", "no aplica · " + esc(d.ccaaNom) + " tiene IRPF propio")
+          : d.irpfEstado > 0
+            ? fila("Deducción estatal del IRPF (40 %)", "− " + eur(d.irpfEstado), "resta")
+            : fila("Deducción estatal del IRPF", "0 € · no llegas a la cuota"))
+      + (d.irpfCcaa > 0
+          ? fila("Deducción de " + d.ccaaNom + " (" + Math.round(d.ccaaDed.pct*100) + " %)", "− " + eur(d.irpfCcaa), "resta")
+          : d.ccaaDed
+            ? fila("Deducción de " + d.ccaaNom, "0 € · no llegas a la cuota")
+            : fila("Deducción autonómica", "no existe en " + d.ccaaNom))
+      + (d.subv > 0
+          ? fila("Subvención de " + d.ccaaNom, "− " + eur(d.subv), "resta")
+          : fila("Subvención autonómica", "0 € · " + (d.subvNota ? "cerrada" : "no consta")))
+      + (d.hayMuni
+          ? (d.ibiPct > 0
+              ? fila("Bonificación del IBI (" + Math.round(d.ibiPct*100) + " % · " + d.ibiAnos + " años)", "− " + eur(d.ibiTotal), "resta")
+              : fila("Bonificación del IBI", "sin publicar en tu municipio"))
+            + fila("Bonificación del ICIO", "− " + eur(d.icio), "resta")
+          : fila("IBI e ICIO", "los pone tu ayuntamiento"))
+      + '<tr class="total"><td>TE CUESTA DE VERDAD</td><td>' + eur(d.real) + '</td></tr>'
+      + fila("Produce al año", kwh(d.prod))
+      + fila("De eso lo aprovechas tú", kwh(d.auto))
+      + fila("Te ahorra al año", eur(d.ahorroAno))
+      + fila("Cuota a " + d.anos + " años (6,25 % TAE)", eur(d.c1))
+      + '</table></div>'
+      + '<p style="font-size:13px;color:var(--tinta2);margin:10px 0 0">'
+      + (d.ibiAviso ? "<b>Ojo con el IBI:</b> " + esc(d.ibiAviso) + " " : "")
+      + (d.ccaaDed && d.ccaaDed.nota ? "<b>Sobre la deducción de " + esc(d.ccaaNom) + ":</b> " + esc(d.ccaaDed.nota) + " " : "")
+      + (d.hayMuni ? 'El IBI está estimado en 350 € al año; con tu recibo real sale el número exacto. ' : '')
+      + 'El precio es de 750 € por panel puesto, dentro del rango de 600-900 € que se publica.</p></div>';
+    charla.appendChild(det);
+
+    /* ---- si la deducción no le va a salir, se le dice AQUÍ, que es donde mira ---- */
+    if(!d.aptoDeduccion && R.irpf === "si"){
+      var avD = document.createElement("div");
+      avD.className = "ojo";
+      avD.innerHTML = "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
+        + "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. "
+        + "El motivo: Hacienda no paga por poner placas, paga porque tu casa gaste menos "
+        + "energía de la sucia — y eso solo se mide en calefacción, aire, agua caliente y "
+        + "ventilación. Con el agua de bombona y sin aire, <b>las placas no tienen nada "
+        + "eléctrico que compensar ahí</b>.<br><br>"
+        + "<b>La salida:</b> con un termo eléctrico o con aire acondicionado, la deducción "
+        + "sí sale y son unos " + eur(0.40 * Math.min(d.gasto, BASE_40)) + " menos. "
+        + "Un técnico te lo simula en una hora antes de que te gastes un euro. "
+        + "Y si no, las placas te siguen ahorrando luz igual: lo que no habrá es devolución.";
+      charla.appendChild(avD);
+    }
+
+    /* ---- si con sus números esto no le compensa, se le dice ----
+       Vale más un cliente que confía que una venta que se cae al mes. */
+    var tarda = d.ahorroAno > 0 ? d.real / d.ahorroAno : 99;
+    if(tarda > 12){
+      var ojo = document.createElement("div");
+      ojo.className = "ojo";
+      ojo.innerHTML = "<b>Y ahora lo que no te va a decir nadie:</b> con tus números esto tarda "
+        + "<b>" + (Math.round(tarda * 10) / 10).toString().replace(".", ",") + " años</b> en "
+        + "pagarse solo. Es mucho. Te pasa porque "
+        + (d.irpf === 0 ? "no puedes aprovechar la deducción del IRPF" : "tu factura de luz es baja")
+        + ", y el ahorro que sacas es pequeño.<br><br>"
+        + "<b>Comprarlas tú, así, no te lo recomiendo.</b> Si te interesa el tema, lo que sí "
+        + "encaja en tu caso es la otra fórmula: <b>no pones nada y nos quedamos la luz que te "
+        + "sobra</b>. Ahí no arriesgas dinero tuyo. Pregúntanos y te lo explicamos sin "
+        + "compromiso.";
+      charla.appendChild(ojo);
+    }
+
+    ia("<p>¿Te enseño las formas de pagarlo?</p>");
+    opciones([
+      { texto:"Sí, enséñamelas", fuerte:true, hacer:paso5b },
+      { texto:"Quiero cambiar algún dato", hacer:function(){ R.factura = null; paso2(); } }
+    ], true);
+
+    /* la IA ya estaba enganchada desde la primera pregunta; aquí se abre sola,
+       porque es cuando de verdad surgen las dudas */
+    montarIA();
+    var cajaIA = $("ia-caja");
+    if(cajaIA) cajaIA.open = true;
+  }
+
+  function fila(a, b, cls){
+    return '<tr><td>' + esc(a) + '</td><td class="' + (cls || "") + '">' + b + '</td></tr>';
+  }
+
+  /* ==========================================================
+     LAS FORMAS DE PAGARLO
+     ----------------------------------------------------------
+     Salen de CLOUD_ESTUDIO_PANELES/calculos_financieros.md y de
+     engranaje_completo.md. Todas se calculan con SUS números, no
+     con un ejemplo. El cliente elige; no se le empuja a ninguna.
+     ========================================================== */
+  var DESCUENTO_CESION = 500;   /* lo que se le negocia al instalador y se le pasa a él */
+
+  var MES_DEVOLUCION = 18;   /* la devolucion entra sobre el mes 18 desde la obra */
+
+  function formasDePago(){
+    var d = calcular();
+    var lista = [];
+
+    /* --- 1 · LA BUENA: sigue pagando lo mismo que ahora --- */
+    var disponible = d.ahorroAno / 12;                 /* lo que se ahorra de luz */
+    var mesesIgual = mesesPagando(d.aFinanciar, disponible, d.irpf, MES_DEVOLUCION);
+    var mesesSinDev = mesesPagando(d.aFinanciar, disponible, 0, 0);
+    if(mesesIgual !== null && mesesIgual <= 144){
+      var anosIgual = Math.ceil(mesesIgual / 12);
+      lista.push({
+        id: "igual",
+        titulo: "Pagas lo mismo que ahora",
+        hoy: 0,
+        mes: d.factura,
+        mesDespues: d.factura,
+        mesAlFinal: d.luzNueva,
+        anos: anosIgual,
+        meses: mesesIgual,
+        mesesSinDevolucion: mesesSinDev,
+        devolucion: d.irpf,
+        sobrante: "tuyo",
+        recomendada: true,
+        resumen: "No pones nada y <b>tu recibo no sube ni un euro</b>: sigues pagando los "
+               + eur(d.factura) + " de siempre. De esos, " + eur(d.luzNueva) + " son la luz que "
+               + "aún compras y " + eur(disponible) + " se van al préstamo. "
+               + "Durante <b>" + anosIgual + " años</b>. "
+               + (d.irpf > 0 && mesesSinDev
+                   ? "Y la devolución de Hacienda te quita " + Math.round((mesesSinDev - mesesIgual)/12*10)/10
+                     + " años de golpe."
+                   : "")
+               + " Al terminar te quedas en <b>" + eur(d.luzNueva) + " al mes, para siempre</b>, "
+               + "y las placas son tuyas.",
+        paraQuien: "No gastas de más ni un mes. Es la que tiene sentido para casi todo el mundo."
+      });
+    }
+
+    /* --- 2 · al contado --- */
+    lista.push({
+      id: "contado",
+      titulo: "Al contado",
+      hoy: d.aFinanciar,
+      mes: -d.ahorroAno / 12,
+      mesDespues: -d.ahorroAno / 12,
+      devolucion: d.irpf,
+      sobrante: "tuyo",
+      resumen: "Lo pagas de una vez y desde el primer recibo la luz te sale " + eur(d.ahorroAno/12)
+             + " más barata. Con la devolución y el resto de ayudas, te acaba costando "
+             + eur(d.real) + " y se paga sola en "
+             + (Math.round((d.ahorroAno > 0 ? d.real/d.ahorroAno : 0)*10)/10).toString().replace(".", ",")
+             + " años.",
+      paraQuien: "Si tienes el dinero parado, es la que menos te cuesta de todas."
+    });
+
+    /* --- 2 · a plazos, sin entrada, a 5 / 7 / 10 años --- */
+    [5, 7, 10].forEach(function(anos){
+      var c1 = cuota(d.aFinanciar, anos);
+      var saldo = saldoTras(d.aFinanciar, anos, 12);
+      var resto = Math.max(0, saldo - d.irpf);
+      var c2 = resto > 0 ? cuota(resto, anos - 1) : 0;
+      lista.push({
+        id: "plazos" + anos,
+        titulo: "A plazos, " + anos + " años",
+        hoy: 0,
+        mes: d.luzNueva + c1,
+        mesDespues: d.luzNueva + c2,
+        devolucion: d.irpf,
+        sobrante: "tuyo",
+        resumen: "No pones nada. Pagas " + eur(c1) + " de cuota más " + eur(d.luzNueva)
+               + " de luz. Cuando entre la devolución, la cuota baja a " + eur(c2)
+               + ". Al acabar, " + eur(d.luzNueva) + " al mes para siempre.",
+        paraQuien: anos === 10 ? "Acabas antes que con la de arriba, pero pagas mas al mes."
+                 : anos === 5  ? "La que menos intereses paga de todas, pero se nota mucho al mes."
+                 : "Un término medio.",
+        recomendada: false
+      });
+    });
+
+    /* --- 3 · con entrada --- */
+    var entrada = Math.min(1000, d.aFinanciar);
+    var presta = Math.max(0, d.aFinanciar - entrada);
+    var ce1 = cuota(presta, 10);
+    var se = saldoTras(presta, 10, 12);
+    var re = Math.max(0, se - d.irpf);
+    var ce2 = re > 0 ? cuota(re, 9) : 0;
+    lista.push({
+      id: "entrada",
+      titulo: "1.000 € de entrada, 10 años",
+      hoy: entrada,
+      mes: d.luzNueva + ce1,
+      mesDespues: d.luzNueva + ce2,
+      devolucion: d.irpf,
+      sobrante: "tuyo",
+      resumen: "Pones 1.000 € al principio y la cuota baja a " + eur(ce1)
+             + ". Tras la devolución, " + eur(ce2) + ".",
+      paraQuien: "Si puedes poner algo, bajas la cuota y pagas menos intereses."
+    });
+
+    /* --- 4 · sin poner nada, cediéndonos el sobrante --- */
+    var financiaCesion = Math.max(0, d.aFinanciar - DESCUENTO_CESION);
+    var cc1 = cuota(financiaCesion, 10);
+    var sc = saldoTras(financiaCesion, 10, 12);
+    var rc = Math.max(0, sc - d.irpf);
+    var cc2 = rc > 0 ? cuota(rc, 9) : 0;
+    var luzCesion = Math.max(0, d.factura - d.ahorroCede / 12);
+    /* Esta solo se le ofrece SI LE SALE MEJOR que pagarlo él a 10 años.
+       En una vivienda normal de Tenerife el tope de la compensación no llega a morder,
+       así que el sobrante le vale a él lo mismo que a nosotros y cederlo es perder
+       dinero. Donde sí tiene sentido es en el vacacional. Ver el informe. */
+    var refDiez = null;
+    for(var q = 0; q < lista.length; q++){
+      if(lista[q].id === "igual" || (!refDiez && lista[q].id === "plazos10")) {
+        if(lista[q].id === "igual"){ refDiez = lista[q]; break; }
+        refDiez = lista[q];
+      }
+    }
+    var mesCesion = luzCesion + cc1;
+    var leSaleMejor = refDiez ? (mesCesion < refDiez.mes - 0.5) : true;
+
+    lista.push({
+      id: "cesion",
+      oculta: !leSaleMejor,
+      loQuePierde: d.compensa,
+      titulo: "Sin entrada, cediéndonos el sobrante",
+      hoy: 0,
+      mes: luzCesion + cc1,
+      mesDespues: luzCesion + cc2,
+      devolucion: d.irpf,
+      sobrante: "nuestro, 30 años",
+      resumen: "Te negociamos el precio con el instalador y <b>el descuento te lo quedas tú</b>: "
+             + "financias " + eur(DESCUENTO_CESION) + " menos, así que la cuota baja a " + eur(cc1)
+             + ". A cambio, la luz que te sobra es nuestra durante 30 años — hoy te la compensan "
+             + eur(d.compensa) + " al año, así que eso es lo que dejas de cobrar.",
+      paraQuien: "Es opcional. Si no te convence, cualquiera de las otras vale igual.",
+      esNuestra: true
+    });
+
+    return lista;
+  }
+
+  /* ---------- paso 5b · elegir cómo pagarlo ---------- */
+  function paso5b(){
+    PASO = "pago";
+    var lista = formasDePago();
+
+    ia("<p>Y ahora lo que casi nadie te explica: <b>hay varias maneras de pagarlo</b>, y no "
+     + "todas te convienen igual. Te las pongo todas con TUS números, no con un ejemplo.</p>");
+
+    var descartadas = lista.filter(function(o){ return o.oculta; });
+    lista = lista.filter(function(o){ return !o.oculta; });
+
+    var caja = document.createElement("div");
+    caja.className = "opciones";
+    caja.style.margin = "0 0 14px";
+    caja.innerHTML = lista.map(function(o){
+      return '<div class="op' + (o.recomendada ? " b" : "") + '" data-pago="' + o.id + '">'
+        + '<h3>' + esc(o.titulo) + '</h3>'
+        + '<p class="quien">' + (o.hoy > 0 ? "Pones hoy " + eur(o.hoy) : "No pones nada")
+        + " · sobrante " + esc(o.sobrante) + '</p>'
+        + '<p class="precio">' + (o.mes < 0 ? "−" + eur(-o.mes) : eur(o.mes)) + '/mes'
+        + '<small>' + (o.mes < 0 ? "te AHORRA eso al mes"
+            : "y " + eur(o.mesDespues) + "/mes tras la devolución") + '</small></p>'
+        + '<p style="font-size:14px;margin:11px 0 0">' + o.resumen + '</p>'
+        + '<p style="font-size:13px;color:var(--tinta2);margin:8px 0 0"><b>'
+        + esc(o.paraQuien) + '</b></p>'
+        + '</div>';
+    }).join("");
+    charla.appendChild(caja);
+
+    /* si hay alguna que no le conviene, se le dice en vez de esconderla sin más */
+    descartadas.forEach(function(o){
+      if(o.id !== "cesion") return;
+      var av = document.createElement("div");
+      av.className = "ojo";
+      av.innerHTML = "<b>Y una que NO te ofrezco, para que sepas que existe:</b> hay una fórmula "
+        + "en la que nosotros te ponemos la instalación y nos quedamos la luz que te sobra. "
+        + "<b>Con tus números no te sale a cuenta</b>: ese sobrante hoy te lo compensan a ti en "
+        + "tu propia factura, unos " + eur(o.loQuePierde) + " al año, y lo que te daríamos a "
+        + "cambio vale menos que eso. Así que págalo tú y quédatelo.<br><br>"
+        + "Donde sí tiene sentido es en un <b>apartamento vacacional</b>, porque ahí está vacío "
+        + "media temporada y buena parte de esa luz se regala sin que nadie te la pague.";
+      charla.appendChild(av);
+    });
+
+    ia("<p>Hoy pagas <b>" + eur(calcular().factura) + " al mes</b> de luz y no te queda nada. "
+     + "Compara con eso.</p><p>¿Cuál te encaja?</p>");
+
+    opciones(lista.map(function(o){
+      return { texto: o.titulo, fuerte: !!o.recomendada, hacer: function(){
+        R.pago = o.id; guardar();
+        yo(o.titulo);
+        if(o.esNuestra){
+          ia("<p>Buena elección, y te digo lo que ganamos nosotros para que lo sepas: esa luz "
+           + "que te sobra la vendemos, y ahí está nuestro negocio. Tú te ahorras la cuota más "
+           + "baja y no pones un duro. <b>Si algún día prefieres quedártela, se habla.</b></p>");
+        } else {
+          ia("<p>Apuntado. <b>El sobrante se queda tuyo</b>, entonces: te lo compensan en tu "
+           + "propia factura.</p>");
+        }
+        setTimeout(paso6, 350);
+      }};
+    }), true);
+
+    montarIA();
+    var cajaIA = $("ia-caja");
+    if(cajaIA) cajaIA.open = true;
+  }
+
+  /* ---------- paso 6 · los papeles ---------- */
+  function paso6(){
+    PASO = "papeles";
+    var d = calcular();
+    ia("<p>Poca cosa, y <b>todo lo tienes ya en casa</b>. Es esto:</p>");
+
+    var lista = document.createElement("ul");
+    lista.className = "papeles";
+    lista.innerHTML = [
+      ["🪪", "Tu DNI",                    "De quien sea el dueño de la casa. Si está a nombre de dos, los dos."],
+      ["🧾", "La última declaración de la renta", "Solo para comprobar la cuota, que es lo que decide la deducción."],
+      ["💡", "Una factura de la luz",      "Cualquiera reciente. De ahí sale el consumo real y el número CUPS."],
+      ["🏠", "La escritura o el recibo del IBI", "Para el ayuntamiento y para pedir la bonificación."],
+      ["✍️", "Una firma de autorización",  "Para que podamos presentar los papeles por ti y no tengas que ir tú."]
+    ].map(function(p){
+      return '<li><span class="ico" aria-hidden="true">' + p[0] + '</span>'
+           + '<span><b>' + esc(p[1]) + '</b><span>' + esc(p[2]) + '</span></span></li>';
+    }).join("");
+    charla.appendChild(lista);
+
+    var ojo = document.createElement("div");
+    ojo.className = "ojo";
+    ojo.style.marginTop = "14px";
+    ojo.innerHTML = "<b>No subas nada aquí.</b> Esta página no recoge documentos: tu DNI y tu "
+      + "declaración de la renta no se mandan por un formulario de una web. Te llamamos, te "
+      + "decimos exactamente qué hace falta y los recogemos por el canal que toque, con su "
+      + "consentimiento firmado.";
+    charla.appendChild(ojo);
+
+    ia("<p>Y una cosa importante de plazos: para que la deducción del 40 % cuente, "
+     + "<b>la instalación tiene que estar terminada y certificada antes del 31 de diciembre de "
+     + "2026</b>. En enero ya no vale. Por eso conviene no dejarlo.</p>"
+     + "<p>Otras dos, para que no haya sorpresas: <b>todo se paga por banco</b> —en efectivo se "
+     + "pierde la deducción entera— y si firmamos en tu casa sin que tú nos hayas llamado, "
+     + "<b>tienes 30 días para echarte atrás</b> sin dar explicaciones.</p>");
+
+    opciones([
+      { texto:"Que me llaméis", fuerte:true, hacer:function(){ yo("Llamadme"); paso7(false); } },
+      { texto:"Prefiero pensarlo", hacer:pensarlo }
+    ], true);
+  }
+
+  function pensarlo(){
+    yo("Prefiero pensarlo");
+    ia("<p>Claro. Te dejo el resumen aquí arriba para que lo mires con calma, y si quieres lo "
+     + "vuelves a abrir cuando te apetezca: se queda guardado en este navegador.</p>"
+     + "<p>Si te surge cualquier duda, escríbenos a <b>" + esc(CORREO) + "</b>. "
+     + "Y acuérdate del 31 de diciembre.</p>");
+    opciones([{ texto:"Vale, pero llamadme mejor", hacer:function(){ paso7(false); } }]);
+  }
+
+  /* ---------- paso 7 · por dónde hablamos ---------- */
+  function paso7(esPisoCaso){
+    PASO = "contacto";
+    if(!WHATSAPP){ formulario(esPisoCaso, "correo"); return; }
+    ia("<p>Perfecto. <b>¿Por dónde prefieres que hablemos?</b> Tú eliges: nos da igual una que "
+     + "otra.</p>");
+    opciones([
+      { texto:"Por WhatsApp", pie:"Más rápido, contestamos ahí mismo",
+        hacer:function(){ yo("Por WhatsApp"); formulario(esPisoCaso, "whatsapp"); } },
+      { texto:"Por correo", pie:"Si prefieres tenerlo por escrito",
+        hacer:function(){ yo("Por correo"); formulario(esPisoCaso, "correo"); } }
+    ], true);
+  }
+
+  /* ---------- paso 7b · sus datos, de uno en uno ----------
+     Aquí sí escribe él. Es lo único que escribe en toda la página, y a propósito:
+     un correo o un teléfono dictados por voz salen mal, y un aviso con el teléfono
+     mal es lo mismo que ningún aviso. Un campo cada vez, grande y con su
+     instrucción encima. */
+  function formulario(esPisoCaso, canal){
+    var enviado = false;
+
+    quitarDictado();   /* aquí no se habla: aquí se escribe, y solo esto */
+
+    ia(canal === "whatsapp"
+      ? "<p>Va. <b>Esto sí te lo pido escrito</b>, que un móvil dictado sale mal. "
+        + "Son dos cosas y ya está.</p>"
+      : "<p>Va. <b>Esto sí te lo pido escrito</b>, que un correo dictado sale mal. "
+        + "Son dos cosas y ya está.</p>");
+
+    pedirNombre(esPisoCaso, canal);
+  }
+
+  function campo(instruccion, id, tipo, ejemplo, autocompletar, alDarle){
+    responder.className = "responder col";
+    responder.innerHTML =
+        '<label class="eti" for="' + id + '" style="font-size:15px;color:var(--tinta)">'
+      + instruccion + '</label>'
+      + '<input class="op" type="' + tipo + '" id="' + id + '" '
+      + 'autocomplete="' + autocompletar + '" '
+      + (tipo === "tel" ? 'inputmode="tel" ' : '')
+      + 'placeholder="' + ejemplo + '" style="font-size:18px;padding:15px">'
+      + '<button class="op fuerte" type="button" id="' + id + '-ok" style="margin-top:11px">'
+      + 'Listo</button>';
+    var caja = $(id);
+    caja.focus();
+    function darle(){ alDarle((caja.value || "").trim()); }
+    $(id + "-ok").addEventListener("click", darle);
+    caja.addEventListener("keydown", function(e){ if(e.key === "Enter") darle(); });
+    responder.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+
+  function pedirNombre(esPisoCaso, canal){
+    campo("Escribe aquí tu nombre", "c-nom", "text", "Nombre y apellido", "name", function(v){
+      if(!v){ ia("<p>Sin el nombre no sé a quién llamar. Escríbelo y seguimos.</p>"); return; }
+      R.nombre = v;
+      yo(v);
+      responder.innerHTML = "";
+      if(canal === "whatsapp") pedirMovil(esPisoCaso, canal);
+      else pedirContacto(esPisoCaso, canal);
+    });
+  }
+
+  function pedirMovil(esPisoCaso, canal){
+    ia("<p>Gracias, " + esc(R.nombre.split(" ")[0]) + ". <b>Ahora tu móvil</b>, y ya está.</p>");
+    campo("Escribe aquí tu móvil", "c-tel", "tel", "600 00 00 00", "tel", function(v){
+      if(v.replace(/\D/g, "").length < 9){
+        ia("<p>Ese móvil se ha quedado corto. Escríbelo entero, que si no no puedo escribirte.</p>");
+        return;
+      }
+      R.telefono = v;
+      yo(v);
+      responder.innerHTML = "";
+      rematar(esPisoCaso, canal);
+    });
+  }
+
+  function pedirContacto(esPisoCaso, canal){
+    ia("<p>Gracias, " + esc(R.nombre.split(" ")[0]) + ". <b>Ahora un móvil o un correo</b>, "
+     + "el que prefieras, y ya está.</p>");
+    campo("Escribe aquí tu móvil o tu correo", "c-con", "text",
+          "600 00 00 00  ·  o  tucorreo@ejemplo.com", "tel", function(v){
+      if(!v){ ia("<p>Me falta un móvil o un correo, uno de los dos.</p>"); return; }
+      if(v.indexOf("@") !== -1){
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){
+          ia("<p>Ese correo no me cuadra — revísalo, que si está mal te escribimos al vacío.</p>");
+          return;
+        }
+        R.correo = v;
+      } else {
+        if(v.replace(/\D/g, "").length < 9){
+          ia("<p>Ese teléfono se ha quedado corto: escríbelo entero.</p>");
+          return;
+        }
+        R.telefono = v;
+      }
+      yo(v);
+      responder.innerHTML = "";
+      rematar(esPisoCaso, canal);
+    });
+  }
+
+  /* ---------- y aquí se le prepara el mensaje ---------- */
+  function rematar(esPisoCaso, canal){
+    var d = calcular();
+    var nom = R.nombre || "", tel = R.telefono || "", mail = R.correo || "";
+
+    var cuerpo =
+        "Hola, quiero informacion sobre las placas solares.\n\n"
+      + "Nombre: " + nom + "\n"
+      + (tel  ? "Telefono: " + tel + "\n" : "")
+      + (mail ? "Correo: " + mail + "\n" : "")
+      + "\n--- lo que me ha salido en la web ---\n"
+      + "Puerta: " + R.de + "\n"
+      + "Tipo de vivienda: " + (esPisoCaso ? "piso en edificio (autoconsumo colectivo)" : (R.tipo || "-")) + "\n"
+      + "Municipio: " + d.muniNom + "\n"
+      + (R.pago ? "Forma de pago que ha elegido: " + R.pago + "\n" : "")
+      + "Factura de luz hoy: " + Math.round(d.factura) + " EUR/mes\n"
+      + "IRPF por encima de 2.500 EUR: " + (R.irpf === "si" ? "si" : "no / no lo sabe") + "\n"
+      + "Paneles que le tocan: " + d.n + " (" + d.kwp.toLocaleString("es-ES") + " kW)\n"
+      + "Primer ano: " + Math.round(d.mes1) + " EUR/mes\n"
+      + (d.irpf > 0 ? "Tras la devolucion: " + Math.round(d.mes2) + " EUR/mes\n" : "")
+      + "Desde el ano " + d.anos + ": " + Math.round(d.mesFin) + " EUR/mes\n";
+
+    var asunto = "Placas solares - " + nom + " - " + d.muniNom;
+    var enlace = "mailto:" + CORREO
+               + "?subject=" + encodeURIComponent(asunto)
+               + "&body="    + encodeURIComponent(cuerpo);
+
+    var bCorreo = '<a style="text-decoration:none;display:block" href="' + esc(enlace)
+                + '" class="op' + (canal === "correo" ? " fuerte" : "") + '">'
+                + 'Abrir mi correo y enviarlo</a>';
+    var bWasap  = WHATSAPP
+      ? '<a style="text-decoration:none;display:block" class="op'
+        + (canal === "whatsapp" ? " fuerte" : "") + '" target="_blank" rel="noopener" '
+        + 'href="https://wa.me/' + esc(WHATSAPP) + '?text=' + encodeURIComponent(cuerpo) + '">'
+        + 'Abrir WhatsApp y enviarlo</a>'
+      : "";
+
+    var botones = canal === "whatsapp"
+      ? bWasap + (bCorreo ? '<div style="height:9px"></div>' + bCorreo : "")
+      : bCorreo + (bWasap ? '<div style="height:9px"></div>' + bWasap : "");
+
+    ia("<p>Listo, " + esc(nom.split(" ")[0]) + ". Te he escrito el mensaje con tus números "
+     + "dentro. <b>Dale al botón y se abre "
+     + (canal === "whatsapp" ? "WhatsApp" : "tu correo") + " con todo puesto</b>: tú solo "
+     + "tienes que darle a enviar.</p>"
+     + (WHATSAPP ? "<p>Y si prefieres la otra vía, ahí abajo la tienes: nos llega igual.</p>" : "")
+     + "<p>En cuanto nos llegue, te " + (tel ? "llamamos" : "contestamos") + ".</p>");
+
+    responder.className = "responder col";
+    responder.innerHTML = botones;
+
+    /* ---- la red de seguridad ----
+       En muchos móviles el enlace de correo no abre nada porque no hay app puesta.
+       El cliente se cree que lo ha mandado y aquí no llega nada. */
+    var red = document.createElement("details");
+    red.className = "mas";
+    red.style.marginTop = "16px";
+    red.innerHTML =
+        '<summary>¿No se te ha abierto nada al pulsar?</summary>'
+      + '<div class="dentro">'
+      + '<p style="margin:0 0 10px;font-size:14.5px">Pasa a veces, y no es culpa tuya: depende '
+      + 'de lo que tengas puesto en el móvil. Copia esto y mándanoslo por donde te venga bien.</p>'
+      + '<p style="margin:0 0 10px;font-size:14.5px">Nuestro correo: '
+      + '<b style="user-select:all">' + esc(CORREO) + '</b>'
+      + (WHATSAPP ? '<br>Nuestro WhatsApp: <b style="user-select:all">+' + esc(WHATSAPP) + '</b>' : '')
+      + '</p>'
+      + '<textarea id="c-texto" readonly rows="9" style="width:100%;font:inherit;font-size:14px;'
+      + 'border:1px solid var(--linea);border-radius:10px;padding:11px;background:var(--papel);'
+      + 'color:var(--tinta);resize:vertical"></textarea>'
+      + '<button class="op" type="button" id="c-copiar" style="margin-top:9px;width:100%">'
+      + 'Copiar el mensaje</button>'
+      + '<p id="c-copiado" style="margin:8px 0 0;font-size:13.5px;color:var(--verde)" hidden>'
+      + 'Copiado. Ya lo puedes pegar donde quieras.</p>'
+      + '</div>';
+    charla.appendChild(red);
+    $("c-texto").value = cuerpo;
+
+    $("c-copiar").addEventListener("click", function(){
+      var cajaT = $("c-texto");
+      cajaT.focus();
+      cajaT.select();
+      cajaT.setSelectionRange(0, cajaT.value.length);
+      var bien = false;
+      try{ bien = document.execCommand("copy"); }catch(e){}
+      if(!bien && navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(cajaT.value).then(function(){
+          $("c-copiado").hidden = false;
+        }).catch(function(){
+          $("c-copiado").hidden = false;
+          $("c-copiado").style.color = "var(--ambar)";
+          $("c-copiado").textContent = "No he podido copiarlo yo. Te lo he dejado seleccionado: cópialo tú.";
+        });
+      } else {
+        $("c-copiado").hidden = false;
+        if(!bien){
+          $("c-copiado").style.color = "var(--ambar)";
+          $("c-copiado").textContent = "No he podido copiarlo yo. Te lo he dejado seleccionado: cópialo tú.";
+        }
+      }
+    });
+
+    avance(5);
+    puenteIA(cuerpo);
+  }
+
+  /* ==========================================================
+     6 · LA IA DE VERDAD  (el worker)
+     ----------------------------------------------------------
+     Esta conversación guiada funciona sola, sin internet y sin API:
+     eso es a propósito, para que NUNCA se quede a medias.
+     Encima de eso, si el worker contesta, se engancha un cuadro para
+     que el cliente le pregunte lo que quiera, y le llega ya sabiendo
+     todo lo que ha contestado aquí. Si el worker no contesta, no
+     aparece nada y no se rompe nada.
+     ========================================================== */
+  var API = (typeof CONFIG === "object" && CONFIG && CONFIG.api)
+    ? String(CONFIG.api).replace(/\/$/, "")
+    : "https://immoia.ley1998ortizz.workers.dev";
+  var CODIGO = "leire2026";
+  var iaPuesta = false;
+
+  /* ---- el gancho para cuando haya nube y memoria ----
+     Hoy no manda nada a ninguna parte, y por eso el flujo no depende de
+     que haya servidor. Cuando montéis la nube, esto es LO ÚNICO que hay
+     que rellenar: le llega el resumen entero de lo que ha contestado. */
+  function guardarEnLaNube(resumen){
+    /* pendiente: aquí irá el POST cuando exista el sitio donde guardarlo */
+    return false;
+  }
+
+  /* Lo que la IA necesita saber para no preguntar lo que ya está contestado.
+     Se rehace en cada pregunta, así que siempre va al día. */
+  var DONDE = {
+    inicio:    "acabo de entrar y no he contestado nada todavia",
+    irpf:      "me estan preguntando si pague mas de 2500 euros de IRPF y aun no he contestado",
+    agua:      "me estan preguntando como caliento el agua en casa",
+    aire:      "me estan preguntando si tengo aire acondicionado",
+    factura:   "me estan preguntando cuanto pago de luz al mes",
+    vivienda:  "me estan preguntando que tipo de vivienda tengo",
+    municipio: "me estan preguntando en que municipio vivo",
+    numeros:   "ya he visto mis numeros",
+    pago:      "estoy eligiendo como pagarlo",
+    papeles:   "ya he visto la lista de papeles que hacen falta",
+    contacto:  "estoy dejando mis datos para que me llamen"
+  };
+
+  function contexto(){
+    var t = "Estoy en la pagina de placas solares de IMMO IA. Ahora mismo " + (DONDE[PASO] || "") + ". "
+          + "Entro por la puerta " + R.de + ". ";
+    var dicho = [];
+    if(R.irpf)    dicho.push("IRPF por encima de 2500 euros: " + (R.irpf === "si" ? "si" : "no o no lo se"));
+    if(R.factura) dicho.push("pago " + Math.round(R.factura) + " euros de luz al mes");
+    if(R.tipo)    dicho.push("vivienda: " + R.tipo);
+    if(R.agua)    dicho.push("agua caliente: " + R.agua);
+    if(R.aire)    dicho.push("aire acondicionado: " + R.aire);
+    if(R.muni)    dicho.push("municipio: " + (IBI[R.muni] ? IBI[R.muni][4] : R.muni));
+    if(R.ccaaElegida && (D.comunidades||{})[R.ccaa]) dicho.push("comunidad: " + D.comunidades[R.ccaa].nombre);
+    t += dicho.length ? "Ya he contestado esto: " + dicho.join("; ") + ". " : "Todavia no he contestado nada. ";
+
+    if(R.factura && R.ccaaElegida){
+      var d = calcular();
+      t += "La web ya me ha calculado: " + d.n + " paneles; primer ano " + Math.round(d.mes1)
+         + " euros al mes; "
+         + (d.irpf > 0 ? "tras la devolucion de Hacienda " + Math.round(d.mes2) + " euros al mes; " : "sin deduccion de IRPF; ")
+         + "desde el ano " + d.anos + ", " + Math.round(d.mesFin) + " euros al mes. ";
+    }
+    if(R.pago) t += "He elegido pagarlo asi: " + R.pago + ". ";
+    t += "Contestame corto y en cristiano, sin repetirme los numeros si no te los pido, "
+       + "y sin pedirme datos que ya he dado.";
+    return t;
+  }
+
+  async function preguntarIA(historia){
+    var corta = new AbortController();
+    var reloj = setTimeout(function(){ corta.abort(); }, 20000);
+    try{
+      var r = await fetch(API + "/hablar", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ codigo: CODIGO, mensajes: historia }),
+        signal: corta.signal
+      });
+      var j = await r.json();
+      clearTimeout(reloj);
+      return (j && j.respuesta) ? String(j.respuesta) : null;
+    }catch(e){
+      clearTimeout(reloj);
+      return null;
+    }
+  }
+
+  function montarIA(){
+    if(iaPuesta) return;
+    iaPuesta = true;
+
+    /* primero se le pregunta al worker si está vivo. Si no lo está, aquí no
+       aparece nada: el cliente no ve un cuadro que no funciona. */
+    preguntarIA([{ papel:"yo", texto:"hola" }]).then(function(vive){
+      if(!vive) return;
+
+      var caja = document.createElement("details");
+      caja.className = "mas";
+      caja.style.marginTop = "16px";
+      caja.id = "ia-caja";
+      caja.open = (PASO === "numeros" || PASO === "pago" || PASO === "papeles" || PASO === "contacto");
+      caja.innerHTML =
+          '<summary>¿Alguna duda? Pregúntame lo que quieras</summary>'
+        + '<div class="dentro">'
+        + '<p style="margin:0 0 11px;font-size:14px;color:var(--tinta2)">'
+        + 'Sé en qué punto vas y lo que llevas contestado, así que no hace falta que me lo '
+        + 'repitas. Pregúntame lo que sea: por qué te pregunto lo del IRPF, qué pasa si vendes '
+        + 'la casa, cuánto tarda la obra, qué es eso del excedente…</p>'
+        + '<div id="ia-hilo" class="charla" style="margin:0 0 11px"></div>'
+        + '<textarea id="ia-txt" rows="3" style="width:100%;font:inherit;font-size:15.5px;'
+        + 'border:1px solid var(--linea);border-radius:10px;padding:11px;background:var(--papel);'
+        + 'color:var(--tinta);resize:vertical" placeholder="Escribe tu pregunta"></textarea>'
+        + '<button class="op fuerte" type="button" id="ia-ir" style="margin-top:9px;width:100%">'
+        + 'Preguntar</button>'
+        + '</div>';
+      charla.appendChild(caja);
+
+      var historia = [{ papel:"yo", texto: contexto() }];
+      var visibles = [];
+      var pensando = false;
+
+      function pintarHilo(){
+        $("ia-hilo").innerHTML = visibles.map(function(m){
+          if(m.papel === "yo"){
+            return '<div class="dice yo"><span class="cara" aria-hidden="true">Tú</span>'
+                 + '<div class="globo">' + esc(m.texto) + '</div></div>';
+          }
+          var cls = m.papel === "mal" ? ' style="color:var(--rojo)"' : "";
+          return '<div class="dice"><span class="cara" aria-hidden="true">IA</span>'
+               + '<div class="globo"' + cls + '>'
+               + esc(m.texto).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/[*_#]/g, "")
+                             .replace(/\n/g, "<br>")
+               + '</div></div>';
+        }).join("");
+      }
+
+      async function mandar(){
+        var t = ($("ia-txt").value || "").trim();
+        if(!t || pensando) return;
+        pensando = true;
+        $("ia-ir").disabled = true;
+        $("ia-ir").textContent = "Pensando…";
+        $("ia-txt").value = "";
+        historia.push({ papel:"yo", texto:t });
+        visibles.push({ papel:"yo", texto:t });
+        pintarHilo();
+
+        /* el contexto se rehace en cada pregunta: si el cliente ha contestado algo
+           desde que se abrió el cuadro, la IA lo sabe. Antes se quedaba congelado. */
+        historia[0] = { papel:"yo", texto: contexto() };
+
+        var r = await preguntarIA(historia);
+        if(r){
+          historia.push({ papel:"ella", texto:r });
+          visibles.push({ papel:"ella", texto:r });
+        } else {
+          visibles.push({ papel:"mal", texto:
+            "Ahora mismo no he podido contestarte. Inténtalo otra vez en un momento, y si no, "
+            + "mándanos la pregunta por el botón de arriba y te la contestamos nosotros." });
+        }
+        pintarHilo();
+        pensando = false;
+        $("ia-ir").disabled = false;
+        $("ia-ir").textContent = "Preguntar";
+      }
+
+      $("ia-ir").addEventListener("click", mandar);
+      $("ia-txt").addEventListener("keydown", function(e){
+        if(e.key === "Enter" && (e.ctrlKey || e.metaKey)) mandar();
+      });
+    });
+  }
+
+  function puenteIA(resumen){
+    guardarEnLaNube(resumen);
+    montarIA();
+  }
+
+  /* ---------- empezar de nuevo ---------- */
+  $("reiniciar").addEventListener("click", function(){
+    try{ localStorage.removeItem(LLAVE); }catch(e){}
+    R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+    charla.innerHTML = ""; responder.innerHTML = "";
+    paso0();
+  });
+
+  paso0();
+  window.__entender = entender;   /* atajo para las pruebas */
+
+  /* ==========================================================
+     7 · EL PANEL DE MANDOS DE LA IA
+     ----------------------------------------------------------
+     Todo lo que hace esta página se puede hacer también desde aquí,
+     con una orden. Es para que la IA —la de ahora o la que venga—
+     pueda leer en qué punto está el cliente, contestar por él, moverlo
+     de paso o hablarle, sin tener que entender el HTML.
+
+     Ejemplos:
+       IMMOIA.estado()                     -> dónde está y qué ha contestado
+       IMMOIA.resumen()                    -> lo mismo, en una frase, para pasárselo a un modelo
+       IMMOIA.numeros()                    -> todas las cifras calculadas
+       IMMOIA.responder("factura", 120)    -> contesta por él
+       IMMOIA.ir("municipio")              -> lo lleva a ese paso
+       IMMOIA.decir("Tranquilo, te lo explico")   -> le habla en la conversación
+       await IMMOIA.preguntar("¿y si vendo la casa?")  -> pregunta al worker con contexto
+       IMMOIA.municipios()                 -> los trece, con su bonificación
+     ========================================================== */
+  var PASOS = {
+    inicio: paso0, irpf: paso1, agua: paso1b, aire: paso1c, factura: paso2, vivienda: paso3,
+    municipio: paso4, numeros: paso5, pago: paso5b, papeles: paso6,
+    contacto: function(){ paso7(false); }
+  };
+
+  window.IMMOIA = window.immoiaEnergia = {
+    version: "1.0",
+    pagina: "energia",
+
+    /* ---- leer ---- */
+    estado: function(){
+      return {
+        paso: PASO,
+        puerta: R.de,
+        respuestas: { irpf:R.irpf, agua:R.agua, aire:R.aire, factura:R.factura,
+                      tipo:R.tipo, muni:R.muni, ccaa:R.ccaa, pago:R.pago || null },
+        faltan: ["irpf","agua","aire","factura","tipo"].filter(function(k){ return !R[k]; })
+                 .concat(R.ccaaElegida ? [] : ["donde"]),
+        completo: !!(R.irpf && R.agua && R.aire && R.factura && R.tipo && R.ccaaElegida),
+        aptoDeduccion: (R.agua === "electrico") || (R.aire === "si"),
+        iaViva: iaPuesta && !!document.getElementById("ia-txt")
+      };
+    },
+    resumen: contexto,
+    numeros: calcular,
+    formasDePago: formasDePago,     /* las cinco maneras, con SUS números */
+    entender: entender,        /* para que la IA pueda pedirle a la pagina que interprete una frase */
+    /* nombres viejos, por si algo de fuera ya los usaba */
+    calcular: calcular,
+    respuestas: function(){ return R; },
+    municipios: function(){
+      return Object.keys(IBI).map(function(k){
+        return { clave:k, nombre:IBI[k][4], porcentaje:IBI[k][0], anos:IBI[k][1],
+                 topeAnual:IBI[k][2], aviso:IBI[k][3] };
+      });
+    },
+    constantes: function(){
+      return { eurPorPanel:EUR_PANEL, kwpPorPanel:KWP_PANEL, kwhPorKwp:KWH_POR_KWP,
+               autoconsumo:AUTOCONSUMO, precioLuz:PRECIO_LUZ, costeCertificados:COSTE_CERT,
+               baseDeduccion40:BASE_40, icio:ICIO, tae:TAE,
+               finDeduccionVivienda:"2026-12-31", finDeduccionEdificio:"2027-12-31" };
+    },
+
+    /* ---- escribir ---- */
+    responder: function(clave, valor){
+      if(clave === "factura"){ R.factura = Math.max(10, Math.min(900, Number(valor) || 0)); }
+      else if(clave === "irpf"){ R.irpf = (valor === "si" || valor === true) ? "si" : "no"; }
+      else if(clave === "tipo"){ R.tipo = String(valor); }
+      else if(clave === "muni"){
+        /* los municipios que tenemos son de Tenerife: elegir uno ya dice la comunidad */
+        R.muni = IBI[valor] ? valor : "otro";
+        R.ccaa = "cn";
+        R.ccaaElegida = true;
+      }
+      else if(clave === "ccaa"){
+        R.ccaa = String(valor);
+        R.ccaaElegida = true;
+        if(R.ccaa !== "cn") R.muni = null;
+      }
+      else if(clave === "de"){ R.de = String(valor); }
+      else if(clave === "pago"){ R.pago = String(valor); }
+      else if(clave === "agua"){ R.agua = String(valor); }
+      else if(clave === "aire"){ R.aire = String(valor); }
+      else return false;
+      guardar();
+      return true;
+    },
+    ir: function(nombre){
+      var f = PASOS[nombre];
+      if(!f) return false;
+      responder.innerHTML = "";
+      f();
+      return true;
+    },
+    decir: function(texto){ ia("<p>" + esc(String(texto)) + "</p>"); return true; },
+    preguntar: function(texto){
+      return preguntarIA([{ papel:"yo", texto: contexto() }, { papel:"yo", texto:String(texto) }]);
+    },
+    reiniciar: function(){ $("reiniciar").click(); return true; }
+  };
+})();
+</script>
+</body>
+</html>
