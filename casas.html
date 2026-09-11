@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMMO IA · las casas en vídeo</title>
+<style>
+/* ============================================================
+   IMMO IA · GALERIA DE CASAS EN VIDEO
+   Lee la lista de casas.json. Para anadir o quitar casas se
+   edita ESE archivo, no este. No toca index.html.
+   ============================================================ */
+:root{
+  --marca:#13342A; --marca-2:#1F5A47; --suave:#E8EFEA;
+  --papel:#F7F4EC; --tarjeta:#FFFDF8; --tinta:#1B231F; --tinta2:#635C4B;
+  --linea:#DED6C3; --oro:#8A6A16; --sobre:#F4F1E6;
+  --sombra:0 1px 2px rgba(27,35,31,.05), 0 10px 28px -16px rgba(27,35,31,.3);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --marca:#8FC3A8; --marca-2:#A9D4BC; --suave:#1B2A22;
+    --papel:#111613; --tarjeta:#19201C; --tinta:#ECEAE1; --tinta2:#9FA79E;
+    --linea:#2C3630; --oro:#D8B45C; --sobre:#0F1512;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--papel);color:var(--tinta);
+  font:16.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.env{max-width:1000px;margin:0 auto;padding:24px 18px 90px}
+[hidden]{display:none !important}
+
+h1{font-size:clamp(27px,6.5vw,40px);line-height:1.06;margin:0 0 8px;letter-spacing:-.015em}
+.sub{color:var(--tinta2);margin:0 0 22px;max-width:56ch}
+
+/* ---------- buscador ---------- */
+.buscador{background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
+  padding:16px;margin:0 0 20px;box-shadow:var(--sombra)}
+.campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{display:block;font-size:12px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--tinta2);margin:0 0 6px}
+input,select{width:100%;padding:11px 12px;font:inherit;font-size:16px;
+  border:1px solid var(--linea);border-radius:9px;background:var(--papel);color:var(--tinta)}
+input:focus-visible,select:focus-visible{outline:2px solid var(--marca);outline-offset:1px}
+.cuantas{margin:13px 0 0;font-size:14.5px;color:var(--tinta2)}
+.cuantas b{color:var(--tinta)}
+.limpiar{background:none;border:0;padding:0;margin-left:9px;font:inherit;font-size:14px;
+  color:var(--marca);text-decoration:underline;cursor:pointer}
+
+/* ---------- rejilla de casas ---------- */
+.rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.casa{background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
+  overflow:hidden;box-shadow:var(--sombra);display:flex;flex-direction:column;
+  text-align:left;padding:0;font:inherit;color:inherit;cursor:pointer}
+.casa:hover{border-color:var(--marca)}
+.casa:focus-visible{outline:2px solid var(--marca);outline-offset:3px}
+.mini{position:relative;aspect-ratio:16/9;background:#0D1310;overflow:hidden}
+.mini img{width:100%;height:100%;object-fit:cover;display:block}
+.mini .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.mini .play span{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.55);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;
+  border:2px solid rgba(255,255,255,.85);padding-left:4px}
+.casa:hover .play span{background:rgba(0,0,0,.75)}
+.marca-tipo{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:99px;
+  font-size:12px;font-weight:700;background:var(--sobre);color:var(--marca);
+  border:1px solid var(--linea)}
+.cuerpo{padding:14px 15px 16px;display:flex;flex-direction:column;gap:5px;flex:1}
+.cuerpo h2{margin:0;font-size:16.5px;line-height:1.28}
+.donde{font-size:14px;color:var(--tinta2)}
+.precio{margin-top:auto;padding-top:8px;font-size:19px;font-weight:800;color:var(--marca);
+  font-variant-numeric:tabular-nums}
+.precio small{font-size:13px;font-weight:600;color:var(--tinta2)}
+.datos{font-size:13.5px;color:var(--tinta2)}
+.aviso-ej{display:inline-block;margin-top:7px;font-size:11.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--oro)}
+
+.vacio{grid-column:1/-1;padding:34px 16px;text-align:center;color:var(--tinta2);
+  border:2px dashed var(--linea);border-radius:14px}
+
+/* ---------- reproductor ---------- */
+#visor{position:fixed;z-index:50;background:#0D1310;box-shadow:0 20px 60px -12px rgba(0,0,0,.6)}
+#visor.grande{inset:0;display:flex;flex-direction:column}
+#visor.peque{right:16px;bottom:16px;width:min(360px,calc(100vw - 32px));
+  border-radius:14px;overflow:hidden;border:1px solid var(--linea)}
+#visor .marco{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+#visor.grande .marco{flex:1;aspect-ratio:auto;min-height:0}
+#visor iframe,#visor video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+#visor .barra{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#141A16;color:#EDEAE1}
+#visor .tit{flex:1;min-width:0;font-size:14.5px;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#visor .barra button{flex:0 0 auto;padding:8px 12px;border:1px solid #33403A;border-radius:9px;
+  background:transparent;color:#EDEAE1;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+#visor .barra button:hover{background:#1E2721}
+#visor .barra button:focus-visible{outline:2px solid #8FC3A8;outline-offset:2px}
+#visor.grande .datos-visor{padding:14px 16px 20px;background:#141A16;color:#C9CFC9;font-size:15px}
+#visor.peque .datos-visor{display:none}
+#fondo{position:fixed;inset:0;background:rgba(8,12,10,.72);z-index:49}
+
+@media (max-width:520px){
+  .env{padding:20px 14px 80px}
+  #visor.peque{right:10px;bottom:10px;left:10px;width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="env">
+  <h1>Las casas, en vídeo</h1>
+  <p class="sub">Dile lo que buscas y te enseño el vídeo de la que encaje. Lo puedes poner a pantalla completa, o dejarlo pequeño en una esquina y seguir hablando con la IA.</p>
+
+  <div class="buscador">
+    <div class="campos">
+      <div>
+        <label for="f-zona">Zona</label>
+        <input type="text" id="f-zona" placeholder="Arona, Adeje…" autocomplete="off">
+      </div>
+      <div>
+        <label for="f-tipo">Qué buscas</label>
+        <select id="f-tipo">
+          <option value="">Comprar o alquilar</option>
+          <option value="venta">Comprar</option>
+          <option value="alquiler">Alquilar</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-precio">Hasta (€)</label>
+        <input type="number" id="f-precio" min="0" step="50" placeholder="sin límite" inputmode="numeric">
+      </div>
+      <div>
+        <label for="f-hab">Habitaciones</label>
+        <select id="f-hab">
+          <option value="">Las que sean</option>
+          <option value="1">1 o más</option>
+          <option value="2">2 o más</option>
+          <option value="3">3 o más</option>
+          <option value="4">4 o más</option>
+        </select>
+      </div>
+    </div>
+    <p class="cuantas" id="cuantas">Cargando…</p>
+  </div>
+
+  <div class="rejilla" id="rejilla"></div>
+</div>
+
+<div id="fondo" hidden></div>
+
+<div id="visor" class="grande" hidden aria-label="Vídeo de la vivienda">
+  <div class="marco" id="marco"></div>
+  <div class="barra">
+    <span class="tit" id="v-tit"></span>
+    <button type="button" id="v-peque">Minimizar</button>
+    <button type="button" id="v-grande" hidden>Ampliar</button>
+    <button type="button" id="v-cerrar">Cerrar</button>
+  </div>
+  <div class="datos-visor" id="v-datos"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Si no se puede leer casas.json (por ejemplo abriendo el archivo suelto en el
+     ordenador), se usa esta copia para que la pagina siga viendose. */
+  var DE_RESERVA = [
+    {id:"ej-1", titulo:"Piso de 2 habitaciones en Los Cristianos", zona:"Los Cristianos, Arona",
+     tipo:"alquiler", precio:950, habitaciones:2, banos:1, metros:68,
+     descripcion:"Segunda planta con ascensor, terraza al sur y plaza de garaje.",
+     video:"https://www.youtube.com/watch?v=aqz-KE-bpKQ", ejemplo:true},
+    {id:"ej-2", titulo:"Apartamento con vistas en Costa Adeje", zona:"Costa Adeje, Adeje",
+     tipo:"venta", precio:245000, habitaciones:1, banos:1, metros:52,
+     descripcion:"Reformado en 2024, amueblado, en complejo con piscina.",
+     video:"https://vimeo.com/76979871", ejemplo:true}
+  ];
+
+  var casas = [];
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ var d=document.createElement("div"); d.textContent = s==null?"":String(s); return d.innerHTML; }
+
+  /* ---------- de un enlace cualquiera al embed ---------- */
+  function deYoutube(u){
+    var m = u.match(/(?:youtube\.com\/.*[?&]v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : null;
+  }
+  function deVimeo(u){
+    var m = u.match(/vimeo\.com\/(?:video\/)?(\d{5,})/);
+    return m ? m[1] : null;
+  }
+  function miniatura(u){
+    var y = deYoutube(u);
+    if(y) return "https://i.ytimg.com/vi/" + y + "/hqdefault.jpg";
+    return null;   /* Vimeo y los mp4 no dan miniatura sin llamar fuera: se deja el fondo oscuro */
+  }
+
+  function meterVideo(u, titulo){
+    var marco = $("marco");
+    marco.innerHTML = "";
+    var y = deYoutube(u), v = deVimeo(u), el;
+    if(y){
+      el = document.createElement("iframe");
+      /* nocookie: YouTube no deja cookies de seguimiento hasta que se le da al play */
+      el.src = "https://www.youtube-nocookie.com/embed/" + y + "?rel=0&modestbranding=1&autoplay=1";
+      el.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen";
+      el.allowFullscreen = true;
+    } else if(v){
+      el = document.createElement("iframe");
+      el.src = "https://player.vimeo.com/video/" + v + "?dnt=1&autoplay=1";
+      el.allow = "autoplay; fullscreen; picture-in-picture";
+      el.allowFullscreen = true;
+    } else {
+      el = document.createElement("video");
+      el.src = u; el.controls = true; el.autoplay = true; el.playsInline = true;
+    }
+    el.title = titulo || "Vídeo de la vivienda";
+    marco.appendChild(el);
+  }
+
+  /* ---------- pintar ---------- */
+  function euros(n){
+    return (Number(n)||0).toLocaleString("es-ES", {maximumFractionDigits:0}) + " €";
+  }
+
+  function filtradas(){
+    var z = $("f-zona").value.trim().toLowerCase();
+    var t = $("f-tipo").value;
+    var p = parseFloat($("f-precio").value);
+    var h = parseInt($("f-hab").value, 10);
+    return casas.filter(function(c){
+      if(z && (String(c.zona||"") + " " + String(c.titulo||"")).toLowerCase().indexOf(z) < 0) return false;
+      if(t && c.tipo !== t) return false;
+      if(!isNaN(p) && Number(c.precio) > p) return false;
+      if(!isNaN(h) && Number(c.habitaciones||0) < h) return false;
+      return true;
+    });
+  }
+
+  function pintar(){
+    var lista = filtradas(), r = $("rejilla");
+    $("cuantas").innerHTML = lista.length
+      ? "<b>" + lista.length + "</b> " + (lista.length === 1 ? "vivienda" : "viviendas")
+        + ' <button type="button" class="limpiar" id="limpiar">quitar filtros</button>'
+      : "Ninguna encaja con eso.";
+    var lim = $("limpiar");
+    if(lim) lim.addEventListener("click", function(){
+      $("f-zona").value=""; $("f-tipo").value=""; $("f-precio").value=""; $("f-hab").value="";
+      pintar();
+    });
+
+    if(!lista.length){
+      r.innerHTML = '<div class="vacio">No hay ninguna vivienda con esos filtros.<br>Prueba a quitar alguno o a ampliar el precio.</div>';
+      return;
+    }
+
+    r.innerHTML = lista.map(function(c){
+      var mini = miniatura(String(c.video || ""));
+      return '<button type="button" class="casa" data-id="' + esc(c.id) + '">'
+        + '<span class="mini">'
+          + (mini ? '<img src="' + esc(mini) + '" alt="" loading="lazy">' : '')
+          + '<span class="marca-tipo">' + (c.tipo === "venta" ? "En venta" : "En alquiler") + '</span>'
+          + '<span class="play"><span>&#9654;</span></span>'
+        + '</span>'
+        + '<span class="cuerpo">'
+          + '<h2>' + esc(c.titulo) + '</h2>'
+          + '<span class="donde">' + esc(c.zona) + '</span>'
+          + '<span class="datos">' + esc(c.habitaciones) + ' hab · ' + esc(c.banos) + ' baño'
+            + (Number(c.banos) === 1 ? '' : 's') + ' · ' + esc(c.metros) + ' m²</span>'
+          + '<span class="precio">' + euros(c.precio)
+            + (c.tipo === "alquiler" ? ' <small>al mes</small>' : '') + '</span>'
+          + (c.ejemplo ? '<span class="aviso-ej">Ejemplo</span>' : '')
+        + '</span></button>';
+    }).join("");
+
+    Array.prototype.forEach.call(r.querySelectorAll(".casa"), function(b){
+      b.addEventListener("click", function(){ abrir(b.getAttribute("data-id")); });
+    });
+  }
+
+  /* ---------- visor ---------- */
+  var abierta = null;
+
+  function abrir(id){
+    var c = casas.filter(function(x){ return String(x.id) === String(id); })[0];
+    if(!c) return;
+    abierta = c;
+    $("v-tit").textContent = c.titulo;
+    $("v-datos").innerHTML = esc(c.zona) + ' · ' + esc(c.habitaciones) + ' hab · '
+      + esc(c.metros) + ' m² · <b>' + euros(c.precio)
+      + (c.tipo === "alquiler" ? ' al mes' : '') + '</b><br>' + esc(c.descripcion || "");
+    meterVideo(String(c.video || ""), c.titulo);
+    modo("grande");
+    $("visor").hidden = false;
+    $("v-peque").focus();
+  }
+
+  function modo(cual){
+    var v = $("visor");
+    v.classList.toggle("grande", cual === "grande");
+    v.classList.toggle("peque",  cual === "peque");
+    $("fondo").hidden = (cual !== "grande");
+    $("v-peque").hidden  = (cual !== "grande");
+    $("v-grande").hidden = (cual === "grande");
+    document.body.style.overflow = (cual === "grande") ? "hidden" : "";
+  }
+
+  function cerrar(){
+    $("visor").hidden = true;
+    $("fondo").hidden = true;
+    $("marco").innerHTML = "";     /* para que el video deje de sonar */
+    document.body.style.overflow = "";
+    abierta = null;
+  }
+
+  $("v-peque").addEventListener("click", function(){ modo("peque"); });
+  $("v-grande").addEventListener("click", function(){ modo("grande"); });
+  $("v-cerrar").addEventListener("click", cerrar);
+  $("fondo").addEventListener("click", function(){ modo("peque"); });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && !$("visor").hidden){
+      if($("visor").classList.contains("grande")) modo("peque"); else cerrar();
+    }
+  });
+
+  ["f-zona","f-precio"].forEach(function(id){ $(id).addEventListener("input", pintar); });
+  ["f-tipo","f-hab"].forEach(function(id){ $(id).addEventListener("change", pintar); });
+
+  /* ---------- arranque ---------- */
+  fetch("casas.json", {cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(d){ casas = (d && Array.isArray(d.casas)) ? d.casas : DE_RESERVA; })
+    .catch(function(){ casas = DE_RESERVA; })
+    .then(function(){ pintar(); });
+})();
+</script>
+</body>
+</html>

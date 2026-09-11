@@ -173,6 +173,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 </div>
 
 <script src="datos.js?v=1"></script>
+<script src="orden.js?v=1"></script>
+<script src="ayudas.js?v=1"></script>
 <script>
 (function(){
   "use strict";
@@ -200,7 +202,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var BASE_40     = dato((D.irpfEstatal||{}).conCertificados && D.irpfEstatal.conCertificados.base, 7500);
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);
-  var PLAZO       = dato(DN.plazoAnos, 10);
+  var PLAZO       = dato(DN.plazoAnos, 15);   /* respaldo: igual que datos.js (11/09/2026) */
   var DESCUENTO   = dato(DN.descuentoInstalador, 500);
   var PARTE_ENERGIA = dato(DN.parteEnergiaFactura, 0.70);
 
@@ -1056,6 +1058,11 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         partes.push("Y <b>hay subvención abierta</b>: " + esc(c.subvencion.nota || ""));
       } else if(c.subvencion && c.subvencion.estado === "reabre"){
         partes.push("Subvención: " + esc(c.subvencion.nota || ""));
+      } else if(c.subvencion && c.subvencion.estado === "cerrada" && c.subvencion.nota){
+        /* 11/09/2026: si la subvención está cerrada pero tenemos algo que decir
+           (por qué cerró, o que hay otra ayuda que NO cubre placas), se dice.
+           Solo pinta texto: no toca ningún número. */
+        partes.push("Subvención: " + esc(c.subvencion.nota));
       }
       if(k !== "cn") partes.push("El IBI y el ICIO los pone tu ayuntamiento; esos hay que mirarlos con tu recibo delante.");
       $("nota-ccaa").innerHTML = partes.join(" ");
@@ -1068,6 +1075,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       R.ccaa = $("c-sel").value;
       R.muni = (R.ccaa === "cn") ? $("m-sel").value : null;
       R.ccaaElegida = true;
+      try{ if(window.IMMOIA_AYUDAS) window.IMMOIA_AYUDAS.cargar(R.ccaa); }catch(e){}
       guardar();
       responder.innerHTML = "";
       yo(R.muni ? IBI[R.muni][4] : (COM[R.ccaa] ? COM[R.ccaa].nombre : R.ccaa));
@@ -1768,6 +1776,34 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
          + "desde el ano " + d.anos + ", " + Math.round(d.mesFin) + " euros al mes. ";
     }
     if(R.pago) t += "He elegido pagarlo asi: " + R.pago + ". ";
+
+    /* ---- lo que sabe la base: las ayudas de SU comunidad y los avisos de orden.
+            Si algo de esto falla, la pagina sigue funcionando igual que antes. ---- */
+    try{
+      if(window.IMMOIA_AYUDAS && R.ccaa){
+        window.IMMOIA_AYUDAS.cargar(R.ccaa);               /* sin esperar: deja el fichero listo */
+        var txtAyudas = window.IMMOIA_AYUDAS.paraLaIA(R.ccaa, "placas", 5);
+        if(txtAyudas) t += "\n\n" + txtAyudas + "\n";
+      }
+      if(window.IMMOIA_ORDEN){
+        var revision = window.IMMOIA_ORDEN.revisar({
+          aguaElectrica: R.agua ? (R.agua === "electrico") : null,
+          aire:          R.aire ? (R.aire === "si") : null,
+          titulares:     1,
+          vacacional:    R.tipo ? (R.tipo === "vac") : null,
+          plazoAnos:     (D.numeros && D.numeros.plazoAnos) || 0,
+          conPrestamo:   !!R.pago && /prestamo|banco|financi/i.test(String(R.pago)),
+          mes:           (new Date()).getMonth() + 1
+        });
+        if(revision.hayQueAvisar && revision.loPrimero){
+          var av = revision.loPrimero;
+          t += "\nESTO SE LO TIENES QUE DECIR ANTES QUE NADA: " + av.titulo
+             + " | Por que: " + av.porque
+             + " | Y la salida, que va en la misma frase: " + av.salida + "\n";
+        }
+      }
+    }catch(e){ /* la base es un extra: si falla, no se rompe la conversacion */ }
+
     t += "Contestame corto y en cristiano, sin repetirme los numeros si no te los pido, "
        + "y sin pedirme datos que ya he dado.";
     return t;
