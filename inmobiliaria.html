@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>La secretaria · IMMO IA para inmobiliarias</title>
+<style>
+  :root{
+    --marca:#13342A; --tinta:#1B231F; --tinta-2:#635C4B;
+    --linea:#D8D1BE; --tarjeta:#fff; --fondo:#FAF8F3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);
+       font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .caja{max-width:760px;margin:0 auto;padding:26px 18px 80px}
+  header{border-bottom:1px solid var(--linea);padding-bottom:18px;margin-bottom:22px}
+  .marca{font-weight:700;color:var(--marca);font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+  h1{font-size:27px;line-height:1.2;margin:0 0 8px;color:var(--marca)}
+  .lema{margin:0;color:var(--tinta-2);font-size:16px}
+  .tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:0 0 24px}
+  .t{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:14px 16px}
+  .t b{display:block;color:var(--marca);font-size:15px;margin-bottom:3px}
+  .t span{font-size:14px;color:var(--tinta-2)}
+  .prueba{background:#EDF1EE;border:1px solid #CBD9D0;border-radius:12px;padding:15px 17px;margin:0 0 24px}
+  .prueba p{margin:0 0 8px;font-size:14.5px;color:var(--tinta-2)}
+  .prueba ul{margin:0;padding-left:19px;font-size:14.5px}
+  .prueba li{margin:3px 0}
+  .mesa{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:15px 17px;margin:0 0 22px}
+  .mesa-tit{display:block;font-weight:700;color:var(--marca);font-size:16px;margin:0 0 3px}
+  .mesa-sub{margin:0 0 10px;font-size:13.5px;color:var(--tinta-2)}
+  .mesa textarea{width:100%;min-height:104px;resize:vertical;padding:11px 12px;font:inherit;font-size:15px;
+    border:1px solid var(--linea);border-radius:9px;background:#fff;color:inherit;line-height:1.5}
+  .mesa-pie{display:flex;align-items:center;gap:11px;margin-top:9px}
+  .mesa-pie button{padding:9px 17px;font:inherit;font-weight:600;font-size:14.5px;border:0;border-radius:9px;
+    background:var(--marca);color:#fff;cursor:pointer}
+  .mesa-pie button:hover{filter:brightness(1.15)}
+  #inmo-mesa-aviso{font-size:13.5px;color:var(--tinta-2)}
+  .asis{margin:0}
+  footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--linea);
+         font-size:13px;color:var(--tinta-2)}
+  footer a{color:var(--marca)}
+  @media (max-width:520px){ h1{font-size:23px} .caja{padding:20px 15px 70px} }
+</style>
+</head>
+<body>
+<div class="caja">
+
+  <header>
+    <p class="marca">IMMO IA</p>
+    <h1>La secretaria de la inmobiliaria</h1>
+    <p class="lema">Lleva los expedientes, sabe los papeles y los plazos, y se adelanta:
+       te dice lo que viene detrás antes de que lo preguntes.</p>
+  </header>
+
+  <div class="tarjetas">
+    <div class="t"><b>Se adelanta</b><span>No espera a que preguntes. Si pides el certificado energético, ya te dice qué va detrás.</span></div>
+    <div class="t"><b>Pide todo de golpe</b><span>Si falta un papel se va el cliente. Te da la lista entera y cuál hay que lanzar primero.</span></div>
+    <div class="t"><b>De las arras a la notaría</b><span>El tramo donde se cae una venta. Repasa ella sola la lista de alarmas.</span></div>
+    <div class="t"><b>No se inventa nada</b><span>Importes y plazos que no tiene delante, los manda confirmar y te dice dónde.</span></div>
+  </div>
+
+  <div id="inmo-mesa"></div>
+
+  <div class="prueba">
+    <p><b>Para probarla</b>, háblale como le hablarías a una compañera. Por ejemplo:</p>
+    <ul>
+      <li>«Tengo una captación nueva en Adeje, ¿qué le pido al propietario?»</li>
+      <li>«Firmamos arras el jueves, ¿qué se me puede escapar?»</li>
+      <li>«El vendedor vive en Alemania, ¿eso cambia algo?»</li>
+      <li>«Repásame el expediente de José, que la firma es en dos semanas.»</li>
+    </ul>
+  </div>
+
+  <div class="asis"></div>
+
+  <footer>
+    Contesta una IA, y lo dice si se lo preguntas. No le hace falta ningún dato personal:
+    al expediente lo llamamos por un nombre corto. Los importes y plazos que dependen de tu
+    comunidad autónoma te los manda confirmar en vez de inventárselos.
+    · <a href="privacidad.html">Privacidad</a>
+  </footer>
+
+</div>
+
+<script>
+  window.CONFIG = { api: "https://immoia.ley1998ortizz.workers.dev" };
+</script>
+<!-- inmo.js va ANTES que charla.js: asi el encargo queda el primero de todo -->
+<script src="inmo.js?v=1"></script>
+<script src="charla.js?v=8"></script>
+</body>
+</html>
