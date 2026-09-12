@@ -130,3 +130,14 @@ if(puede) montar();
 if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", arrancar);
 else arrancar(); /* boton flotante v2 */
 })();
+
+/* LA SECRETARIA. Dos anadidos, cada uno en su archivo:
+     secretaria.js  hace que hable como una persona
+     saber.js       le pone delante las ayudas del sitio del que se hable
+   Si algun dia molestan, se borran estas lineas y todo vuelve a estar igual. */
+(function(){
+  ["secretaria.js?v=1", "saber.js?v=1"].forEach(function(f){
+    var s = document.createElement("script"); s.src = f;
+    (document.body || document.documentElement).appendChild(s);
+  });
+})();
