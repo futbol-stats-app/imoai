@@ -131,7 +131,7 @@ if(document.readyState === "loading") document.addEventListener("DOMContentLoade
 else arrancar(); /* boton flotante v2 */
 })();
 
-/* LA SECRETARIA. Dos anadidos, cada uno en su archivo:
+window.IMMOIA_CHARLA = { version: "2026-09-11+modulos", microfono: "avisa" };  /* Marca de version. El nucleo la lee: si algun dia vuelve a subirse un charla.js anterior al 11 de septiembre, esta linea se va con el y el nucleo lo dice en voz alta en vez de quedarse callado. */  /* LA SECRETARIA. Dos anadidos, cada uno en su archivo:
      secretaria.js  hace que hable como una persona
      saber.js       le pone delante las ayudas del sitio del que se hable
      papeles.js     botones para bajar lo que escribe en PDF o Word
