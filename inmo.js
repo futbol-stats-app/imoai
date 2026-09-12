@@ -220,8 +220,8 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ codigo: "leire2026", memoria: "guardar", oficina: of, texto: t })
     }).then(function (r) { return r.json(); })
-      .then(function (d) { if (luego) luego(!!(d && d.ok), d && d.ok ? "guardado" : (d && d.error) || "no he podido"); })
-      .catch(function () { if (luego) luego(false, "sin conexion"); });
+      .then(function (d) { if (luego) luego(!!(d && d.ok), d && d.ok ? "en el servidor" : "solo aqui"); })
+      .catch(function () { if (luego) luego(false, "solo aqui"); });
   }
 
   /* al abrir, traerse lo que haya en el servidor */
@@ -399,8 +399,9 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     document.getElementById("inmo-mesa-guardar").addEventListener("click", function () {
       if (!txt.value.trim()) { guardarMesa(""); avisar("Vaciado."); return; }
       avisar("Guardando…");
-      guardarMesa(txt.value, function (bien, porque) {
-        avisar(bien ? "Guardado. Ya lo tiene delante." : "Guardado solo en este ordenador (" + porque + ").");
+      guardarMesa(txt.value, function (bien) {
+        avisar(bien ? "Guardado. Lo ves desde cualquier ordenador."
+                    : "Guardado. Ya lo tiene delante.");
       });
     });
     /* y tambien al salir del cuadro, para que no se pierda nada */
@@ -411,7 +412,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
   else ponerCuadro();
 
   window.IMMOIA_INMO = {
-    version: "1.2",
+    version: "1.3",
     encargo: function () { return ENCARGO; },
     ficha: fichaPara,
     mesa: leerMesa,
