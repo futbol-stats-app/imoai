@@ -62,10 +62,18 @@
 
   /* De lo que ha escrito la IA, saca un titulo corto para el archivo. */
   function comoSeLlama(t) {
-    var plano = sinTildes(limpio(t));
-    for (var k = 0; k < PAPELES.length; k++) {
-      if (plano.indexOf(PAPELES[k]) !== -1) {
-        return PAPELES[k].charAt(0).toUpperCase() + PAPELES[k].slice(1);
+    /* primero en lo que ha escrito ella; si ahi no sale el nombre del papel,
+       en lo ultimo que le hemos pedido nosotros */
+    var donde = [sinTildes(limpio(t))];
+    var mios = document.querySelectorAll(".cha-yo");
+    for (var z = mios.length - 1; z >= 0 && donde.length < 4; z--) {
+      donde.push(sinTildes(mios[z].textContent || ""));
+    }
+    for (var w = 0; w < donde.length; w++) {
+      for (var k = 0; k < PAPELES.length; k++) {
+        if (donde[w].indexOf(PAPELES[k]) !== -1) {
+          return PAPELES[k].charAt(0).toUpperCase() + PAPELES[k].slice(1);
+        }
       }
     }
     var m = limpio(t).split("\n").filter(function (l) { return l.trim(); })[0] || "documento";
@@ -429,7 +437,7 @@
   else vigilar();
 
   window.IMMOIA_PAPELES = {
-    version: "1.0",
+    version: "1.1",
     aWord: aWord,
     aPdf: aPdf,
     pdfBytes: hacerPDF,

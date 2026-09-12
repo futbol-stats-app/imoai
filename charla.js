@@ -138,7 +138,7 @@ else arrancar(); /* boton flotante v2 */
      firma.js       el boton Firmar, con AutoFirma
    Si algun dia molestan, se borran estas lineas y todo vuelve a estar igual. */
 (function(){
-  ["secretaria.js?v=1", "saber.js?v=1", "papeles.js?v=1", "firma.js?v=1"].forEach(function(f){
+  ["secretaria.js?v=1", "saber.js?v=1", "papeles.js?v=2", "firma.js?v=1"].forEach(function(f){
     var s = document.createElement("script"); s.src = f;
     (document.body || document.documentElement).appendChild(s);
   });
