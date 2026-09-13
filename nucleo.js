@@ -32,20 +32,31 @@
     { id: "ayudas",     global: "IMMOIA_AYUDAS",           nombre: "el motor de ayudas",        donde: "ambas",         esencial: false, sin: "no se pueden consultar las ayudas" },
     { id: "ayudastodas",global: "IMMOIA_AYUDAS_TODAS",     nombre: "las ayudas de las comunidades", donde: "ambas",     esencial: true,  sin: "las ayudas por comunidad no funcionan" },
     { id: "municipios", global: "IMMOIA_MUNICIPIOS_TODOS", nombre: "los municipios",            donde: "ambas",         esencial: false, sin: "no se localizara el municipio" },
-    { id: "inmo",       global: "IMMOIA_INMO",             nombre: "la secretaria",             donde: "inmobiliaria",  esencial: true,  sin: "la pagina de la inmobiliaria no sabe su oficio" },
+    { id: "inmo",       global: "IMMOIA_INMO",             nombre: "la secretaria",             donde: "profesional",  esencial: true,  sin: "la pagina de la inmobiliaria no sabe su oficio" },
     { id: "fiscal",     global: "IMMOIA_FISCAL",           nombre: "los impuestos",             donde: "inmobiliaria",  esencial: true,  sin: "no sabra el ITP ni el AJD de ninguna comunidad" },
-    { id: "motor",      global: "IMMOIA_MOTOR",             nombre: "el motor de autonomia",     donde: "inmobiliaria",  esencial: true,  sin: "no sabra que puede hacer sola" },    { id: "bandeja",    global: "IMMOIA_BANDEJA",           nombre: "la bandeja",                donde: "inmobiliaria",  esencial: true,  sin: "no veras lo que ha hecho ni lo que necesita de ti" },    { id: "leer",       global: "IMMOIA_LEER",             nombre: "el lector de expedientes",  donde: "inmobiliaria",  esencial: false, sin: "no podra leer un PDF que le sueltes" }
+    { id: "motor",      global: "IMMOIA_MOTOR",             nombre: "el motor de autonomia",     donde: "profesional",  esencial: true,  sin: "no sabra que puede hacer sola" },    { id: "bandeja",    global: "IMMOIA_BANDEJA",           nombre: "la bandeja",                donde: "inmobiliaria",  esencial: true,  sin: "no veras lo que ha hecho ni lo que necesita de ti" },    { id: "leer",       global: "IMMOIA_LEER",             nombre: "el lector de expedientes",  donde: "inmobiliaria",  esencial: false, sin: "no podra leer un PDF que le sueltes" },
+    { id: "oficina",    global: "IMMOIA_OFICINA",          nombre: "la cuenta de la oficina",   donde: "profesional",   esencial: true,  sin: "los expedientes no se guardan en tu oficina ni se ven desde el movil" },
+    { id: "cartera",    global: "IMMOIA_CARTERA",          nombre: "la cartera de expedientes", donde: "profesional",   esencial: true,  sin: "solo se podra llevar un expediente a la vez" },
+    { id: "manana",     global: "IMMOIA_MANANA",           nombre: "la pantalla de la manana",  donde: "manana",        esencial: true,  sin: "no veras lo que tienes hoy en toda la cartera" }
   ];
   /* En que pagina estamos. Sin inventar: por lo que hay en el documento. */
   function pagina() {
     var p = (location.pathname || "").toLowerCase();
+    if (p.indexOf("manana") !== -1) return "manana";
     if (p.indexOf("inmobiliaria") !== -1) return "inmobiliaria";
     if (document.getElementById("inmo-mesa") || document.getElementById("inmo")) return "inmobiliaria";
     return "portada";
   }
   var PAG = pagina();
 
-  function toca(p) { return p.donde === "ambas" || p.donde === PAG; }
+  /* "profesional" = las dos paginas de la inmobiliaria: la mesa y la
+     manana. "ambas" sigue queriendo decir portada + inmobiliaria, como
+     hasta hoy, para no cambiar lo que ya se comprobaba. */
+  function toca(p) {
+    if (p.donde === "ambas") return PAG !== "manana";
+    if (p.donde === "profesional") return PAG === "inmobiliaria" || PAG === "manana";
+    return p.donde === PAG;
+  }
   function hay(p)  { if (p.prueba) { try { return !!p.prueba(); } catch (e) { return false; } }
                      return typeof window[p.global] !== "undefined" && window[p.global] !== null; }
 
@@ -144,7 +155,7 @@
   }
 
   window.IMMOIA_NUCLEO = {
-    version: "1.0",
+    version: "1.1",
     parte: parte,
     texto: texto,
     faltan: function () { return faltan().map(function (p) { return p.nombre; }); },
