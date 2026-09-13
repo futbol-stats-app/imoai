@@ -34,7 +34,7 @@
     { id: "municipios", global: "IMMOIA_MUNICIPIOS_TODOS", nombre: "los municipios",            donde: "ambas",         esencial: false, sin: "no se localizara el municipio" },
     { id: "inmo",       global: "IMMOIA_INMO",             nombre: "la secretaria",             donde: "inmobiliaria",  esencial: true,  sin: "la pagina de la inmobiliaria no sabe su oficio" },
     { id: "fiscal",     global: "IMMOIA_FISCAL",           nombre: "los impuestos",             donde: "inmobiliaria",  esencial: true,  sin: "no sabra el ITP ni el AJD de ninguna comunidad" },
-    { id: "leer",       global: "IMMOIA_LEER",             nombre: "el lector de expedientes",  donde: "inmobiliaria",  esencial: false, sin: "no podra leer un PDF que le sueltes" }
+    { id: "motor",      global: "IMMOIA_MOTOR",             nombre: "el motor de autonomia",     donde: "inmobiliaria",  esencial: true,  sin: "no sabra que puede hacer sola" },    { id: "bandeja",    global: "IMMOIA_BANDEJA",           nombre: "la bandeja",                donde: "inmobiliaria",  esencial: true,  sin: "no veras lo que ha hecho ni lo que necesita de ti" },    { id: "leer",       global: "IMMOIA_LEER",             nombre: "el lector de expedientes",  donde: "inmobiliaria",  esencial: false, sin: "no podra leer un PDF que le sueltes" }
   ];
   /* En que pagina estamos. Sin inventar: por lo que hay en el documento. */
   function pagina() {
