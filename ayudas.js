@@ -33,10 +33,21 @@
     return INE[c] || (/^\d{2}$/.test(c) ? c : null);
   }
 
-  /* Descarga el fichero de una comunidad (y el estatal, que vale para todos). */
+  /* Descarga el fichero de una comunidad (y el estatal, que vale para todos).
+     Si esta cargado ayudas_todas.js (el archivo unico), tira de ahi y no pide nada:
+     asi funciona aunque la carpeta ayudas/ no se haya llegado a subir. */
   function cargar(ccaa) {
     var cod = codigo(ccaa);
     var quiero = cod ? [cod, "ES"] : ["ES"];
+
+    var TODAS = global.IMMOIA_AYUDAS_TODAS;
+    if (TODAS) {
+      quiero.forEach(function (k) {
+        if (!cache[k] && TODAS[k]) cache[k] = { ayudas: TODAS[k], origen: "archivo unico" };
+      });
+      return Promise.resolve(para(ccaa));
+    }
+
     return Promise.all(quiero.map(function (k) {
       if (cache[k]) return Promise.resolve(cache[k]);
       if (enVuelo[k]) return enVuelo[k];

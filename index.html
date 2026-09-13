@@ -1086,7 +1086,9 @@ function alcanzaTerritorio(ine, cp){
   const prov = cp.slice(0,2), ccaa = PROV_CCAA[prov];
   if(!ccaa) return true;
   if(ine.length===5) return ine.slice(0,2)===prov;
-  return ine===ccaa || ine===prov;
+  /* Los dos digitos pueden ser comunidad (01-19) o provincia (01-52) y los numeros chocan: "15" es Navarra como comunidad y A Coruna como provincia. Antes valia cualquiera de las dos y por eso a un gallego le salian ayudas navarras. Ahora manda lo que es la ficha: si el codigo esta en la tabla de comunidades, solo vale para la suya; si no esta, es provincial. */
+  if(NOMBRE_CCAA[ine] !== undefined) return ine===ccaa;
+  return ine===prov;
 }
 function nombreAmbito(ine){
   if(!ine) return "";

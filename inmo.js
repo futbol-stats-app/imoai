@@ -264,7 +264,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
   function traerFiscal() {
     if (window.IMMOIA_FISCAL || document.querySelector('script[data-fiscal]')) return;
     var s = document.createElement("script");
-    s.src = "fiscal.js?v=1";
+    s.src = "fiscal.js?v=2";
     s.setAttribute("data-fiscal", "si");
     s.onerror = function () {};
     document.head.appendChild(s);
