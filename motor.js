@@ -1,8 +1,17 @@
 /* IMMO IA · MOTOR DE AUTONOMIA Y ANTICIPACION
    ------------------------------------------------------------------
-   Traduccion fiel, linea por linea, de motor_autonomia.py y de
-   anticipacion.py. Mismas tablas, mismas reglas, mismos textos.
-   Se comprueba con una prueba que ejecuta los dos y compara.
+   Era una traduccion fiel, linea por linea, de motor_autonomia.py y
+   de anticipacion.py, y se comprobaba ejecutando los dos y comparando.
+
+   EL 16 DE SEPTIEMBRE DE 2026 DEJA DE SERLO, A PROPOSITO.
+   siguiente_paso solo miraba las LLAVES, asi que los seis DATOS no
+   competian nunca y la secretaria no podia proponer "dime la
+   direccion". Con un expediente vacio mandaba a sacarse un
+   certificado en la FNMT (2 tareas) en vez de preguntar la direccion
+   (3 tareas, diez segundos). El Python tiene el mismo fallo.
+   Si alguien vuelve a comparar los dos, van a salir distintos: es
+   correcto, y el bueno es este. No lo "arregles" hacia atras.
+   Lo demas sigue igual, linea por linea.
 
    Las cinco reglas, tal cual estaban:
      1. Cada tarea declara QUE LE FALTA, no de que color es.
@@ -49,6 +58,25 @@
     fecha_firma: "La fecha prevista de firma",
     correo_cliente: "El correo del cliente"
   };
+
+  /* COMO SE CONSIGUE CADA DATO.
+     DATOS se queda tal cual -es un mapa de nombre a texto y hay codigo
+     que hace DATOS[d].toLowerCase()-, asi que esto va aparte.
+     El ESFUERZO de un dato es 0 o 1, siempre por debajo del de
+     cualquier llave, y no es un capricho: un dato se consigue
+     PREGUNTANDO, sin tramite, sin tercero y sin esperar. Una llave
+     pide a la FNMT, al notario o a un colegio profesional. Poner los
+     dos en la misma escala seria comparar "dime la direccion" con
+     "vete a sacarte un certificado", y eso es justo lo que hacia mal. */
+  var COMO_DATOS = {
+    direccion:      { como: "Me la dices tu: la sabes de memoria.", pide_a: "agencia", esfuerzo: 0 },
+    precio:         { como: "En cuanto este pactado, me lo dices.", pide_a: "agencia", esfuerzo: 0 },
+    ccaa:           { como: "Sale sola de la direccion, o me la dices.", pide_a: "agencia", esfuerzo: 0 },
+    fecha_firma:    { como: "La fecha que hayais hablado, aunque sea aproximada.", pide_a: "agencia", esfuerzo: 0 },
+    correo_admin:   { como: "El correo del administrador de fincas del edificio.", pide_a: "agencia", esfuerzo: 1 },
+    correo_cliente: { como: "El correo del cliente, para mandarle los papeles.", pide_a: "cliente", esfuerzo: 1 }
+  };
+
   /* [nombre, fase, llaves que necesita, datos que necesita] */
   var TAREAS = [
     ["Sacar superficie, ano y uso del Catastro", "Captacion", [], ["direccion"]],
@@ -105,11 +133,23 @@
   /* ---------- utiles ---------- */
   function conjunto(x) { return (x instanceof Set) ? x : new Set(x || []); }
 
-  function llaves_utiles(llave) {
+  /* LAS DEPENDENCIAS NO PUEDEN DAR VUELTAS SOBRE SI MISMAS.
+     Esta funcion baja por "necesita" recursivamente. Si algun dia
+     alguien escribe que A necesita B y B necesita A -un renglon, en la
+     tabla de arriba, sin darse cuenta-, la version anterior se llamaba
+     a si misma hasta reventar la pila, y eso NO es un error que se vea
+     en un rincon: tira la pagina entera con un RangeError, en blanco,
+     delante de quien sea. Con el "visto" es imposible: cada llave se
+     visita una vez y el ciclo se corta solo. Hoy la tabla no tiene
+     ciclos; esto es para el dia en que alguien anada uno. */
+  function llaves_utiles(llave, visto) {
     if (llave === IMPOSIBLE || !LLAVES[llave]) return new Set([llave]);
+    visto = visto || new Set();
+    if (visto.has(llave)) return new Set();
+    visto.add(llave);
     var fuera = new Set([llave]);
     LLAVES[llave].necesita.forEach(function (d) {
-      llaves_utiles(d).forEach(function (x) { fuera.add(x); });
+      llaves_utiles(d, visto).forEach(function (x) { fuera.add(x); });
     });
     return fuera;
   }
@@ -157,27 +197,78 @@
     return resumen(mas, datos_que_hay).VERDE - antes;
   }
 
-  /* Un solo siguiente paso, el mas rentable. */
+  /* Cuantas tareas pasarian a VERDE con SOLO este dato.
+     El gemelo de cuanto_desbloquea, pero para los datos. */
+  function cuanto_desbloquea_dato(dato, tengo, datos_que_hay) {
+    datos_que_hay = conjunto(datos_que_hay);
+    var antes = resumen(tengo, datos_que_hay).VERDE;
+    var mas = new Set(datos_que_hay); mas.add(dato);
+    return resumen(tengo, mas).VERDE - antes;
+  }
+
+  /* UN SOLO SIGUIENTE PASO, EL MAS RENTABLE.
+
+     LO QUE ESTABA MAL, Y POR QUE IMPORTA MAS DE LO QUE PARECE:
+     esta funcion solo miraba Object.keys(LLAVES). Los seis DATOS no
+     competian NUNCA, asi que la secretaria no podia proponer jamas
+     "dime la direccion de la casa".
+
+     Medido con un expediente vacio, antes de tocar nada:
+       cert_empresa (sacarse un certificado en la FNMT) ... 2 tareas
+       direccion    (decirmela, diez segundos) ............ 3 tareas
+     Y lo que contestaba era: vete a la FNMT. Mandaba a la persona a
+     hacer el tramite mas caro de la lista para ganar menos que
+     contestando una pregunta.
+
+     Eso no es un detalle de ordenacion: la regla 4 de este motor dice
+     que nunca se pide algo que hoy no desbloquearia nada, y la 5 que
+     se propone el paso MAS RENTABLE. Con los datos fuera del concurso,
+     la 5 no se podia cumplir.
+
+     Ahora compiten los dos, con el mismo criterio de siempre: lo que
+     mas desbloquea primero, y a igualdad, lo que menos cuesta. */
   function siguiente_paso(tengo, datos_que_hay) {
     tengo = conjunto(tengo);
+    datos_que_hay = conjunto(datos_que_hay);
     var opciones = [];
+
     Object.keys(LLAVES).forEach(function (k) {
       if (tengo.has(k)) return;
       var pendientes = LLAVES[k].necesita.filter(function (d) { return !tengo.has(d); });
       if (pendientes.length) return;
       var gana = cuanto_desbloquea(k, tengo, datos_que_hay);
       if (gana <= 0) return;
-      opciones.push([gana, -LLAVES[k].esfuerzo, k]);
+      opciones.push([gana, -LLAVES[k].esfuerzo, k, "llave"]);
     });
+
+    Object.keys(DATOS).forEach(function (d) {
+      if (datos_que_hay.has(d)) return;
+      var gana = cuanto_desbloquea_dato(d, tengo, datos_que_hay);
+      if (gana <= 0) return;
+      var c = COMO_DATOS[d] || { esfuerzo: 0 };
+      opciones.push([gana, -c.esfuerzo, d, "dato"]);
+    });
+
     if (!opciones.length) return null;
-    /* mismo orden que Python: sort(reverse=True) sobre la tupla */
+    /* mismo orden de siempre: mas desbloqueo, menos esfuerzo, y el
+       nombre solo para que dos iguales salgan siempre en el mismo
+       orden y la pantalla no baile entre dos recargas */
     opciones.sort(function (a, b) {
       if (a[0] !== b[0]) return b[0] - a[0];
       if (a[1] !== b[1]) return b[1] - a[1];
       return a[2] < b[2] ? 1 : (a[2] > b[2] ? -1 : 0);
     });
-    var g = opciones[0], info = LLAVES[g[2]];
-    return { llave: g[2], desbloquea: g[0], que: info.que, como: info.como,
+
+    var g = opciones[0];
+    if (g[3] === "dato") {
+      var cd = COMO_DATOS[g[2]] || { como: "Me lo dices y seguimos.", pide_a: "agencia", esfuerzo: 0 };
+      return { tipo: "dato", dato: g[2], llave: null, desbloquea: g[0],
+               que: DATOS[g[2]], como: cd.como,
+               necesita: [], pide_a: cd.pide_a, esfuerzo: cd.esfuerzo };
+    }
+    var info = LLAVES[g[2]];
+    return { tipo: "llave", llave: g[2], dato: null, desbloquea: g[0],
+             que: info.que, como: info.como,
              necesita: info.necesita, pide_a: info.pide_a, esfuerzo: info.esfuerzo };
   }
 
@@ -318,10 +409,12 @@
 
   var API = {
     version: "1.0",
-    IMPOSIBLE: IMPOSIBLE, LLAVES: LLAVES, DATOS: DATOS, TAREAS: TAREAS, GUION: GUION,
+    IMPOSIBLE: IMPOSIBLE, LLAVES: LLAVES, DATOS: DATOS, COMO_DATOS: COMO_DATOS,
+    TAREAS: TAREAS, GUION: GUION,
     TOPE_AVISOS_DIA: TOPE_AVISOS_DIA,
     llaves_utiles: llaves_utiles, estado: estado, resumen: resumen,
-    cuanto_desbloquea: cuanto_desbloquea, siguiente_paso: siguiente_paso,
+    cuanto_desbloquea: cuanto_desbloquea, cuanto_desbloquea_dato: cuanto_desbloquea_dato,
+    siguiente_paso: siguiente_paso,
     bloqueado_por: bloqueado_por,
     Expediente: Expediente, toca: toca, buscar_tarea: buscar_tarea,
     adelantarse: adelantarse, montar_aviso: montar_aviso, parte_del_dia: parte_del_dia

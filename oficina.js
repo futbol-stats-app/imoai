@@ -144,10 +144,10 @@
         + 'Entra con la misma en el móvil y verás lo mismo. Sin cuenta, todo se queda en este ordenador.</p>'
         + '<div class="ofi-campos">'
         + '<label>Nombre de la oficina<input type="text" id="ofi-u" autocomplete="username" placeholder="inmo-adeje" spellcheck="false"></label>'
-        + '<label>Clave<input type="password" id="ofi-c" autocomplete="current-password" placeholder="al menos 6 letras"></label>'
+        + '<label>Clave<input type="password" id="ofi-c" autocomplete="current-password" placeholder="al menos 12 letras"></label>'
         + '</div>'
         + '<div class="ofi-pie"><button type="button" class="ofi-1" id="ofi-entrar">Entrar</button>'
-        + '<button type="button" class="ofi-2" id="ofi-crear">Es la primera vez</button>'
+        + '<button type="button" class="ofi-2" id="ofi-nueva">No tengo cuenta</button>'
         + '<span class="ofi-aviso" id="ofi-aviso"></span></div>';
 
       var u = document.getElementById("ofi-u"), k = document.getElementById("ofi-c"), av = document.getElementById("ofi-aviso");
@@ -160,9 +160,22 @@
         if (!u.value.trim() || !k.value) { decir("Pon el nombre y la clave.", true); return; }
         decir("Entrando…"); entrar(u.value.trim(), k.value, hecho);
       });
-      document.getElementById("ofi-crear").addEventListener("click", function () {
-        if (!u.value.trim() || !k.value) { decir("Pon el nombre y la clave que quieras usar.", true); return; }
-        decir("Creando la cuenta…"); crear(u.value.trim(), k.value, hecho);
+      /* EL BOTON QUE ANTES DABA ERROR, Y POR QUE YA NO EXISTE.
+         Aqui habia un boton "Es la primera vez" que llamaba a crear().
+         No podia funcionar NUNCA: el servidor exige un codigo de alta
+         para dar de alta una oficina -y lo exige a proposito, para que
+         nadie pueda ir probando nombres hasta averiguar quien es
+         clienta vuestra-, y esta pagina no lo lleva ni lo puede
+         llevar, porque cualquiera puede leer el codigo de una pagina.
+         Asi que el boton contestaba siempre "Aqui no se pueden dar de
+         alta oficinas". Eso es lo que habria salido en pantalla si
+         alguien lo pulsa en una demostracion.
+         Las cuentas las crea IMMO IA y se entregan hechas, como hace
+         cualquier programa de gestion. crear() se queda en el API de
+         abajo porque las herramientas internas si lo usan, con el
+         codigo de alta en la mano. Lo que se va es el boton. */
+      document.getElementById("ofi-nueva").addEventListener("click", function () {
+        decir("Las cuentas las damos nosotros: escribenos a immoai.contacto@gmail.com y te la creamos en el momento.");
       });
       k.addEventListener("keydown", function (e) {
         if (e.key === "Enter") document.getElementById("ofi-entrar").click();
