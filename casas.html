@@ -268,7 +268,7 @@ input:focus-visible,select:focus-visible{outline:2px solid var(--marca);outline-
             + (Number(c.banos) === 1 ? '' : 's') + ' · ' + esc(c.metros) + ' m²</span>'
           + '<span class="precio">' + euros(c.precio)
             + (c.tipo === "alquiler" ? ' <small>al mes</small>' : '') + '</span>'
-          + (c.ejemplo ? '<span class="aviso-ej">Ejemplo</span>' : '')
+          + (c.ejemplo ? '<span class="aviso-ej">Ejemplo: no está a la venta</span>' : '')
         + '</span></button>';
     }).join("");
 
@@ -285,7 +285,8 @@ input:focus-visible,select:focus-visible{outline:2px solid var(--marca);outline-
     if(!c) return;
     abierta = c;
     $("v-tit").textContent = c.titulo;
-    $("v-datos").innerHTML = esc(c.zona) + ' · ' + esc(c.habitaciones) + ' hab · '
+    $("v-datos").innerHTML = (c.ejemplo ? '<b>Vivienda de ejemplo: no está a la venta ni se puede visitar.</b><br>' : '')
+      + esc(c.zona) + ' · ' + esc(c.habitaciones) + ' hab · '
       + esc(c.metros) + ' m² · <b>' + euros(c.precio)
       + (c.tipo === "alquiler" ? ' al mes' : '') + '</b><br>' + esc(c.descripcion || "");
     meterVideo(String(c.video || ""), c.titulo);

@@ -47,6 +47,7 @@
   + "#casa-visor .pie{padding:13px 16px 18px;background:#141A16;color:#C9CFC9;font-size:15px;line-height:1.5}"
   + "#casa-visor.peque .pie{display:none}"
   + "#casa-fondo{position:fixed;inset:0;background:rgba(8,12,10,.72);z-index:59}"
+  + ".casa-ej{display:block;margin-top:8px;padding:6px 9px;border-radius:7px;background:#FFF4D6;color:#6B4A00;font-size:13px;font-weight:700}"
   + "[hidden]{display:none !important}"
   + "@media(max-width:520px){#casa-visor.peque{right:10px;left:10px;bottom:10px;width:auto}}";
 
@@ -145,14 +146,47 @@
     el.title = c.titulo || "Vivienda";
     marco.appendChild(el);
 
-    visor.querySelector(".tit").textContent = c.titulo || "Vivienda";
+    visor.querySelector(".tit").textContent = (c.ejemplo ? "EJEMPLO \u00b7 " : "") + (c.titulo || "Vivienda");
     var precio = (Number(c.precio)||0).toLocaleString("es-ES",{maximumFractionDigits:0}) + " €";
     visor.querySelector(".pie").textContent =
-      [c.zona, (c.habitaciones ? c.habitaciones + " hab" : ""), (c.metros ? c.metros + " m²" : ""),
+      [(c.ejemplo ? AVISO_EJ : ""), c.zona, (c.habitaciones ? c.habitaciones + " hab" : ""), (c.metros ? c.metros + " m²" : ""),
        precio + (c.tipo === "alquiler" ? " al mes" : "")].filter(Boolean).join(" · ");
 
     modo("grande");
     visor.hidden = false;
+  }
+
+  /* ---------------- las casas de ejemplo, dichas como ejemplo ----------------
+     Las cuatro casas del archivo son inventadas. La IA las describe con su zona
+     y su precio. Si una respuesta nombra la zona Y el precio de una casa marcada
+     como ejemplo, se le pone debajo una linea que lo dice. */
+  var AVISO_EJ = "Vivienda de ejemplo: no est\u00e1 a la venta ni se puede visitar";
+  function cifra(n){
+    var s = String(Math.round(Number(n) || 0));
+    var partes = [];
+    while(s.length > 3){ partes.unshift(s.slice(-3)); s = s.slice(0, -3); }
+    partes.unshift(s);
+    return partes.join("[.\\s\u00a0]?");
+  }
+  function nombraEjemplo(t){
+    var bajo = t.toLowerCase();
+    for(var i=0;i<casas.length;i++){
+      var c = casas[i];
+      if(!c || !c.ejemplo) continue;
+      var zona = String(c.zona || "").split(",")[0].trim().toLowerCase();
+      if(!zona || bajo.indexOf(zona) < 0) continue;
+      if(!c.precio) continue;
+      if(new RegExp("(^|[^0-9])" + cifra(c.precio) + "([^0-9]|$)").test(t)) return true;
+    }
+    return false;
+  }
+  function marcarEjemplo(nodo){
+    if(nodo.querySelector(".casa-ej")) return;
+    if(!nombraEjemplo(nodo.textContent || "")) return;
+    var p = document.createElement("span");
+    p.className = "casa-ej";
+    p.textContent = AVISO_EJ + ".";
+    nodo.appendChild(p);
   }
 
   /* ---------------- ver la marca en lo que dice la IA ---------------- */
@@ -181,7 +215,10 @@
   function barrer(){
     var hilo = document.getElementById("cha-hilo");
     if(!hilo) return;
-    Array.prototype.forEach.call(hilo.querySelectorAll(".cha-ella"), limpiarYAbrir);
+    Array.prototype.forEach.call(hilo.querySelectorAll(".cha-ella"), function(n){
+      limpiarYAbrir(n);
+      if(listo){ estilos(); marcarEjemplo(n); }
+    });
   }
 
   /* El hilo se repinta entero cada vez, asi que se vigila el contenedor. */
