@@ -593,6 +593,33 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       if (u.indexOf("/hablar") >= 0 && opciones && typeof opciones.body === "string") {
         var cuerpo = JSON.parse(opciones.body);
         var m = cuerpo && cuerpo.mensajes;
+
+        /* DE QUIEN ES ESTA CONVERSACION.
+           El chat no llevaba NADA que dijera de que oficina viene, y
+           eso no era un detalle: el tope de gasto del servidor cobra
+           al cubo de los anonimos todo lo que no sabe de quien es. Una
+           oficina que paga se habria quedado cortada a los pocos
+           mensajes del dia, compartiendo cubo con cualquiera que entre
+           en la web, y sin que nadie pudiera explicar por que.
+           Va la LLAVE DE PASO, nunca la clave: una clave no tiene por
+           que viajar en cada mensaje. Si no hay llave -nadie ha
+           entrado, o es la pagina de particulares- no se manda nada y
+           la conversacion es anonima, que es lo correcto.
+           Se pone FUERA del "if" de abajo a proposito: ese solo entra
+           cuando hay que colar el encargo, y el gasto hay que
+           atribuirlo en todas. */
+        if (m && m.length && !cuerpo.sesion && !cuerpo.usuario) {
+          var cAhora = cuentaAbierta();
+          if (cAhora && cAhora.sesion) cuerpo.sesion = cAhora.sesion;
+          else {
+            try {
+              var s = window.IMMOIA_OFICINA && window.IMMOIA_OFICINA.sesion && window.IMMOIA_OFICINA.sesion();
+              if (s) cuerpo.sesion = s;
+            } catch (e) {}
+          }
+          if (cuerpo.sesion) opciones = Object.assign({}, opciones, { body: JSON.stringify(cuerpo) });
+        }
+
         if (m && m.length && !(m[0] && String(m[0].texto || "").indexOf(MARCA) === 0)) {
           var delante = [{ papel: "yo", texto: ENCARGO }];
           var mesa = fichaDeLaMesa();

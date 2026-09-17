@@ -35,7 +35,10 @@
     if (cuenta) return cuenta;
     try {
       var c = JSON.parse(localStorage.getItem(LLAVE) || "null");
-      if (c && c.usuario && c.clave) cuenta = c;
+      /* vale con la clave O con la llave de paso, igual que lo mira
+         inmo.js. Antes exigia clave, asi que una cuenta que solo
+         tuviera llave se habria quedado fuera sin decir nada. */
+      if (c && c.usuario && (c.clave || c.sesion)) cuenta = c;
     } catch (e) {}
     return cuenta;
   }
@@ -79,12 +82,52 @@
       luego(d);
     });
   }
+  /* LA LLAVE DE PASO SE GUARDA, QUE HASTA HOY SE TIRABA.
+     "entrar" devuelve una llave de paso -d.sesion- que vale para
+     trabajar sin volver a mandar la clave. Aqui se cogia el "ok" y se
+     tiraba la llave, asi que:
+       · inmo.js tiene escrito desde siempre "si hay sesion, manda la
+         sesion; si no, manda usuario y clave". Esa rama nunca se
+         ejecutaba: la clave de la oficina viajaba en CADA guardado.
+       · y el chat no podia decir de quien es, porque la clave no se
+         manda en el chat y nunca se pone. Sin eso, el tope de gasto
+         cobra la conversacion al cubo de los anonimos: la oficina que
+         paga se quedaria cortada a los pocos mensajes del dia sin que
+         nadie sepa por que.
+     Se guardan las dos cosas: la llave para el dia a dia y la clave
+     para cuando la llave caduque (ver caduco()). */
   function entrar(usuario, clave, luego) {
     pedir({ codigo: codigoWeb(), oficina_accion: "entrar", usuario: usuario, clave: clave }, function (d) {
-      if (d && d.ok) apuntarCuenta({ usuario: d.usuario || usuario, clave: clave });
+      if (d && d.ok) apuntarCuenta({
+        usuario: d.usuario || usuario, clave: clave,
+        sesion: d.sesion || null, sesion_vence: d.sesion_vence || null
+      });
       luego(d);
     });
   }
+
+  /* LA LLAVE HA CADUCADO. Lo dice inmo.js cuando el servidor contesta
+     401 con entrada:"no". Se tira SOLO la llave y se conserva la
+     clave, asi que la siguiente peticion vuelve a ir con la clave y
+     ademas se pide una llave nueva por lo bajo. La persona no se entera
+     y no se queda guardando solo en su ordenador sin saberlo. */
+  function caduco() {
+    var c = leerCuenta();
+    if (!c) return;
+    if (!c.clave) { apuntarCuenta(null); return; }
+    apuntarCuenta({ usuario: c.usuario, clave: c.clave, sesion: null, sesion_vence: null });
+    entrar(c.usuario, c.clave, function () {});
+  }
+
+  /* Y AL ABRIR LA PAGINA: si hay cuenta pero no hay llave -porque se
+     guardo antes de este cambio, o porque caduco estando cerrado-, se
+     pide una sin molestar a nadie. */
+  function asegurarLlave() {
+    var c = leerCuenta();
+    if (!c || c.sesion || !c.clave) return;
+    entrar(c.usuario, c.clave, function () {});
+  }
+
   function salir() { apuntarCuenta(null); }
 
   function traer(luego) { conCuenta("leer", null, luego); }
@@ -202,14 +245,19 @@
   }
 
   leerCuenta();
+  asegurarLlave();
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar);
   else montar();
 
   window.IMMOIA_OFICINA = {
-    version: "1.0",
+    version: "1.1",
     hay: function () { return !!leerCuenta(); },
     usuario: function () { var c = leerCuenta(); return c ? c.usuario : null; },
+    /* la llave de paso, para que el chat pueda decir de quien es la
+       conversacion sin mandar la clave en cada mensaje */
+    sesion: function () { var c = leerCuenta(); return (c && c.sesion) || null; },
+    caduco: caduco,
     crear: crear, entrar: entrar, salir: salir,
     traer: traer, guardar: guardar,
     cuadro: cuadro, montar: montar
