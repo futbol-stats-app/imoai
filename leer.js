@@ -559,7 +559,7 @@
     if (cuerpo.length > TOPE) { cuerpo = cuerpo.slice(0, TOPE); cortado = true; }
     c.value =
       "Te paso un expediente que se llama \"" + nombre + "\". " +
-      "Leelo y dime lo que veas: que papel es, de quien, fechas y plazos, " +
+      "Léelo y dime lo que veas: qué papel es, de quién, fechas y plazos, " +
       "y sobre todo lo que falte o me pueda dar un disgusto." +
       (cortado ? " (Es largo: te paso el principio.)" : "") +
       "\n\n----- lo que pone el papel -----\n" + cuerpo;
@@ -594,8 +594,8 @@
     var esTxt = /\.(txt|md|csv)$/i.test(nombre) || /^text\//.test(fichero.type || "");
 
     if (!esPdf && !esTxt) {
-      avisar("De momento solo se leer PDF y ficheros de texto. " +
-             "Si es un Word, guardalo como PDF y lo leo.", true);
+      avisar("De momento solo se leen PDF y ficheros de texto. " +
+             "Si es un Word, guárdalo como PDF y te lo leo.", true);
       return;
     }
 
@@ -612,23 +612,23 @@
       if (!texto || texto.replace(/\s/g, "").length < 25) {
         avisar("Este PDF no lleva letras dentro: es una foto de un papel " +
                "escaneado. Yo solo puedo leer los que tienen texto. " +
-               "Si tienes el original en Word o en PDF de verdad, pasamelo.", true);
+               "Si tienes el original en Word o en PDF de verdad, pásamelo.", true);
         return;
       }
 
       if (mandar(nombre, texto)) {
-        avisar("Leido: " + nombre + " (" + texto.length.toLocaleString("es-ES") +
+        avisar("Leído: " + nombre + " (" + texto.length.toLocaleString("es-ES") +
                " letras). Se lo estoy pasando.");
         setTimeout(quitarAviso, 5000);
       } else {
-        avisar("He leido el papel pero no encuentro el sitio donde escribirle.", true);
+        avisar("He leído el papel pero no encuentro el sitio donde escribirle.", true);
       }
     } catch (e) {
       if (e && e.motivo === "clave") {
-        avisar("Ese PDF esta protegido con contrasenia y no puedo abrirlo.", true);
+        avisar("Ese PDF está protegido con contraseña y no puedo abrirlo.", true);
       } else {
         avisar("No he podido leer ese fichero. Si lo tienes en Word, " +
-               "guardalo como PDF y prueba otra vez.", true);
+               "guárdalo como PDF y prueba otra vez.", true);
       }
     }
   }
@@ -665,7 +665,7 @@
 
     var nota = document.createElement("span");
     nota.className = "lee-nota";
-    nota.textContent = "o arrastra aqui el PDF";
+    nota.textContent = "o arrastra aquí el PDF";
 
     var sitio = document.createElement("div");
     sitio.id = "lee-sitio";

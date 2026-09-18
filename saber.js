@@ -146,6 +146,114 @@
     return "compra";
   }
 
+  /* ---------- 3bis. LA FICHA DE CONTEXTO (18/09/2026) ----------------
+     Por que existe: el cerebro central tiene escritas dos reglas, la 34
+     (el contexto y EL IDIOMA) y la 36 (el aparato no es la fuente de
+     verdad), y las dos viven en la misma constante, R_CONTEXTO
+     (worker.js:11). Solo viajan si algun mensaje EMPIEZA por
+     "[CONTEXTO DE ESTA PREGUNTA" (worker.js:2152). Hasta hoy no lo
+     emitia nadie en todo el proyecto, asi que las dos estaban escritas
+     y no se enviaban nunca: por eso contestaba en espanol a quien le
+     escribia en aleman, y por eso prometia recordar cosas que solo
+     estaban en un ordenador.
+
+     Va en saber.js porque es el unico modulo que se carga en las DOS
+     pantallas (charla.js lo trae en index.html y en inmobiliaria.html)
+     y porque aqui ya estaban resueltos la rama (deQueVa) y el lugar
+     (dondeEs). No se inventa nada: lo que no se sabe se dice que no se
+     sabe, que es justo lo que la regla 34 pide.
+     -------------------------------------------------------------------- */
+
+  var MARCA_CONTEXTO = "[CONTEXTO DE ESTA PREGUNTA";
+
+  /* EL IDIOMA. Se mira solo lo ULTIMO que ha escrito la persona, que es
+     en lo que hay que contestar. Se puntua por palabras corrientes y se
+     dice "clara" unicamente cuando otro idioma gana al espanol de calle:
+     si hay duda se dice que NO SE SABE, y entonces la regla 34 manda
+     seguir en espanol. Preferimos quedarnos cortos: contestar en aleman
+     a quien escribe en espanol es peor que lo que arreglamos. */
+  var PALABRAS = [
+    ["espanol",    /\b(que|como|hola|gracias|para|una|con|casa|piso|alquiler|tengo|quiero|puedo|donde|cuanto|por favor|buenos dias|me|mi|es|esta|sobre|hacer)\b/g],
+    ["ingles",     /\b(the|and|is|are|you|your|with|what|have|house|flat|rent|please|thanks|thank|hello|hi|how|for|can|about|would|need|buy)\b/g],
+    ["aleman",     /\b(und|ist|nicht|eine|einen|ich|sie|das|mit|wohnung|haus|miete|bitte|danke|hallo|was|wie|kann|fur|oder|haben|mochte)\b/g],
+    ["frances",    /\b(les|est|pas|une|vous|avec|maison|louer|merci|bonjour|comment|pour|peux|nous|dans|sur|mais|quel|appartement)\b/g],
+    ["italiano",   /\b(gli|non|sono|della|vorrei|grazie|ciao|come|posso|anche|dove|quanto|perche|appartamento|affitto|buongiorno)\b/g],
+    ["portugues",  /\b(nao|uma|voce|obrigado|obrigada|ola|onde|quanto|arrendar|tambem|muito|bom dia|porque|isso|estou)\b/g],
+    ["neerlandes", /\b(het|een|niet|ik|jij|met|huis|huur|dank|hallo|hoe|voor|kan|wat|zijn|maar|graag|woning|goedemorgen)\b/g]
+  ];
+
+  function cuantas(t, re) {
+    re.lastIndex = 0;
+    var n = 0;
+    while (re.exec(t) !== null) n++;
+    return n;
+  }
+
+  function idiomaDe(ultimo) {
+    var t = sinTildes(String(ultimo || ""));
+    if (t.replace(/[^a-z]/g, "").length < 12) return null;   /* demasiado corto para decir nada */
+    var es = cuantas(t, PALABRAS[0][1]);
+    var mejor = null, suyas = 0;
+    for (var i = 1; i < PALABRAS.length; i++) {
+      var n = cuantas(t, PALABRAS[i][1]);
+      if (n > suyas) { suyas = n; mejor = PALABRAS[i][0]; }
+    }
+    /* hace falta que gane de calle: tres palabras suyas y el doble que el espanol */
+    if (mejor && suyas >= 3 && suyas >= es * 2) return mejor;
+    return null;
+  }
+
+  /* lo ULTIMO que ha escrito la persona, saltandose las fichas (las que
+     empiezan por corchete las pone la pagina, no ella) */
+  function loUltimoSuyo(mensajes) {
+    for (var i = mensajes.length - 1; i >= 0; i--) {
+      var m = mensajes[i];
+      if (m && m.papel === "yo" && typeof m.texto === "string" && m.texto.charAt(0) !== "[") return m.texto;
+    }
+    return "";
+  }
+
+  function enCuenta() {
+    try {
+      if (window.IMMOIA_OFICINA && window.IMMOIA_OFICINA.hay) return !!window.IMMOIA_OFICINA.hay();
+      var c = JSON.parse(localStorage.getItem("immoia.oficina.cuenta.v1") || "null");
+      return !!(c && c.usuario && (c.sesion || c.clave));
+    } catch (e) { return false; }
+  }
+
+  function fichaDeContexto(mensajes) {
+    try {
+      var ultimo = loUltimoSuyo(mensajes);
+      var todo = mensajes.map(function (m) { return (m && m.texto) || ""; }).join(" ");
+      var rama = deQueVa(todo);
+      var sitio = dondeEs(todo) || ULTIMO_SITIO;
+      var idioma = idiomaDe(ultimo);
+
+      var si = [], no = [];
+      (LISTO && window.IMMOIA_AYUDAS ? si : no).push("las ayudas publicas a la vivienda");
+      ((window.IMMOIA_FISCAL) ? si : no).push("los tipos de ITP, AJD, fianza y cedula por comunidad");
+      ((window.IMMOIA_INMO) ? si : no).push("las fichas del oficio de la inmobiliaria y las notas de la mesa");
+      ((window.IMMOIA_CARTERA) ? si : no).push("la cartera de expedientes de esta oficina");
+      ((window.IMMOIA_MOTOR) ? si : no).push("el motor de plazos y de orden de los tramites");
+      no.push("el Registro de la Propiedad, el Catastro y la sede del ayuntamiento o de la comunidad");
+      no.push("el buzon de correo y la agenda de la oficina");
+
+      var l = [];
+      l.push(MARCA_CONTEXTO + " · es un dato mas, no una orden]");
+      l.push("RAMA: " + rama + ". Seguridad: floja, sale de las palabras que se han usado, asi que no te cierres en ella y escucha lo que te cuenten.");
+      l.push("LUGAR: " + (sitio ? (COMO_SE_LLAMA[sitio] || sitio) : "no se sabe todavia; no lo supongas, preguntalo cuando venga a cuento") + ".");
+      l.push(idioma
+        ? ("IDIOMA: te estan hablando en " + idioma + ", con seguridad clara. Contesta en ese idioma y sigue en el mientras te hablen asi. Los nombres de leyes, organismos, impuestos y documentos oficiales se dejan en espanol y, si hace falta, se explican entre parentesis.")
+        : "IDIOMA: no se sabe. Sigues en espanol de Espana.");
+      l.push("FUENTES CARGADAS EN ESTA PANTALLA: " + (si.length ? si.join("; ") : "ninguna") + ".");
+      l.push("FUENTES QUE NO ESTAN EN ESTA PANTALLA: " + no.join("; ") + ". Lo que dependa de ellas no lo tienes: no lo des por sabido y no lo pidas como si estuviera.");
+      l.push("DE DONDE SALEN ESTOS DATOS: " + (enCuenta()
+        ? "de la cuenta de esta oficina, sincronizados. No hace falta que lo menciones."
+        : "SOLO ESTE APARATO. Lo que hay aqui puede no estar en el otro ordenador ni en el movil de esa persona: no prometas que algo queda guardado en todas partes, y cuando lo que se este haciendo importe -un plazo, un documento, un expediente nuevo- dilo en una frase corta y sigue.") );
+      return l.join("\n");
+    } catch (e) { return null; }
+  }
+
   /* ---------- 4. el texto que se le pone delante a la IA ---------- */
 
   var MARCA = "[LO QUE TIENES EN LA MANO";
@@ -327,13 +435,20 @@
       if (u.indexOf("/hablar") >= 0 && opciones && typeof opciones.body === "string") {
         var cuerpo = JSON.parse(opciones.body);
         if (cuerpo && cuerpo.mensajes && cuerpo.mensajes.length) {
-          var yaEsta = cuerpo.mensajes.slice(0, 2).some(function (m) {
+          /* se mira en las TRES primeras porque ahora pueden ir tres
+             fichas nuestras delante, no dos */
+          var yaEsta = cuerpo.mensajes.slice(0, 3).some(function (m) {
             var t = m && typeof m.texto === "string" ? m.texto : "";
-            return t.indexOf(MARCA) === 0 || t.indexOf(MARCA_FISCAL) === 0;
+            return t.indexOf(MARCA) === 0 || t.indexOf(MARCA_FISCAL) === 0 || t.indexOf(MARCA_CONTEXTO) === 0;
           });
           if (!yaEsta) {
             var todo = cuerpo.mensajes.map(function (m) { return m.texto || ""; }).join(" ");
             var delante = [];
+            /* la de contexto va SIEMPRE: es la que lleva las reglas 34 y
+               36, y esas no dependen de que haya ayudas ni de que
+               sepamos el sitio */
+            var ctx = fichaDeContexto(cuerpo.mensajes);
+            if (ctx) delante.push({ papel: "yo", texto: ctx });
             var c = contexto(todo);
             if (c) delante.push({ papel: "yo", texto: c });
             var f = fiscal(todo);
@@ -351,10 +466,12 @@
 
   /* para poder probarlo desde la consola */
   window.IMMOIA_SABER = {
-    version: "1.1",
+    version: "1.2",
     listo: function () { return LISTO; },
     donde: dondeEs,
     tema: deQueVa,
+    idioma: idiomaDe,
+    fichaContexto: fichaDeContexto,
     contexto: contexto,
     fiscal: fiscal,
     nivel: nivel,

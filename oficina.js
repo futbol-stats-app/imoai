@@ -18,8 +18,22 @@
   "use strict";
   if (window.IMMOIA_OFICINA) return;
 
+  /* LA CLAVE DE LA OFICINA YA NO SE GUARDA EN ESTE NAVEGADOR.
+     Hasta hoy se guardaba tal cual, en claro, en el almacen del
+     navegador: quien se sentara delante de ese ordenador -o cualquier
+     cosa capaz de leer ese almacen- tenia la contrasena de la oficina
+     escrita, no un rastro de ella. Y como mucha gente repite contrasena,
+     eso no abria solo la puerta de esta cuenta.
+     Lo que se guarda ahora es SOLO lo que hace falta para mantener la
+     sesion abierta: el nombre de la oficina y la LLAVE DE PASO que
+     devuelve el servidor, que caduca sola a las doce horas y se puede
+     anular desde la cuenta. La clave se usa una vez, para entrar, y se
+     olvida en cuanto el servidor contesta.
+     QUE CAMBIA PARA LA PERSONA: cuando la llave caduca hay que volver a
+     escribir la clave. Antes no hacia falta porque estaba guardada; eso
+     era exactamente el problema. */
   var LLAVE = "immoia.oficina.cuenta.v1";
-  var cuenta = null;          /* { usuario, clave } */
+  var cuenta = null;          /* { usuario, sesion, sesion_vence } */
 
   function api() {
     try {
@@ -31,20 +45,43 @@
     try { return (window.CONFIG && window.CONFIG.codigo) || "leire2026"; } catch (e) { return "leire2026"; }
   }
 
+  /* LO QUE SE QUEDA ESCRITO EN EL NAVEGADOR, Y NADA MAS.
+     Todo lo que se guarda pasa por aqui, asi que aqui es donde se
+     garantiza que la clave no llega al almacen. Aunque alguien mande
+     una clave por descuido, esta funcion no la copia. */
+  function soloLoQueHaceFalta(c) {
+    if (!c || !c.usuario) return null;
+    return {
+      usuario: String(c.usuario),
+      sesion: c.sesion || null,
+      sesion_vence: c.sesion_vence || null
+    };
+  }
+
   function leerCuenta() {
     if (cuenta) return cuenta;
     try {
       var c = JSON.parse(localStorage.getItem(LLAVE) || "null");
-      /* vale con la clave O con la llave de paso, igual que lo mira
-         inmo.js. Antes exigia clave, asi que una cuenta que solo
-         tuviera llave se habria quedado fuera sin decir nada. */
-      if (c && c.usuario && (c.clave || c.sesion)) cuenta = c;
+      /* SI LO GUARDADO TRAE UNA CLAVE, ES DE ANTES DE ESTE CAMBIO: se
+         borra del almacen ahora mismo, sin esperar a nada. Es la unica
+         manera de que las claves que ya estan escritas en los
+         navegadores de las oficinas desaparezcan de verdad. */
+      if (c && c.clave) {
+        cuenta = soloLoQueHaceFalta(c);
+        try {
+          if (cuenta && cuenta.sesion) localStorage.setItem(LLAVE, JSON.stringify(cuenta));
+          else { localStorage.removeItem(LLAVE); cuenta = null; }
+        } catch (e) {}
+        return cuenta;
+      }
+      /* sin llave de paso no hay sesion que mantener */
+      if (c && c.usuario && c.sesion) cuenta = soloLoQueHaceFalta(c);
     } catch (e) {}
     return cuenta;
   }
   function apuntarCuenta(c) {
-    cuenta = c;
-    try { if (c) localStorage.setItem(LLAVE, JSON.stringify(c)); else localStorage.removeItem(LLAVE); } catch (e) {}
+    cuenta = soloLoQueHaceFalta(c);
+    try { if (cuenta) localStorage.setItem(LLAVE, JSON.stringify(cuenta)); else localStorage.removeItem(LLAVE); } catch (e) {}
     avisar();
   }
   function avisar() {
@@ -68,65 +105,72 @@
       .catch(function () { luego({ error: "Sin conexión con el servidor." }); });
   }
 
+  /* EL DIA A DIA VA CON LA LLAVE DE PASO, NUNCA CON LA CLAVE.
+     Antes esto mandaba la clave de la oficina en CADA lectura y en cada
+     guardado. Ahora va la llave, que es lo unico que se guarda. El
+     servidor rechaza la peticion que trae las dos, y hace bien, porque
+     no se sabria cual manda: por eso aqui va una sola. */
   function conCuenta(accion, extra, luego) {
     var c = leerCuenta();
     if (!c) { luego({ error: "Esta página no tiene ninguna oficina abierta." }); return; }
-    var cuerpo = { codigo: codigoWeb(), oficina_accion: accion, usuario: c.usuario, clave: c.clave };
+    if (!c.sesion) { luego({ error: "Hay que volver a entrar en la cuenta de la oficina.", entrada: "no" }); return; }
+    var cuerpo = { codigo: codigoWeb(), oficina_accion: accion, usuario: c.usuario, sesion: c.sesion };
     if (extra) for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) cuerpo[k] = extra[k];
-    pedir(cuerpo, luego);
+    pedir(cuerpo, function (d) {
+      /* si la llave ya no vale, se dice y se pide entrar otra vez */
+      if (d && d.__estado === 401 && d.entrada === "no") caduco();
+      luego(d);
+    });
   }
 
+  /* Dar de alta pide la clave y la pide el servidor: no se guarda aqui.
+     Nada mas crearla se entra, que es lo que devuelve la llave de paso. */
   function crear(usuario, clave, luego) {
     pedir({ codigo: codigoWeb(), oficina_accion: "crear", usuario: usuario, clave: clave }, function (d) {
-      if (d && d.ok) apuntarCuenta({ usuario: d.usuario || usuario, clave: clave });
+      if (d && d.ok) { entrar(usuario, clave, function () { luego(d); }); return; }
       luego(d);
     });
   }
-  /* LA LLAVE DE PASO SE GUARDA, QUE HASTA HOY SE TIRABA.
+  /* ENTRAR ES EL UNICO SITIO DONDE SE USA LA CLAVE.
      "entrar" devuelve una llave de paso -d.sesion- que vale para
-     trabajar sin volver a mandar la clave. Aqui se cogia el "ok" y se
-     tiraba la llave, asi que:
-       · inmo.js tiene escrito desde siempre "si hay sesion, manda la
-         sesion; si no, manda usuario y clave". Esa rama nunca se
-         ejecutaba: la clave de la oficina viajaba en CADA guardado.
-       · y el chat no podia decir de quien es, porque la clave no se
-         manda en el chat y nunca se pone. Sin eso, el tope de gasto
-         cobra la conversacion al cubo de los anonimos: la oficina que
-         paga se quedaria cortada a los pocos mensajes del dia sin que
-         nadie sepa por que.
-     Se guardan las dos cosas: la llave para el dia a dia y la clave
-     para cuando la llave caduque (ver caduco()). */
+     trabajar sin volver a mandar la clave. Se guarda la llave; la clave
+     se queda en la variable de esta llamada y desaparece con ella. No se
+     escribe en el almacen del navegador, ni aqui ni en ningun otro sitio.
+     Si el servidor no devuelve llave, no hay sesion que mantener: se
+     dice, en vez de guardar la clave para apanarlo. */
   function entrar(usuario, clave, luego) {
     pedir({ codigo: codigoWeb(), oficina_accion: "entrar", usuario: usuario, clave: clave }, function (d) {
-      if (d && d.ok) apuntarCuenta({
-        usuario: d.usuario || usuario, clave: clave,
-        sesion: d.sesion || null, sesion_vence: d.sesion_vence || null
-      });
+      if (d && d.ok && d.sesion) {
+        apuntarCuenta({
+          usuario: d.usuario || usuario,
+          sesion: d.sesion, sesion_vence: d.sesion_vence || null
+        });
+      } else if (d && d.ok && !d.sesion) {
+        apuntarCuenta(null);
+        d = { error: "He entrado, pero este servidor no me ha dado con qué mantener la sesión abierta." };
+      }
       luego(d);
     });
   }
 
-  /* LA LLAVE HA CADUCADO. Lo dice inmo.js cuando el servidor contesta
-     401 con entrada:"no". Se tira SOLO la llave y se conserva la
-     clave, asi que la siguiente peticion vuelve a ir con la clave y
-     ademas se pide una llave nueva por lo bajo. La persona no se entera
-     y no se queda guardando solo en su ordenador sin saberlo. */
+  /* LA LLAVE HA CADUCADO. Lo dice inmo.js -y ahora tambien conCuenta()-
+     cuando el servidor contesta 401 con entrada:"no".
+     Antes aqui se volvia a entrar solo, por lo bajo, usando la clave
+     guardada. Ya no hay clave guardada, asi que no se puede y TAMPOCO SE
+     FINGE: se cierra la cuenta y se vuelve a pintar el cuadro de entrar,
+     para que la persona sepa por que le pide la clave y no se quede
+     guardando solo en su ordenador creyendo que sube. */
   function caduco() {
-    var c = leerCuenta();
-    if (!c) return;
-    if (!c.clave) { apuntarCuenta(null); return; }
-    apuntarCuenta({ usuario: c.usuario, clave: c.clave, sesion: null, sesion_vence: null });
-    entrar(c.usuario, c.clave, function () {});
+    if (!leerCuenta()) return;
+    apuntarCuenta(null);
+    try { if (typeof repintar === "function") repintar(); } catch (e) {}
   }
 
-  /* Y AL ABRIR LA PAGINA: si hay cuenta pero no hay llave -porque se
-     guardo antes de este cambio, o porque caduco estando cerrado-, se
-     pide una sin molestar a nadie. */
-  function asegurarLlave() {
-    var c = leerCuenta();
-    if (!c || c.sesion || !c.clave) return;
-    entrar(c.usuario, c.clave, function () {});
-  }
+  /* Al abrir la pagina no hay nada que pedir por lo bajo: o hay llave de
+     paso y vale, o hace falta que la persona entre. Se queda por si algun
+     dia el servidor sabe renovar una llave con otra llave (ver el informe:
+     eso es lo que habria que anadirle a worker.js). */
+  function asegurarLlave() { leerCuenta(); }
 
   function salir() { apuntarCuenta(null); }
 
@@ -161,19 +205,25 @@
   }
   function esc(s) { var d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
 
+  /* el cuadro que esta puesto ahora mismo, para poder volver a pintarlo
+     cuando la llave de paso caduca y hay que pedir la clave otra vez */
+  var repintar = null;
+
   function cuadro(sitio, alEntrar) {
     if (!sitio) return;
     ponerCss();
     var caja = document.createElement("div");
     caja.className = "ofi"; caja.id = "ofi";
     sitio.appendChild(caja);
+    repintar = pintar;
     pintar();
 
     function pintar() {
       var c = leerCuenta();
       if (c) {
         caja.innerHTML = '<div class="ofi-dentro"><b>' + esc(c.usuario) + '</b>'
-          + '<small>Tus expedientes se guardan en tu cuenta: los ves igual desde el movil.</small>'
+          + '<small>Tus expedientes se guardan en tu cuenta: los ves igual desde el móvil. '
+          + 'Tu clave no se queda guardada en este navegador, así que de vez en cuando te la pedimos otra vez.</small>'
           + '<button type="button" class="ofi-2" id="ofi-salir">Salir de esta cuenta</button></div>';
         var b = document.getElementById("ofi-salir");
         if (b) b.addEventListener("click", function () {

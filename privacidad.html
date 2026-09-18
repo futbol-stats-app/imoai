@@ -141,8 +141,10 @@ de otra persona.</b> Puedes cambiarlo o borrarlo cuando quieras.</p>
 
 <p><b>Lo que apuntas en «Lo que llevas esta semana».</b> Si escribes o dictas ahí, se guarda
 en el mismo almacén con tu cuenta, para que lo tengas en cualquier aparato. No caduca solo:
-se queda hasta que lo cambies. <b>La conversación con el asistente, en cambio, no la
-guardamos</b> (punto 3).</p>
+se queda hasta que lo cambies. Junto a esa lista se guarda además, en tu navegador, <b>el
+número del último guardado y su fecha</b>: sirve para saber qué copia es más nueva cuando
+escribes desde dos aparatos y no llevan ningún dato de nadie. <b>La conversación con el
+asistente, en cambio, no la guardamos</b> (punto 3).</p>
 
 <p><b>El registro de la cuenta.</b> El servidor apunta lo que se hace con cada cuenta de
 oficina (cuándo, con qué usuario, desde qué aparato y qué se hizo: entrar, guardar, cerrar
@@ -167,17 +169,28 @@ te hemos atendido bien, puedes reclamar ante la
 <p>Si dejas tu correo, se guarda además una copia en el almacenamiento local de tu propio
 navegador, como respaldo por si falla el envío. Esa copia está solo en tu dispositivo, no
 la vemos nosotros, y desaparece al borrar los datos del navegador.</p>
-<p><b>La cuenta de la página de entrada para particulares</b> funciona así: tu correo y tu
-nombre <b>se guardan solo en tu navegador</b>, y de la contraseña no se guarda la contraseña:
-se guarda una huella (SHA-256 con sal) de la que no se puede volver atrás. Nada de eso llega
-a nosotros.</p>
-<p><b>La cuenta de la oficina (inmobiliarias) es distinta.</b> Para no pedirte la contraseña
-cada vez, <b>se guarda tal cual en este navegador</b>, junto con una llave de sesión que da el
-servidor. Al pulsar «salir» se olvidan. En un ordenador compartido, sal siempre al terminar.</p>
-<p>Ahora bien, seamos claros: <b>esto no es una caja fuerte.</b> Cualquiera que use tu ordenador
-puede ver que existe esa cuenta. Por eso <b>no uses aquí una contraseña que uses en otro sitio</b>,
-y no metas datos que no quieras tener guardados en ese navegador. El día que haya servidor, esta
-página se actualizará.</p>
+<p><b>La página de entrada para particulares no te pide ninguna contraseña.</b> Te pide el
+código de la demostración, tu nombre y tu correo. El nombre y el correo <b>se guardan solo en
+tu navegador</b> y no llegan a nosotros. Verás también un hueco de contraseña, pero está
+<b>apagado y no se puede escribir en él</b>: dice «en la versión final» porque hoy no hay
+contraseña de particular. Así que aquí no guardamos ninguna contraseña, ni entera ni en trozos,
+sencillamente porque no te pedimos ninguna.</p>
+<p><b>La cuenta de la oficina (inmobiliarias) sí tiene contraseña, y así se trata.</b></p>
+<p>Cuando entras, tu contraseña viaja al servidor, <b>se comprueba allí y no se guarda en
+ninguna parte</b>: lo que el servidor conserva no es la contraseña, sino un resultado calculado
+a partir de ella del que no se puede volver atrás, con un ingrediente distinto para cada cuenta
+y repitiendo el cálculo cien mil veces para que probar contraseñas a lo bruto salga carísimo
+(es lo que se llama PBKDF2 con SHA-256).</p>
+<p><b>En tu navegador no queda tu contraseña.</b> Queda el nombre de tu oficina y una llave de
+paso que te da el servidor al entrar, que es lo justo para no pedírtela a cada rato. Esa llave
+<b>caduca sola a las doce horas</b>, se puede anular desde la cuenta, y al pulsar «salir» se
+borra. Cuando caduca, te pedimos la contraseña otra vez: no la tenemos guardada para
+ahorrártelo, y eso es a propósito.</p>
+<p>Aun así, seamos claros: <b>esto no es una caja fuerte.</b> Cualquiera que use tu ordenador
+puede ver que existe esa cuenta y, mientras la llave de paso siga valiendo, puede entrar en
+ella sin saber tu contraseña. Por eso <b>no uses aquí una contraseña que uses en otro sitio</b>,
+sal siempre al terminar en un ordenador compartido, y no metas datos que no quieras tener
+guardados en ese navegador.</p>
 
 <h2>10. Menores</h2>
 <p>Esta web no está dirigida a menores de 14 años y no recogemos sus datos a sabiendas.</p>
@@ -185,5 +198,5 @@ página se actualizará.</p>
 <h2>11. Cambios</h2>
 <p>Si cambiamos algo de esta política, se actualizará la fecha del pie.</p>
 
-<footer><a href="./">← Volver</a> · Última actualización: 17 de septiembre de 2026</footer>
+<footer><a href="./">← Volver</a> · Última actualización: 18 de septiembre de 2026</footer>
 </div></body></html>

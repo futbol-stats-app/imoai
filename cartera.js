@@ -22,6 +22,16 @@
 
   var LLAVE_BANDEJA = "immoia.autonomia.v1";   /* donde mira la bandeja: NO se cambia */
   var LLAVE_CARTERA = "immoia.cartera.v1";
+  /* DE QUIEN ES LO QUE HAY GUARDADO EN ESTE NAVEGADOR.
+     Sin esto, la cartera de una oficina se quedaba en el ordenador al
+     salir, y la siguiente que entrara la veia entera. Con una sola
+     inmobiliaria no se nota; con dos, son los expedientes de una
+     clienta a la vista de otra. Y era peor que mirar: al entrar la
+     segunda, la cartera se subia al servidor DE LA SEGUNDA, asi que
+     los expedientes de la primera acababan dentro de la cuenta ajena.
+     La marca la lleva inmo.js desde el 13/09 para la mesa; esto es lo
+     mismo para la cartera. */
+  var DUENO_CARTERA = LLAVE_CARTERA + ".de";
   var ESPERA_SUBIDA = 4000;                    /* no se llama al servidor en cada tecla */
   var LATIDO = 1200;
 
@@ -57,11 +67,58 @@
 
   function enBlancoCartera() { return { v: 0, activo: null, orden: [], exp: {}, tocada: ahora() }; }
 
+  /* ---------- DE QUIEN ES ESTO ----------
+     Quien esta dentro ahora mismo. Cadena vacia = nadie: se trabaja
+     en este ordenador y punto, que es lo normal en una demostracion. */
+  function cuentaDeAhora() {
+    try {
+      var o = window.IMMOIA_OFICINA;
+      if (!o || !o.hay()) return "";
+      return String(o.usuario() || "");
+    } catch (e) { return ""; }
+  }
+  function marcaGuardada() {
+    try { return String(localStorage.getItem(DUENO_CARTERA) || ""); } catch (e) { return ""; }
+  }
+  function marcar() {
+    try { localStorage.setItem(DUENO_CARTERA, cuentaDeAhora()); } catch (e) {}
+  }
+
+  /* LAS TRES SITUACIONES, Y POR QUE NO SE TRATAN IGUAL.
+       misma cuenta          -> es suyo, se abre
+       sin marca y hay cuenta -> lo hizo ESTA persona en este ordenador
+                                 antes de entrar. Se ADOPTA, no se tira:
+                                 tirarlo seria borrarle su propio trabajo
+                                 la primera vez que entra con cuenta.
+       cualquier otra cosa   -> es de OTRA oficina. No se abre y se borra.
+     El caso peligroso es el tercero, e incluye salir de una cuenta y
+     quedarse sin ninguna: lo que queda en el ordenador sigue siendo de
+     la que se fue. */
+  function deQuienEs() {
+    var marca = marcaGuardada(), ahoraQuien = cuentaDeAhora();
+    if (marca === ahoraQuien) return "mia";
+    if (marca === "" && ahoraQuien !== "") return "adoptable";
+    return "de_otra";
+  }
+
+  /* No queda ni rastro: ni la cartera, ni la marca, ni el expediente
+     que la bandeja tiene abierto en pantalla. */
+  function borrarLoDeOtra() {
+    try { localStorage.removeItem(LLAVE_CARTERA); } catch (e) {}
+    try { localStorage.removeItem(LLAVE_BANDEJA); } catch (e) {}
+    try { localStorage.removeItem(DUENO_CARTERA); } catch (e) {}
+    ultimoVisto = null;
+  }
+
   function leerCartera() {
+    /* Se mira de quien es ANTES de leer nada. */
+    var quien = deQuienEs();
+    if (quien === "de_otra") { borrarLoDeOtra(); return null; }
     try {
       var c = JSON.parse(localStorage.getItem(LLAVE_CARTERA) || "null");
       if (c && c.exp && typeof c.exp === "object") {
         if (!c.orden) c.orden = Object.keys(c.exp);
+        if (quien === "adoptable") marcar();
         return c;
       }
     } catch (e) {}
@@ -70,6 +127,7 @@
   function guardarCartera() {
     C.tocada = ahora();
     try { localStorage.setItem(LLAVE_CARTERA, JSON.stringify(C)); } catch (e) {}
+    marcar();
   }
 
   /* Lo que hubiera de antes NO se pierde: el expediente que la
@@ -79,6 +137,8 @@
     if (!C) {
       C = enBlancoCartera();
       var viejo = null;
+      /* Solo se hereda el expediente suelto si NO es de otra oficina.
+         Si lo era, leerCartera ya lo ha borrado y aqui no hay nada. */
       try { viejo = JSON.parse(localStorage.getItem(LLAVE_BANDEJA) || "null"); } catch (e) {}
       if (sano(viejo)) {
         var i1 = id();
@@ -372,6 +432,33 @@
   try {
     if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.cuando("bandeja:calculada", function () { recoger(); });
   } catch (e) {}
+
+  /* CUANDO SE ENTRA O SE SALE DE UNA CUENTA.
+     oficina.js avisa por el nucleo en las dos direcciones. Sin esto,
+     la limpieza solo ocurriria al recargar la pagina, y salir y entrar
+     con otra cuenta sin recargar deja los expedientes a la vista. */
+  try {
+    if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.cuando("oficina:cambio", function () {
+      var quien = deQuienEs();
+      if (quien === "de_otra") {
+        borrarLoDeOtra();
+        C = enBlancoCartera();
+        guardarCartera();
+        pintar();
+        /* La bandeja tiene su propia copia en memoria: borrar la llave
+           no le quita de la pantalla el expediente de la otra oficina.
+           empezarDeCero() ya existe en su API publica (bandeja.js:380):
+           la deja en blanco y repinta. Asi no hay que tocar bandeja.js. */
+        try {
+          if (window.IMMOIA_BANDEJA && window.IMMOIA_BANDEJA.empezarDeCero) window.IMMOIA_BANDEJA.empezarDeCero();
+        } catch (e) {}
+        if (hayCuenta()) bajar();
+        return;
+      }
+      if (quien === "adoptable") marcar();
+      if (hayCuenta()) bajar();
+    });
+  } catch (e) {}
   setInterval(recoger, LATIDO);
   window.addEventListener("pagehide", function () { recoger(); });
   document.addEventListener("visibilitychange", function () {
@@ -382,7 +469,7 @@
   else montar();
 
   window.IMMOIA_CARTERA = {
-    version: "1.0",
+    version: "1.1",
     lista: lista,
     activo: function () { return C.activo; },
     expediente: function (cual) { return C.exp[cual || C.activo] || null; },
