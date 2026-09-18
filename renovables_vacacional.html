@@ -195,8 +195,8 @@ table.t td.resta{color:var(--verde)}
         </select>
       </div>
       <div>
-        <label for="ibi">¿Cuánto pagas de IBI al año?</label>
-        <input type="number" id="ibi" min="0" max="5000" step="10" value="400" inputmode="numeric">
+        <label for="ibi">¿Cuánto pagas de IBI al año? <small style="font-weight:400">(mira tu recibo)</small></label>
+        <input type="number" id="ibi" min="0" max="5000" step="10" value="" placeholder="Escribe lo que pone tu recibo" inputmode="numeric">
       </div>
     </div>
 
@@ -336,16 +336,22 @@ table.t td.resta{color:var(--verde)}
       Real Decreto 244/2019, artículo 14: el valor de la energía excedentaria no puede superar
       el de la energía consumida de la red en el periodo de facturación.</span></div>
     <div class="aviso"><span class="pun"></span><span>
-      <b>Deducción del IRPF: 10 % o 40 %</b>
-      Real Decreto-ley 7/2026, convalidado el 27 de marzo de 2026. Base máxima 5.000 € (10 %)
-      y 7.500 € (40 %). Vivienda habitual o arrendada para uso como vivienda.</span></div>
+      <b>Deducción del IRPF: 40 % (y hay quien se queda sin ninguna)</b>
+      Real Decreto-ley 7/2026, convalidado el 27 de marzo de 2026. La del 40 % tiene base
+      máxima de 7.500 € y necesita los dos certificados energéticos. <b>No existe ninguna
+      deducción del 10 %</b> por poner placas: lo que hay además es una del 20 %, que exige
+      bajar la demanda de calefacción y refrigeración, cosa que las placas no hacen.
+      Sin los certificados, aquí no contamos ni un euro. Y solo vale para vivienda habitual
+      o arrendada para uso como vivienda.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Consumo del apartamento</b>
       Estimado en 10 kWh al día ocupado y 1,2 kWh al día vacío (nevera y espera).
       <b>No es un dato publicado</b>: se cambia por tus facturas reales.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Precio de la instalación</b>
-      Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa 750 €.</span></div>
+      Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa <b>687,50 €</b>,
+      que es el número con el que está hecha esta cuenta. Sigue siendo una estimación: el precio
+      de verdad sale del presupuesto del instalador para tu tejado.</span></div>
   </section>
 
   <p class="nota">
@@ -374,7 +380,7 @@ table.t td.resta{color:var(--verde)}
   var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
   var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
   var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
-  var BASE_10     = 5000;
+  /* BASE_10 se ha quitado: no existe ninguna deducción del 10 % (datos.js, línea 140). */
   var BASE_40     = 7500;
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);
@@ -386,23 +392,29 @@ table.t td.resta{color:var(--verde)}
   var SOL_OCUPADO = 0.45;   /* la gente esta fuera media manana y media tarde */
   var SOL_VACIO   = 0.50;   /* la nevera consume igual de dia que de noche */
 
-  /* municipio -> [porcentaje, años, tope anual (0 = sin tope), aviso, soloVivHabitual] */
+  /* municipio -> [porcentaje, años, tope anual (0 = sin tope), aviso, nombre, soloVivHabitual]
+     🔴 ARREGLADO (C2, 18/09/2026): aquí faltaba la columna del NOMBRE. El respaldo iba con
+     cinco columnas y datos.js va con seis, así que abajo se leía b[4] —que es el nombre del
+     municipio— como si fuera la bandera de «solo vivienda habitual». Un nombre nunca está
+     vacío, así que en un vacacional el IBI salía a CERO en los catorce municipios y encima
+     se le decía al cliente que le «piden vivienda habitual» donde nadie se lo pide.
+     La bandera buena es b[5]. */
   /* Los municipios salen de datos.js; esto es el respaldo. */
   var IBI = D.municipios || {
-    gu:  [0.50, 25, 0,   "", false],
-    ro:  [0.50, 10, 0,   "", false],
-    sc:  [0.50,  5, 0,   "Hay que pedirlo ANTES del 1 de enero, o se pierde el primer año.", false],
-    ll:  [0.50,  5, 0,   "Hay que estar al corriente de pagos y tener el IBI domiciliado.", false],
-    re:  [0.50,  5, 0,   "", false],
-    pc:  [0.50,  5, 0,   "", false],
-    ta:  [0.50,  5, 300, "Tope de 300 € al año. Los paneles tienen que dar al menos el 30 % de la potencia contratada.", false],
-    ca:  [0.30,  5, 0,   "Hay que pedirlo ANTES del 30 de noviembre del año anterior.", false],
-    gr:  [0.25,  5, 0,   "Granadilla EXIGE vivienda habitual y empadronamiento. En un vacacional no aplica.", true],
-    st:  [0.20,  3, 0,   "SIN CONFIRMAR que cubra fotovoltaica: la ordenanza publicada habla de solar térmica. Llamar al ayuntamiento.", false],
-    sm:  [0,     0, 0,   "El ayuntamiento anunció un 50 % en 2022, pero NO están publicados los años ni los requisitos. Aquí va a cero hasta confirmarlo.", false],
-    ar:  [0,     0, 0,   "Arona no tiene bonificación de IBI ni de ICIO por placas solares.", false],
-    ad:  [0,     0, 0,   "Adeje no tiene la bonificación publicada. Hay que llamar al 922 756 200 antes de prometer nada.", false],
-    otro:[0,     0, 0,   "Si tu municipio no está en la lista, no consta bonificación publicada. Se puede consultar en el Consorcio de Tributos: 922 20 82 00.", false]
+    gu:  [0.50, 25, 0,   "", "Güímar", false],
+    ro:  [0.50, 10, 0,   "", "El Rosario", false],
+    sc:  [0.50,  5, 0,   "Hay que pedirlo ANTES del 1 de enero, o se pierde el primer año.", "Santa Cruz de Tenerife", false],
+    ll:  [0.50,  5, 0,   "Hay que estar al corriente de pagos y tener el IBI domiciliado.", "San Cristóbal de La Laguna", false],
+    re:  [0.50,  5, 0,   "", "Los Realejos", false],
+    pc:  [0.50,  5, 0,   "", "Puerto de la Cruz", false],
+    ta:  [0.50,  5, 300, "Tope de 300 € al año. Los paneles tienen que dar al menos el 30 % de la potencia contratada.", "Tacoronte", false],
+    ca:  [0.30,  5, 0,   "Hay que pedirlo ANTES del 30 de noviembre del año anterior.", "Candelaria", false],
+    gr:  [0.25,  5, 0,   "Granadilla EXIGE vivienda habitual y empadronamiento. En un vacacional no aplica.", "Granadilla de Abona", true],
+    st:  [0.20,  3, 0,   "SIN CONFIRMAR que cubra fotovoltaica: la ordenanza publicada habla de solar térmica. Llamar al ayuntamiento.", "Santiago del Teide", false],
+    sm:  [0,     0, 0,   "El ayuntamiento anunció un 50 % en 2022, pero NO están publicados los años ni los requisitos. Aquí va a cero hasta confirmarlo.", "San Miguel de Abona", false],
+    ar:  [0,     0, 0,   "Arona no tiene bonificación de IBI ni de ICIO por placas solares.", "Arona", false],
+    ad:  [0,     0, 0,   "Adeje no tiene la bonificación publicada. Hay que llamar al 922 756 200 antes de prometer nada.", "Adeje", false],
+    otro:[0,     0, 0,   "Si tu municipio no está en la lista, no consta bonificación publicada. Se puede consultar en el Consorcio de Tributos: 922 20 82 00.", "otro municipio de Tenerife", false]
   };
 
   function $(id){ return document.getElementById(id); }
@@ -497,16 +509,23 @@ table.t td.resta{color:var(--verde)}
 
     /* ---------- IBI ---------- */
     var b = IBI[muni] || IBI.otro;
-    var aplicaIbi = !(b[4] && uso === "tur");
+    /* b[5] es «solo vivienda habitual» (antes se leía b[4], que es el nombre). */
+    var soloHabitual = b[5] === true;
+    var aplicaIbi = !(soloHabitual && uso === "tur");
     var ibiAnual = aplicaIbi ? ibiAn * b[0] : 0;
     if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];
     var ibiTotal = ibiAnual * b[1];
 
     var avi = $("aviso-muni");
     var textoAviso = b[3];
-    if(uso === "tur" && b[0] > 0 && !b[4]){
+    if(uso === "tur" && b[0] > 0 && !soloHabitual){
       textoAviso = (textoAviso ? textoAviso + " " : "")
         + "Y no está publicado si esta bonificación vale para una vivienda vacacional: confírmalo en el ayuntamiento.";
+    }
+    /* No nos inventamos tu IBI: si no lo has escrito, aquí va a cero y se te pide. */
+    if(ibiAn <= 0 && b[0] > 0 && aplicaIbi){
+      textoAviso = (textoAviso ? textoAviso + " " : "")
+        + "No sabemos cuánto pagas tú de IBI, así que aquí va a cero. Escríbelo arriba, tal cual viene en tu recibo, y te lo descontamos.";
     }
     if(textoAviso){ avi.textContent = textoAviso; avi.hidden = false; } else { avi.hidden = true; }
 
@@ -582,9 +601,12 @@ table.t td.resta{color:var(--verde)}
       uso === "tur"
         ? ["Deducción del IRPF", "0 € · no aplica al turístico", ""]
         : ["Deducción del IRPF (40 %)", "− " + eur(irpf), "resta"],
-      (b[0] > 0 && aplicaIbi)
+      (b[0] > 0 && aplicaIbi && ibiAn > 0)
         ? ["Bonificación del IBI (" + Math.round(b[0]*100) + " % durante " + b[1] + " años)", "− " + eur(ibiTotal), "resta"]
-        : ["Bonificación del IBI", (b[4] && uso === "tur") ? "0 € · pide vivienda habitual" : "sin publicar", ""],
+        : ["Bonificación del IBI",
+           (soloHabitual && uso === "tur") ? "0 € · tu ayuntamiento la da solo para vivienda habitual"
+           : (ibiAn <= 0 && b[0] > 0) ? "nos falta tu recibo del IBI"
+           : "sin publicar", ""],
       ["Bonificación del ICIO", "− " + eur(ICIO), "resta"],
       ["Subvención de Canarias", "0 € · cerrada", ""],
       ["__total__", eur(real), ""],

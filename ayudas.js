@@ -1,6 +1,10 @@
 /* ============================================================
    ayudas.js — LAS AYUDAS DE TODA ESPAÑA, AL INSTANTE
    ------------------------------------------------------------
+   Desde el 18/09/2026 las 293 fichas viven en UN solo sitio:
+   ayudas_todas.js. Ni index.html ni asistente.html guardan copia.
+   Este fichero sigue leyendo de ahí exactamente igual que antes.
+   ------------------------------------------------------------
    La IA del cliente NO sale a internet. Lee de aquí.
    Cada comunidad tiene su fichero en ayudas/<codigo>.json y solo
    se descarga el de la comunidad del cliente (41 KB el mayor).
@@ -20,7 +24,8 @@
   /* las claves cortas de datos.js -> el codigo INE de la comunidad */
   var INE = {
     an:"01", ar:"02", as:"03", ib:"04", cn:"05", ct:"06", cl:"07", cm:"08", ca:"09",
-    vc:"10", ex:"11", ga:"12", ma:"13", mu:"14", na:"15", pv:"16", ri:"17"
+    vc:"10", ex:"11", ga:"12", ma:"13", mu:"14", na:"15", pv:"16", ri:"17",
+    ce:"18", me:"19"   /* L-34: Ceuta y Melilla. Hoy no hay fichas suyas: solo les salen las estatales, y se dice */
   };
 
   var CARPETA = "ayudas/";
@@ -75,9 +80,31 @@
     });
   }
 
+  /* D-43: caduca_en deja de ser solo una etiqueta. Con la fecha en que se
+     comprobo ("comprobado") se calcula si la ficha ya esta vieja:
+       dias -> 7 dias · semanas -> 42 dias · anos -> 365 dias.
+     Si caduca_en es una fecha (AAAA-MM-DD), vale esa fecha tal cual.
+     Una ficha vieja NO se borra: se ofrece solo diciendo que hay que confirmarla. */
+  var VIDA = { dias: 7, semanas: 42, anos: 365 };
+  function hoyISO() { return new Date().toISOString().slice(0, 10); }
+  function sumaDias(iso, n) {
+    var d = new Date(iso + "T00:00:00Z"); if (isNaN(d)) return null;
+    d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10);
+  }
+  function limite(a) {
+    var c = String(a.caduca_en || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(c)) return c;
+    if (VIDA[c] && a.comprobado) return sumaDias(String(a.comprobado).slice(0, 10), VIDA[c]);
+    return null;
+  }
+  function vieja(a, hoy) {
+    var l = limite(a); return !!(l && (hoy || hoyISO()) > l);
+  }
+  function hayQueConfirmar(a, hoy) { return a.caduca_en === "dias" || vieja(a, hoy); }
+
   /* Las que hay que confirmar antes de prometer nada. */
   function porConfirmar(ccaa) {
-    return para(ccaa).filter(function (a) { return a.caduca_en === "dias"; });
+    return para(ccaa).filter(function (a) { return hayQueConfirmar(a); });
   }
 
   /* Filtro por tema, para no meterle a la IA las 24 de golpe. */
@@ -134,7 +161,9 @@
       var l = "- " + a.nombre + " (" + a.estado + ")";
       if (a.cuanto_da) l += ": " + String(a.cuanto_da).slice(0, 180);
       if (a.quien_queda_fuera) l += " | NO la puede pedir: " + String(a.quien_queda_fuera).slice(0, 120);
-      if (a.caduca_en === "dias") l += " | ⚠ CONFIRMAR antes de prometerla";
+      if (vieja(a)) l += " | ⚠ DATOS DE HACE TIEMPO (comprobada el " + a.comprobado + "): CONFIRMAR antes de prometerla";
+      else if (a.caduca_en === "dias") l += " | ⚠ CONFIRMAR antes de prometerla";
+      if (a.verificacion && String(a.verificacion).indexOf("a medias") === 0) l += " | ⚠ ficha verificada a medias: di que hay datos por confirmar";
       return l;
     }).join("\n");
     return "Ayudas de vivienda que le pueden servir (no te inventes ninguna que no esté aquí, " +
@@ -148,15 +177,26 @@
       total: l.length,
       abiertas: l.filter(function (a) { return a.estado === "abierta"; }).length,
       permanentes: l.filter(function (a) { return a.estado === "permanente"; }).length,
-      porConfirmar: l.filter(function (a) { return a.caduca_en === "dias"; }).length
+      porConfirmar: l.filter(function (a) { return hayQueConfirmar(a); }).length
     };
   }
 
+  /* La fecha de revisión NO se escribe a mano aquí: se lee del campo
+     "comprobado" de las propias fichas. Una fecha escrita a mano se queda
+     vieja el día que alguien actualiza una ficha y no se acuerda de tocarla,
+     y entonces la página dice una fecha que no es la del dato. */
+  function revisado() {
+    if (global.IMMOIA_AYUDAS_COMPROBADO) return global.IMMOIA_AYUDAS_COMPROBADO;
+    var l = global.IMMOIA_AYUDAS_LISTA || [];
+    return l.map(function (a) { return a.comprobado || ""; })
+            .filter(Boolean).sort().pop() || "";
+  }
+
   global.IMMOIA_AYUDAS = {
-    version: "1.0", revisado: "2026-09-11",
+    version: "1.1", get revisado() { return revisado(); },
     cargar: cargar, para: para, vivas: vivas, porTema: porTema,
     porConfirmar: porConfirmar, paraLaIA: paraLaIA, resumen: resumen,
-    codigo: codigo, _cache: cache
+    codigo: codigo, vieja: vieja, limite: limite, _cache: cache
   };
 
 })(typeof window !== "undefined" ? window : globalThis);

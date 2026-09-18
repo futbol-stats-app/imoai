@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="description" content="IMMO IA Energía: calcula con nosotros lo que te cuestan de verdad las placas solares.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IMMO IA Energía · te lo calculamos contigo</title>
 <meta name="robots" content="noindex">
@@ -128,6 +130,12 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 .reloj b{color:var(--marca-2);font-size:17px}
 .reloj span{font-size:14.5px;color:var(--tinta2)}
 
+/* el aviso de que quien contesta es una máquina (mismo estilo que entrada.html) */
+.avisoia{background:var(--suave);border-left:3px solid var(--marca);
+ border-radius:0 9px 9px 0;padding:12px 14px;margin:0 0 20px;
+ font-size:14.5px;line-height:1.5}
+.avisoia b{color:var(--marca)}
+
 .nota{margin:24px 0 0;font-size:12.5px;color:var(--tinta2);
  border-top:1px solid var(--linea);padding-top:13px}
 .nota a{color:var(--marca)}
@@ -137,6 +145,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 </style>
 </head>
 <body>
+<noscript><p style="padding:16px;font-weight:600">Esta página necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargarla.</p></noscript>
 
 <div class="env">
 
@@ -157,6 +166,14 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     <span>para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
   </div>
 
+  <!-- 🔴 AÑADIDO (C2, 18/09/2026): faltaba el aviso de que quien contesta es una máquina.
+       Es obligatorio desde el 2 de agosto de 2026 y aquí no estaba, aunque toda la página
+       sea una conversación con burbujas que ponen «IA». Mismo texto que entrada.html. -->
+  <p class="avisoia"><b>Aquí contesta una inteligencia artificial, no una persona.</b>
+     Te lo decimos de entrada. Está hecha para no inventarse nada: lo que tiene verificado
+     te lo da con su fuente, y lo que no, te dice dónde se comprueba. Aun así se puede
+     equivocar, así que antes de firmar nada lo repasa una persona del equipo.</p>
+
   <div class="charla" id="charla"></div>
   <div class="responder" id="responder"></div>
 
@@ -165,6 +182,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     Los números son orientativos: la oferta final depende del tejado, del municipio y del banco.
     <b>Aquí no se sube ningún documento</b>, y lo único que guarda tu navegador son tus
     respuestas de la calculadora — nunca tu nombre, tu teléfono ni tu correo.
+    Lo que escribas o dictes a la IA se envía a Anthropic (EE. UU.) para redactar la respuesta:
+    al escribirle lo aceptas. No le pongas datos personales reales.
     Datos revisados el <b>10 de septiembre de 2026</b>.
     <a href="privacidad.html">Política de privacidad</a> ·
     <button class="reiniciar" id="reiniciar" type="button">Empezar de nuevo</button>
@@ -172,9 +191,17 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
 </div>
 
-<script src="datos.js?v=1"></script>
-<script src="orden.js?v=1"></script>
-<script src="ayudas.js?v=1"></script>
+<script src="datos.js?v=18c"></script>
+<script src="orden.js?v=18c"></script>
+<!-- 🔴 ARREGLADO (C2, 18/09/2026): faltaba ayudas_todas.js. ayudas.js solo sabe mirar en
+     window.IMMOIA_AYUDAS_TODAS o, si no está, en la carpeta ayudas/, que NO existe en el
+     repositorio. Resultado: la IA de esta página no veía ni una sola ayuda, nunca.
+     Van los dos con «defer» para no frenar la pantalla: ayudas.js no se usa hasta que el
+     cliente dice dónde vive, mucho después de que la página haya pintado.
+     (18/09 · JUNTADO X2: la versión de caché ?v=18c es la de la auditoría; el «defer» y
+     el propio ayudas_todas.js son de C2. Las dos cosas van juntas.) -->
+<script src="ayudas_todas.js?v=18c" defer></script>
+<script src="ayudas.js?v=18c" defer></script>
 <script>
 (function(){
   "use strict";
@@ -202,7 +229,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var BASE_40     = dato((D.irpfEstatal||{}).conCertificados && D.irpfEstatal.conCertificados.base, 7500);
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);
-  var PLAZO       = dato(DN.plazoAnos, 15);   /* respaldo: igual que datos.js (11/09/2026) */
+  var PLAZO       = dato(DN.plazoAnos, 10);   /* L-36: respaldo igual que datos.js (10 años) */
   var DESCUENTO   = dato(DN.descuentoInstalador, 500);
   var PARTE_ENERGIA = dato(DN.parteEnergiaFactura, 0.70);
 
@@ -240,7 +267,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     gr:  [0.25,  5, 0,   "Solo vivienda habitual, con empadronamiento.", "Granadilla de Abona"],
     st:  [0.20,  3, 0,   "Sin confirmar que cubra fotovoltaica. Hay que llamar al ayuntamiento.", "Santiago del Teide"],
     sm:  [0,     0, 0,   "Anunciaron un 50 % en 2022 pero no está publicado. Aquí va a cero.", "San Miguel de Abona"],
-    ar:  [0,     0, 0,   "Arona no tiene bonificación por placas.", "Arona"],
+    ar:  [0,     0, 0,   "Arona: no consta bonificación publicada por placas (sin confirmar con el ayuntamiento).", "Arona"],
     ad:  [0,     0, 0,   "Adeje no la tiene publicada. Hay que llamar al 922 756 200.", "Adeje"],
     otro:[0,     0, 0,   "En tu municipio no consta bonificación publicada.", "otro municipio"]
   };
@@ -249,14 +276,14 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      2 · LO QUE VA CONTESTANDO
      ========================================================== */
   var LLAVE = "immoia.energia.v1";
-  var R = { de:"general", irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, agua:null, aire:null };
+  var R = { de:"general", irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, agua:null, aire:null };
   var PASO = "inicio";   /* dónde está el cliente ahora mismo, para que la IA lo sepa */
 
   try{
     var g = JSON.parse(localStorage.getItem(LLAVE) || "null");
     if(g && typeof g === "object"){
       /* solo respuestas de la calculadora — nunca nombre, teléfono ni correo */
-      ["irpf","factura","tipo","muni","ccaa","ccaaElegida","pago","agua","aire"].forEach(function(k){
+      ["irpf","factura","tipo","muni","ibi","ccaa","ccaaElegida","pago","agua","aire"].forEach(function(k){
         if(g[k] !== undefined) R[k] = g[k];
       });
     }
@@ -265,7 +292,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   function guardar(){
     try{
       localStorage.setItem(LLAVE, JSON.stringify({
-        irpf:R.irpf, factura:R.factura, tipo:R.tipo, muni:R.muni,
+        irpf:R.irpf, factura:R.factura, tipo:R.tipo, muni:R.muni, ibi:R.ibi,
         ccaa:R.ccaa, ccaaElegida:R.ccaaElegida, pago:R.pago,
         agua:R.agua, aire:R.aire
       }));
@@ -351,19 +378,6 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var descuento = Math.min(DESCUENTO, coste);
     var gasto = coste + gastoCert - descuento;
 
-    /* --- la del Estado: no vale en territorio foral (Navarra, País Vasco) --- */
-    var irpfEstado = 0;
-    if(R.irpf === "si" && !esForal && aptoDeduccion){
-      irpfEstado = 0.40 * Math.min(gasto, BASE_40);
-    }
-
-    /* --- la de la comunidad, la que muchos no saben ni que existe --- */
-    var irpfCcaa = 0;
-    if(R.irpf === "si" && aptoDeduccion && D.deduccionAutonomica){
-      irpfCcaa = D.deduccionAutonomica(R.ccaa, gasto);
-    }
-    var irpf = irpfEstado + irpfCcaa;
-
     /* --- la subvención de la comunidad, si la hay abierta --- */
     var subv = 0, subvNota = "";
     if(CC && CC.subvencion){
@@ -374,13 +388,44 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       }
     }
 
+    /* 18/09 · AUDITORIA (L-16): la subvencion cobrada SE RESTA de la base de la
+       deduccion (datos.js, subvencion.fiscalidad). Antes se deducia sobre el gasto entero. */
+    var baseIrpf = Math.max(0, gasto - subv);
+
+    /* --- la del Estado: no vale en territorio foral (Navarra, País Vasco) --- */
+    var irpfEstado = 0, irpfTipo = "";
+    if(R.irpf === "si" && !esForal && aptoDeduccion){
+      irpfEstado = 0.40 * Math.min(baseIrpf, BASE_40); irpfTipo = "40 %, eficiencia energética";
+    } else if(R.irpf === "si" && !esForal){
+      /* 18/09 · AUDITORIA (D-13): sin el 40 % queda la deduccion nueva por
+         AUTOCONSUMO del RDL 7/2026: 10 %, base 5.000 €, solo instalaciones de
+         2026 con su certificado de instalacion electrica. No se suma al 40 %. */
+      var AC = (D.irpfEstatal || {}).autoconsumo;
+      if(AC && new Date() <= new Date(AC.hasta + "T23:59:59")) { irpfEstado = AC.pct * Math.min(Math.max(0, coste - descuento - subv), AC.base); irpfTipo = "10 %, autoconsumo 2026"; }
+    }
+
+    /* --- la de la comunidad, la que muchos no saben ni que existe --- */
+    var irpfCcaa = 0;
+    if(R.irpf === "si" && aptoDeduccion && D.deduccionAutonomica){
+      irpfCcaa = D.deduccionAutonomica(R.ccaa, baseIrpf);
+    }
+    var irpf = irpfEstado + irpfCcaa;
+
     /* --- el IBI, que es municipal y solo lo tenemos de Tenerife --- */
     var b = IBI[R.muni] || IBI.otro;
     var hayMuni = R.ccaa === "cn" && !!R.muni;
-    var ibiAnual = hayMuni ? 350 * b[0] : 0;      /* IBI típico estimado */
+    /* 🔴 ARREGLADO (C2, 18/09/2026): aquí había un IBI fijo de trescientos cincuenta euros
+       que no había dicho nadie y que se le colaba al cliente en la cuenta como suyo. Ahora sale
+       de lo que él escriba en el paso del municipio (R.ibi). Si no lo ha escrito, va a CERO
+       y la pantalla le dice que nos falta su recibo. */
+    var ibiSuyo = Math.max(0, Number(R.ibi) || 0);
+    var hayIbi = hayMuni && ibiSuyo > 0;
+    var ibiAnual = hayIbi ? ibiSuyo * b[0] : 0;
     if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];
     var ibiTotal = ibiAnual * b[1];
-    var icio = hayMuni ? ICIO : 0;
+    /* 18/09 · AUDITORIA (L-15): el ICIO solo se resta donde el ayuntamiento
+       tiene bonificacion. Donde la de IBI es 0 (Arona, Adeje, otro...), tampoco. */
+    var icio = (hayMuni && b[0] > 0) ? ICIO : 0;
 
     var aFinanciar = Math.max(0, gasto - subv);
     var anos_p = PLAZO;
@@ -397,12 +442,13 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       auto:auto, sobra:sobra, compensa:compensa,
       ahorroPropio:ahorroPropio, ahorroAno:ahorroAno, ahorroCede:ahorroCede,
       ahorroMes:ahorroMes, factura:factura, luzNueva:luzNueva,
-      irpf:irpf, irpfEstado:irpfEstado, irpfCcaa:irpfCcaa, esForal:esForal,
+      irpf:irpf, irpfEstado:irpfEstado, irpfTipo:irpfTipo, irpfCcaa:irpfCcaa, esForal:esForal,
       aptoDeduccion:aptoDeduccion,
       descuento:descuento, gasto:gasto,
       subv:subv, subvNota:subvNota,
       ccaaNom: CC ? CC.nombre : "—", ccaaDed: (CC && CC.deduccion) ? CC.deduccion : null,
       ibiTotal:ibiTotal, ibiPct: hayMuni ? b[0] : 0, ibiAnos:b[1], ibiAviso: hayMuni ? b[3] : "",
+      hayIbi:hayIbi, ibiSuyo:ibiSuyo,
       muniNom: hayMuni ? b[4] : (CC ? CC.nombre : "—"), hayMuni:hayMuni, icio:icio,
       aFinanciar:aFinanciar, anos:anos_p, c1:c1, c2:c2, real:real,
       mes1: luzNueva + c1, mes2: luzNueva + c2, mesFin: luzNueva
@@ -480,13 +526,13 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     ta:["tacoronte"], ca:["candelaria"],
     gr:["granadilla","el medano","medano"], st:["santiago del teide","santiago"],
     sm:["san miguel","las chafiras","chafiras"],
-    ar:["arona","los cristianos","las americas","playa de las americas","cabo blanco","buzanada"],
+    ar:["arona","los cristianos","cabo blanco","buzanada"],   /* D-48: «Playa de las Américas» es de Arona Y de Adeje: no se adivina, se pregunta */
     ad:["adeje","costa adeje","fanabe","la caleta"]
   };
 
   /* cómo llama la gente a cada comunidad */
   var COMO_DICEN_CCAA = {
-    an:["andalucia","sevilla","malaga","cadiz","granada","cordoba","almeria","huelva","jaen"],
+    an:["andalucia","sevilla","malaga","cadiz","granada","cordoba","almeria","huelva","jaen","puerto de santa maria"],
     ar:["aragon","zaragoza","huesca","teruel"],
     as:["asturias","oviedo","gijon","principado"],
     ib:["baleares","balears","mallorca","menorca","ibiza","eivissa","formentera","palma"],
@@ -522,13 +568,21 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var sinIrpf = trozoIrpf ? sinTel.replace(trozoIrpf[0], " ") : sinTel;
 
     /* ---- la factura de la luz ---- */
-    var m = sinIrpf.match(/(\d{2,4})\s*(?:€|euros?|eur)?\s*(?:al |por |cada )?mes/)
-         || sinIrpf.match(/(?:luz|factura|recibo|electricidad)\D{0,25}(\d{2,4})/)
-         || sinIrpf.match(/(?:pago|gasto|sale|son|unos|como|sobre)\s*(?:de\s*)?(\d{2,4})/)
-         || sinIrpf.match(/(\d{2,4})\s*(?:€|euros)/);
-    if(m){
-      var v = Number(m[1]);
-      if(v >= 15 && v <= 900) saco.factura = v;
+    /* L-26: el numero entero con sus decimales y sus miles («85,50», «1.200»),
+       y sin coger un trozo de otro numero. «Al año» se pasa a mes. */
+    var NUM = "(?<![\\d.,])(\\d{1,3}(?:\\.\\d{3})+|\\d{1,5})(?:,(\\d{1,2}))?(?![\\d])";
+    function aNum(mm){ return Number(String(mm[1]).replace(/\./g, "")) + (mm[2] ? Number("0." + mm[2]) : 0); }
+    var alAno = sinIrpf.match(new RegExp(NUM + "\\s*(?:€|euros?|eur)?\\s*(?:al |por |cada )?(?:año|ano|anuales)"));
+    var m = sinIrpf.match(new RegExp(NUM + "\\s*(?:€|euros?|eur)?\\s*(?:al |por |cada )?mes"))
+         || sinIrpf.match(new RegExp("(?:luz|factura|recibo|electricidad)\\D{0,25}" + NUM))
+         || sinIrpf.match(new RegExp("(?:pago|gasto|sale|son|unos|como|sobre)\\s*(?:de\\s*)?" + NUM))
+         || sinIrpf.match(new RegExp(NUM + "\\s*(?:€|euros)"));
+    if(alAno){
+      var va = aNum(alAno) / 12;
+      if(va >= 15 && va <= 900) saco.factura = Math.round(va);
+    } else if(m){
+      var v = aNum(m);
+      if(v >= 15 && v <= 900) saco.factura = Math.round(v * 100) / 100;
     }
 
     /* ---- el IRPF ---- */
@@ -545,31 +599,34 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var mi = t.match(/(?:irpf|renta|hacienda)\D{0,25}(\d{1,2}[.,]\d{3}|\d{3,5})/);
     if(mi){
       var cuota = Number(String(mi[1]).replace(/[.,]/g, ""));
-      if(cuota > 0) saco.irpf = cuota >= 2500 ? "si" : "no";
+      if(cuota > 0) { saco.irpf = cuota >= 2500 ? "si" : "no"; saco.cuotaIrpf = cuota; }   /* L-71: la cuota se guarda */
     }
+    /* L-71: si la casa esta a nombre de dos, el tope de la deduccion es por cada uno */
+    if(/a nombre de (los )?dos|somos dos (titulares|duenos|propietarios)|mi (mujer|marido|pareja) y yo|a medias con/.test(t)) saco.titulares = 2;
 
     /* ---- el tipo de vivienda ---- */
     if(/vacacional|turistic|airbnb|booking|alquilo por dias|apartamento tur/.test(t)) saco.tipo = "vac";
     else if(/\bpiso\b|apartamento|atico|comunidad|edificio|bloque/.test(t))            saco.tipo = "piso";
     else if(/casa|chalet|unifamiliar|villa|tejado|azotea|adosad/.test(t))              saco.tipo = "casa";
 
-    /* ---- el municipio de Tenerife ---- */
-    Object.keys(COMO_LO_DICEN).forEach(function(k){
-      COMO_LO_DICEN[k].forEach(function(nombre){
-        if(saco.muni) return;
-        if(t.indexOf(nombre) !== -1) saco.muni = k;
-      });
-    });
-
-    /* ---- la comunidad, si no ha dicho un municipio de Tenerife ---- */
-    if(!saco.muni){
-      Object.keys(COMO_DICEN_CCAA).forEach(function(k){
-        COMO_DICEN_CCAA[k].forEach(function(nombre){
-          if(saco.ccaa) return;
-          if(t.indexOf(nombre) !== -1) saco.ccaa = k;
+    /* ---- el sitio: municipio de Tenerife o comunidad ----
+       L-27: antes ganaba el primero que apareciera en la lista, a trozos de
+       palabra: «La Palma» salia Baleares («palma»), «Santiago de Compostela»
+       Santiago del Teide y «El Puerto de Santa Maria» Puerto de la Cruz.
+       Ahora se buscan palabras enteras en las dos listas y gana el nombre
+       MAS LARGO que aparezca, que es el mas concreto. */
+    var mejor = null;
+    function mirar(dic, tipo){
+      Object.keys(dic).forEach(function(k){
+        dic[k].forEach(function(nombre){
+          var re = new RegExp("(^|[^a-zñ])" + nombre.replace(/[-]/g, "\\-") + "($|[^a-zñ])");
+          if(re.test(t) && (!mejor || nombre.length > mejor.nombre.length)) mejor = { tipo:tipo, k:k, nombre:nombre };
         });
       });
     }
+    mirar(COMO_LO_DICEN, "muni");
+    mirar(COMO_DICEN_CCAA, "ccaa");
+    if(mejor) saco[mejor.tipo] = mejor.k;
 
     /* ---- cómo calienta el agua y si tiene aire ---- */
     if(/termo electrico|termo|acumulador|agua.{0,15}electric|electric.{0,15}agua/.test(t)) saco.agua = "electrico";
@@ -613,7 +670,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         '<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:var(--tinta2)" id="dic-eti">'
       + 'O dímelo con tus palabras y yo lo relleno</p>'
       + '<div style="display:flex;gap:8px;align-items:stretch">'
-      + '<input class="op" type="text" id="dic-txt" style="flex:1;font-weight:600" '
+      + '<input class="op" type="text" id="dic-txt" aria-label="Escribe tu respuesta" style="flex:1;font-weight:600" '
       + 'placeholder="Ej.: tengo una casa en Adeje y pago unos 120 al mes">'
       + (HAY_VOZ ? '<button class="op" type="button" id="dic-voz" title="Hablar" '
         + 'aria-label="Hablar" style="flex:0 0 auto;padding:13px 15px">🎙️</button>' : '')
@@ -692,6 +749,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
     /* lo que acaba de decir MANDA sobre lo que hubiera de antes */
     if(saco.factura){ R.factura = saco.factura; puesto.push("pagas <b>" + saco.factura + " € al mes</b> de luz"); }
+    if(saco.cuotaIrpf) R.cuotaIrpf = saco.cuotaIrpf;
+    if(saco.titulares){ R.titulares = saco.titulares; puesto.push("la casa está <b>a nombre de dos</b>"); }
     if(saco.tipo){
       R.tipo = saco.tipo;
       puesto.push(saco.tipo === "vac" ? "es un <b>apartamento vacacional</b>"
@@ -823,12 +882,12 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     if(R.tipo) yaHabia.push(R.tipo === "vac" ? "apartamento vacacional" : R.tipo === "piso" ? "piso" : "casa");
 
     if(yaHabia.length >= 2){
-      ia("<p><b>Hola otra vez.</b> La última vez me dijiste: <b>" + esc(yaHabia.join(", "))
+      ia("<p><b>Hola otra vez, soy InmoIA</b> (una inteligencia artificial, no una persona). La última vez me dijiste: <b>" + esc(yaHabia.join(", "))
        + "</b>.</p><p>¿Seguimos con eso o lo hacemos de nuevo?</p>");
       opciones([
         { texto:"Seguimos con eso", fuerte:true, hacer:function(){ seguirDondeToque(false); } },
         { texto:"Empezamos de nuevo", hacer:function(){
-            R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+            R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
             try{ localStorage.removeItem(LLAVE); }catch(e){}
             charla.innerHTML = ""; paso0();
           } }
@@ -836,7 +895,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       return;
     }
 
-    ia("<p><b>Hola.</b> " + esc(ENTRADA[R.de]) + "</p>"
+    /* 18/09 · AUDITORIA (D-14, D-36): Reglamento europeo de IA, art. 50: quien
+       habla con una IA tiene que saberlo desde el principio. */
+    ia("<p><b>Hola, soy InmoIA.</b> Soy una inteligencia artificial, no una persona. " + esc(ENTRADA[R.de]) + "</p>"
      + "<p>No hace falta que sepas nada de placas ni de papeleo: para eso estoy. "
      + "<b>Cuéntamelo con tus palabras</b> —o dímelo por voz— y yo lo relleno todo; "
      + "y si lo prefieres, te lo voy preguntando con botones.</p>");
@@ -1033,7 +1094,15 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       + '<select class="op" id="c-sel">' + opsC + '</select>'
       + '<div id="fila-muni">'
       + '<label class="eti" for="m-sel" style="margin-top:12px">Municipio de Tenerife</label>'
-      + '<select class="op" id="m-sel">' + opsM + '</select></div>'
+      + '<select class="op" id="m-sel">' + opsM + '</select>'
+      /* 🔴 AÑADIDO (C2): antes la página se inventaba un IBI de 350 € al año. Ahora se
+         pregunta. Si lo deja en blanco, la bonificación va a cero y se le dice. */
+      + '<label class="eti" for="m-ibi" style="margin-top:12px">¿Cuánto pagas de IBI al año? '
+      + '<span style="font-weight:400;color:var(--tinta2)">(mira tu recibo; si no lo tienes '
+      + 'a mano, déjalo en blanco y te lo calculamos sin esa parte)</span></label>'
+      + '<input class="op" type="number" id="m-ibi" min="0" max="5000" step="10" '
+      + 'inputmode="numeric" placeholder="Escribe lo que pone tu recibo" value="'
+      + (R.ibi > 0 ? R.ibi : "") + '" style="text-align:left"></div>'
       + '<p id="nota-ccaa" style="font-size:13.5px;color:var(--tinta2);margin:11px 0 0"></p>'
       + '<button class="op fuerte" type="button" id="m-ok" style="margin-top:12px">Ver mis números</button>';
 
@@ -1074,6 +1143,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     $("m-ok").addEventListener("click", function(){
       R.ccaa = $("c-sel").value;
       R.muni = (R.ccaa === "cn") ? $("m-sel").value : null;
+      var ibiEscrito = R.muni ? Math.max(0, Number($("m-ibi").value) || 0) : 0;
+      R.ibi = ibiEscrito > 0 ? ibiEscrito : null;
       R.ccaaElegida = true;
       try{ if(window.IMMOIA_AYUDAS) window.IMMOIA_AYUDAS.cargar(R.ccaa); }catch(e){}
       guardar();
@@ -1156,7 +1227,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       + (d.esForal
           ? fila("Deducción estatal del IRPF", "no aplica · " + esc(d.ccaaNom) + " tiene IRPF propio")
           : d.irpfEstado > 0
-            ? fila("Deducción estatal del IRPF (40 %)", "− " + eur(d.irpfEstado), "resta")
+            ? fila("Deducción estatal del IRPF (" + (d.irpfTipo || "40 %") + ")", "− " + eur(d.irpfEstado), "resta")
             : fila("Deducción estatal del IRPF", "0 € · no llegas a la cuota"))
       + (d.irpfCcaa > 0
           ? fila("Deducción de " + d.ccaaNom + " (" + Math.round(d.ccaaDed.pct*100) + " %)", "− " + eur(d.irpfCcaa), "resta")
@@ -1168,7 +1239,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
           : fila("Subvención autonómica", "0 € · " + (d.subvNota ? "cerrada" : "no consta")))
       + (d.hayMuni
           ? (d.ibiPct > 0
-              ? fila("Bonificación del IBI (" + Math.round(d.ibiPct*100) + " % · " + d.ibiAnos + " años)", "− " + eur(d.ibiTotal), "resta")
+              ? (d.hayIbi
+                  ? fila("Bonificación del IBI (" + Math.round(d.ibiPct*100) + " % · " + d.ibiAnos + " años)", "− " + eur(d.ibiTotal), "resta")
+                  : fila("Bonificación del IBI", "nos falta tu recibo del IBI"))
               : fila("Bonificación del IBI", "sin publicar en tu municipio"))
             + fila("Bonificación del ICIO", "− " + eur(d.icio), "resta")
           : fila("IBI e ICIO", "los pone tu ayuntamiento"))
@@ -1181,8 +1254,14 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       + '<p style="font-size:13px;color:var(--tinta2);margin:10px 0 0">'
       + (d.ibiAviso ? "<b>Ojo con el IBI:</b> " + esc(d.ibiAviso) + " " : "")
       + (d.ccaaDed && d.ccaaDed.nota ? "<b>Sobre la deducción de " + esc(d.ccaaNom) + ":</b> " + esc(d.ccaaDed.nota) + " " : "")
-      + (d.hayMuni ? 'El IBI está estimado en 350 € al año; con tu recibo real sale el número exacto. ' : '')
-      + 'El precio es de 750 € por panel puesto, dentro del rango de 600-900 € que se publica.</p></div>';
+      + (d.hayMuni
+          ? (d.hayIbi
+              ? 'La bonificación del IBI está calculada sobre los ' + eur(d.ibiSuyo) + ' al año que nos has dicho que pagas. '
+              : '<b>No sabemos cuánto pagas de IBI</b>, así que aquí va a cero: no nos lo inventamos. '
+                + 'Dinos lo que pone tu recibo y te lo descontamos. ')
+          : '')
+      + 'El precio es de 687,50 € por panel puesto, dentro del rango de 600-900 € que se publica, '
+      + 'y es el número con el que está hecha esta cuenta.</p></div>';
     charla.appendChild(det);
 
     /* ---- si la deducción no le va a salir, se le dice AQUÍ, que es donde mira ---- */
@@ -1727,17 +1806,20 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var API = (typeof CONFIG === "object" && CONFIG && CONFIG.api)
     ? String(CONFIG.api).replace(/\/$/, "")
     : "https://immoia.ley1998ortizz.workers.dev";
-  var CODIGO = "leire2026";
+  /* 🔴 ARREGLADO (C2, 18/09/2026): aquí había una clave del servidor escrita en claro
+     en una página pública que ve cualquiera con el botón derecho. Una clave
+     escrita en el código no es una clave: es un cartel. Se ha quitado y esta página ya no
+     manda ninguna.
+     OJO, ESTO NO VA SOLO: el servidor todavía exige esa clave en TODAS las peticiones, así
+     que este archivo por sí solo deja el cuadro de preguntas sin funcionar. Va junto con el
+     parche del servidor que se entrega aparte (worker.js, línea 770): a partir de ahí, a la
+     página pública se la reconoce por el dominio desde el que llama —la lista DOMINIOS que
+     el servidor ya tiene— y por el freno de intentos, no por un secreto compartido.
+     Y si el servidor no contesta, aquí no pasa nada raro: el cuadro sencillamente no sale y
+     la conversación guiada sigue funcionando entera, que es como estaba pensada. */
   var iaPuesta = false;
 
-  /* ---- el gancho para cuando haya nube y memoria ----
-     Hoy no manda nada a ninguna parte, y por eso el flujo no depende de
-     que haya servidor. Cuando montéis la nube, esto es LO ÚNICO que hay
-     que rellenar: le llega el resumen entero de lo que ha contestado. */
-  function guardarEnLaNube(resumen){
-    /* pendiente: aquí irá el POST cuando exista el sitio donde guardarlo */
-    return false;
-  }
+  /* (L-70: aquí estaba guardarEnLaNube(), que no hacía nada. Borrada.) */
 
   /* Lo que la IA necesita saber para no preguntar lo que ya está contestado.
      Se rehace en cada pregunta, así que siempre va al día. */
@@ -1789,11 +1871,16 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         var revision = window.IMMOIA_ORDEN.revisar({
           aguaElectrica: R.agua ? (R.agua === "electrico") : null,
           aire:          R.aire ? (R.aire === "si") : null,
-          titulares:     1,
+          titulares:     R.titulares || 1,        /* L-71: antes siempre 1 */
+          cuotaIrpf:     (typeof R.cuotaIrpf === "number") ? R.cuotaIrpf : undefined,
+          ibiConocido:   R.ccaa === "cn" && !!R.muni,   /* L-71: el aviso del IBI solo donde lo conocemos */
           vacacional:    R.tipo ? (R.tipo === "vac") : null,
           plazoAnos:     (D.numeros && D.numeros.plazoAnos) || 0,
           conPrestamo:   !!R.pago && /prestamo|banco|financi/i.test(String(R.pago)),
-          mes:           (new Date()).getMonth() + 1
+          mes:           (new Date()).getMonth() + 1,
+          /* 18/09 AUDITORIA (L-18): sin esto la regla «quedan pocos dias para
+             la deduccion» no saltaba nunca */
+          diasHastaFinDeduccion: (D && typeof D.diasParaElPlazo === "function") ? D.diasParaElPlazo() : null
         });
         if(revision.hayQueAvisar && revision.loPrimero){
           var av = revision.loPrimero;
@@ -1816,7 +1903,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       var r = await fetch(API + "/hablar", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ codigo: CODIGO, mensajes: historia }),
+        /* Sin «codigo»: ya no viaja ninguna clave desde esta página. El servidor
+           reconoce a la web pública por el dominio desde el que llama. */
+        body: JSON.stringify({ mensajes: historia }),
         signal: corta.signal
       });
       var j = await r.json();
@@ -1829,12 +1918,17 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   }
 
   function montarIA(){
-    if(iaPuesta) return;
+    /* L-32: tras «Empezar de nuevo» el cuadro se borra de la pantalla; si ya
+       no esta, se vuelve a montar aunque se hubiera puesto antes. */
+    if(iaPuesta && document.getElementById("ia-caja")) return;
     iaPuesta = true;
 
     /* primero se le pregunta al worker si está vivo. Si no lo está, aquí no
        aparece nada: el cliente no ve un cuadro que no funciona. */
-    preguntarIA([{ papel:"yo", texto:"hola" }]).then(function(vive){
+    /* 18/09 · AUDITORIA (L-46): ya no se manda un «hola» pagado en cada
+       carga para ver si el worker vive. Se monta directamente; si falla,
+       se dice al primer mensaje. */
+    Promise.resolve(true).then(function(vive){
       if(!vive) return;
 
       var caja = document.createElement("details");
@@ -1892,7 +1986,13 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
            desde que se abrió el cuadro, la IA lo sabe. Antes se quedaba congelado. */
         historia[0] = { papel:"yo", texto: contexto() };
 
-        var r = await preguntarIA(historia);
+        /* L-31: el servidor se queda con los 20 ultimos mensajes. El contexto
+           (lo que ya ha contestado) va SIEMPRE el primero, y lo que se recorta
+           es la conversacion vieja, empezando siempre por una pregunta. */
+        var charlaVieja = historia.slice(1);
+        if(charlaVieja.length > 17) charlaVieja = charlaVieja.slice(-17);
+        while(charlaVieja.length && charlaVieja[0].papel !== "yo") charlaVieja.shift();
+        var r = await preguntarIA([historia[0]].concat(charlaVieja));
         if(r){
           historia.push({ papel:"ella", texto:r });
           visibles.push({ papel:"ella", texto:r });
@@ -1915,20 +2015,20 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   }
 
   function puenteIA(resumen){
-    guardarEnLaNube(resumen);
     montarIA();
   }
 
   /* ---------- empezar de nuevo ---------- */
   $("reiniciar").addEventListener("click", function(){
     try{ localStorage.removeItem(LLAVE); }catch(e){}
-    R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+    R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
     charla.innerHTML = ""; responder.innerHTML = "";
     paso0();
   });
 
   paso0();
   window.__entender = entender;   /* atajo para las pruebas */
+  window.__calcularCon = function(r){ var viejo = R; R = Object.assign({}, R, r); try{ return calcular(); } finally { R = viejo; } };   /* atajo para las pruebas (L-16) */
 
   /* ==========================================================
      7 · EL PANEL DE MANDOS DE LA IA

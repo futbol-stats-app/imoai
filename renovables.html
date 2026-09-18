@@ -169,15 +169,16 @@ table.t td.resta{color:var(--verde)}
       </div>
     </div>
 
-    <label for="ibi">¿Cuánto pagas de IBI al año? (si no lo sabes, déjalo)</label>
-    <input type="number" id="ibi" min="0" max="5000" step="10" value="300" inputmode="numeric">
+    <label for="ibi">¿Cuánto pagas de IBI al año? (mira tu recibo)</label>
+    <input type="number" id="ibi" min="0" max="5000" step="10" value="" placeholder="Escribe lo que pone tu recibo" inputmode="numeric">
 
     <p class="ojo" id="aviso-muni" hidden style="margin:10px 0 0;padding:10px 12px;font-size:13.5px"></p>
 
     <label class="casilla" for="cert">
       <input type="checkbox" id="cert" checked>
       <span><b>Quiero los dos certificados energéticos</b>
-      Cuestan unos 200 € y suben la deducción del 10 % al 40 %.</span>
+      Cuestan unos 200 € y son los que dan derecho a la deducción del 40 %.
+      <b>Sin ellos no hay deducción ninguna</b>, así que aquí va a cero.</span>
     </label>
 
     <h2 style="margin-top:20px">Cómo lo pagas</h2>
@@ -276,9 +277,12 @@ table.t td.resta{color:var(--verde)}
   <section class="caja">
     <h2>De dónde salen los números</h2>
     <div class="aviso"><span class="pun"></span><span>
-      <b>Deducción del IRPF: 10 % o 40 %</b>
-      Real Decreto-ley 7/2026, convalidado por el Congreso el 27 de marzo de 2026.
-      Base máxima 5.000 € (10 %) y 7.500 € (40 %).</span></div>
+      <b>Deducción del IRPF: 40 %, o ninguna</b>
+      Real Decreto-ley 7/2026, convalidado por el Congreso el 27 de marzo de 2026. La del
+      40 % tiene base máxima de 7.500 € y necesita los dos certificados energéticos.
+      <b>No existe ninguna deducción del 10 %</b> por poner placas: lo que hay además es una
+      del 20 %, que exige bajar la demanda de calefacción y refrigeración, y eso las placas
+      no lo hacen. Sin certificados, aquí no contamos ni un euro.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Bonificación del IBI</b>
       Ordenanzas municipales, trece municipios de Tenerife. Güímar es el más largo (50 %
@@ -286,7 +290,9 @@ table.t td.resta{color:var(--verde)}
       lo tiene publicado.</b></span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Precio de la instalación</b>
-      Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa 750 €.</span></div>
+      Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa <b>687,50 €</b>,
+      que es el número con el que está hecha esta cuenta. Sigue siendo una estimación: el precio
+      de verdad sale del presupuesto del instalador para tu tejado.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Lo que se ahorra</b>
       Se aprovecha en casa un 35 % de lo que produce, a unos 0,19 €/kWh. El sobrante se
@@ -321,7 +327,7 @@ table.t td.resta{color:var(--verde)}
   var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
   var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
   var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
-  var BASE_10     = 5000;
+  /* BASE_10 se ha quitado: no existe ninguna deducción del 10 % (datos.js, línea 140). */
   var BASE_40     = 7500;
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);   /* prestamo verde a plazo largo, dato publicado */
@@ -376,9 +382,13 @@ table.t td.resta{color:var(--verde)}
     var ahorroAno = propio * PRECIO_LUZ + sobrante * PRECIO_EXC;
 
     var gastoCert = cert ? COSTE_CERT : 0;
+    /* 🔴 ARREGLADO (C2): aquí se aplicaba un 10 % que NO EXISTE (datos.js, línea 140).
+       Las modalidades reales son 20 % (bajando la demanda, que las placas no bajan),
+       40 % (con los dos certificados) y 60 % (edificio entero). Sin certificados no se
+       promete nada: cero, y la pantalla lo dice. */
     var irpf = cert
       ? 0.40 * Math.min(coste + gastoCert, BASE_40)
-      : 0.10 * Math.min(coste, BASE_10);
+      : 0;
 
     var b = IBI[muni] || IBI.otro;
     var ibiAnual = ibiAn * b[0];
@@ -386,7 +396,13 @@ table.t td.resta{color:var(--verde)}
     var ibiTotal = ibiAnual * b[1];
 
     var avi = $("aviso-muni");
-    if(b[3]){ avi.textContent = b[3]; avi.hidden = false; } else { avi.hidden = true; }
+    var textoAviso = b[3] || "";
+    /* No nos inventamos tu IBI: si no lo has escrito, aquí va a cero y se te pide. */
+    if(ibiAn <= 0 && b[0] > 0){
+      textoAviso = (textoAviso ? textoAviso + " " : "")
+        + "No sabemos cuánto pagas tú de IBI, así que aquí va a cero. Escríbelo arriba, tal cual viene en tu recibo, y te lo descontamos.";
+    }
+    if(textoAviso){ avi.textContent = textoAviso; avi.hidden = false; } else { avi.hidden = true; }
 
     var real = coste + gastoCert - irpf - ibiTotal - ICIO;
     if(real < 0) real = 0;
@@ -402,8 +418,12 @@ table.t td.resta{color:var(--verde)}
     if(anos_p === 0 || presta <= 0){
       cuota = 0;
     } else {
-      var i = TAE / 12, n = anos_p * 12;
-      cuota = presta * i / (1 - Math.pow(1 + i, -n));
+      /* 🔴 ARREGLADO (C2): aquí ponía «var n = anos_p * 12», y esa n es la MISMA n de los
+         paneles de arriba (var en JavaScript vale para toda la función). En cuanto alguien
+         financiaba, la tabla decía «Instalación de 60 paneles (3,6 kW)». Ahora los meses
+         se llaman meses y los paneles siguen siendo los paneles. */
+      var i = TAE / 12, meses = anos_p * 12;
+      cuota = presta * i / (1 - Math.pow(1 + i, -meses));
     }
 
     var ahorroMes = ahorroAno / 12;
@@ -452,10 +472,12 @@ table.t td.resta{color:var(--verde)}
     var filas = [
       ["Instalación de " + n + " paneles (" + (kwp).toLocaleString("es-ES") + " kW)", eur(coste), ""],
       cert ? ["Los dos certificados energéticos", eur(gastoCert), ""] : null,
-      ["Deducción del IRPF (" + (cert ? "40 %" : "10 %") + ")", "− " + eur(irpf), "resta"],
-      b[0] > 0
+      cert
+        ? ["Deducción del IRPF (40 %)", "− " + eur(irpf), "resta"]
+        : ["Deducción del IRPF", "0 € · sin los dos certificados no hay deducción", ""],
+      (b[0] > 0 && ibiAn > 0)
         ? ["Bonificación del IBI (" + Math.round(b[0]*100) + " % durante " + b[1] + " años)", "− " + eur(ibiTotal), "resta"]
-        : ["Bonificación del IBI", "sin publicar", ""],
+        : ["Bonificación del IBI", b[0] > 0 ? "nos falta tu recibo del IBI" : "sin publicar", ""],
       ["Bonificación del ICIO", "− " + eur(ICIO), "resta"],
       ["Subvención de Canarias", "0 € · cerrada", ""],
       ["__total__", eur(real), ""],
