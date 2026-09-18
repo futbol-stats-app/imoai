@@ -1,0 +1,12 @@
+# IMMO IA · 18/09/2026
+# Las paginas internas (presentaciones, demos, oficina) no deben salir en buscadores.
+User-agent: *
+Disallow: /carta.html
+Disallow: /pase.html
+Disallow: /proyecto.html
+Disallow: /demo.html
+Disallow: /puertas.html
+Disallow: /casas.html
+Disallow: /inmobiliaria.html
+Disallow: /manana.html
+Disallow: /asistente.html
