@@ -15,6 +15,23 @@
    ------------------------------------------------------------------ */
 (function () {
   "use strict";
+
+  /* QUE DIA ES HOY. UNA SOLA CUENTA, EN LA HORA DE AQUI.
+     Aqui esta su sitio: el nucleo va en todas las paginas. Antes cada
+     fichero la hacia a su manera -la pantalla de la manana en hora
+     universal, la bandeja y la cartera en hora local-, y pasada la
+     medianoche en Espana no se ponian de acuerdo en que dia era.
+     Se deja puesta ANTES de mirar si el nucleo ya estaba, para que este
+     siempre, y con "||" para que el primero que llegue la ponga y los
+     demas usen la que ya hay: asi no importa en que orden se carguen
+     los ficheros. La misma cuenta, escrita igual, esta en cartera.js,
+     bandeja.js y manana.js, por si alguna pagina se abre sin el nucleo:
+     al ser la misma no puede haber dos dias distintos. */
+  window.IMMOIA_HOY = window.IMMOIA_HOY || function () {
+    var d = new Date(), m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (x < 10 ? "0" + x : x);
+  };
+
   if (window.IMMOIA_NUCLEO) return;
 
   var ESPERA_MS = 9000;   /* cuanto esperamos a que lleguen todos */
@@ -22,7 +39,7 @@
 
   /* El catalogo. "esencial" = si falta, la persona lo nota. */
   var PIEZAS = [
-    { id: "charla",     global: "__chaEscuchar",           nombre: "el cuadro de conversacion", donde: "ambas",         esencial: true,  sin: "no se puede hablar con la IA" },
+    { id: "charla",     prueba: function(){ return !!document.getElementById("cha-hilo") || typeof window.__chaEscuchar === "function"; } /* L-45: se mira el cuadro, no el microfono (Firefox no tiene) */, nombre: "el cuadro de conversacion", donde: "ambas",         esencial: true,  sin: "no se puede hablar con la IA" },
     { id: "microfono",  prueba: function(){ return window.IMMOIA_CHARLA && window.IMMOIA_CHARLA.microfono === "avisa"; },
       nombre: "el aviso del microfono", donde: "ambas", esencial: true, sin: "el microfono se quedara mudo cuando falle, como el 12 de septiembre" },
     { id: "voz",        global: "IMMOIA_VOZ",              nombre: "la voz",                    donde: "ambas",         esencial: true,  sin: "no te contestara en voz alta" },

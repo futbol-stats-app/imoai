@@ -67,6 +67,7 @@
   + ".ban-v{background:#EDF1EE;color:#1B4332}.ban-a{background:#FBEDE4;color:#7A3B12}.ban-r{background:#F3EFEF;color:#5B4646}"
   + ".ban-bloque{margin:0 0 14px}"
   + ".ban-bloque h3{font-size:14px;margin:0 0 6px;color:var(--marca,#13342A)}"
+  + ".ban-nota{margin:0 0 6px;font-size:13px;color:#7A3B12}"
   + ".ban-bloque ul{margin:0;padding-left:18px;font-size:14px;color:var(--tinta-2,#635C4B)}"
   + ".ban-bloque li{margin:2px 0}"
   + ".ban-pide{background:#FBEDE4;border:1px solid #E3BFA0;border-radius:10px;padding:11px 13px;margin:0 0 14px}"
@@ -97,10 +98,20 @@
   + ".ban-parte{border-top:1px solid #F0ECE1;margin-top:12px;padding-top:10px;font-size:13.5px;color:var(--tinta-2,#635C4B)}";
 
   /* ---------- lo que se guarda ---------- */
-  function hoy() {
-    var d = new Date();
-    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-  }
+  /* QUE DIA ES HOY. Aqui habia dos cuentas distintas -esta en hora local
+     y hoyISO() mas abajo en hora universal- y la pantalla de la manana
+     tenia una tercera. Pasada la medianoche en Espana no coincidian, y
+     ademas con dos formatos distintos ("2026-9-19" y "2026-09-19"), asi
+     que la manana no entendia la fecha de la bandeja. Ahora es UNA SOLA
+     CUENTA, en la hora de aqui, y NO depende de que otro fichero haya
+     cargado antes: con "||", el primero que llegue la deja puesta y los
+     demas usan la que ya hay. Su sitio es nucleo.js; esta misma cuenta,
+     escrita igual, esta ahi, en cartera.js y en manana.js. */
+  window.IMMOIA_HOY = window.IMMOIA_HOY || function () {
+    var d = new Date(), m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (x < 10 ? "0" + x : x);
+  };
+  function hoy() { return window.IMMOIA_HOY(); }
   function enBlanco() {
     return { llaves: [], expediente: { nombre: "el expediente", hechos: [], avisados: [],
              en_marcha: [], rechazados: [], senales: [], datos: [], diario: [], avisos_hoy: 0,
@@ -199,10 +210,12 @@
     }
   };
 
-  function hoyISO() { var d = new Date(); return d.toISOString().slice(0, 10); }
+  /* L-25 (auditor) + fallo 2 (E1): la fecha de AQUI, no la de Greenwich, y
+     LA MISMA que usa hoy(): una sola cuenta, no dos. */
+  function hoyISO() { return hoy(); }
   function masDias(iso, n) {
     var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0, 10);
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
   function enCristiano(iso) {
     var p = String(iso || "").split("-");
@@ -244,17 +257,26 @@
   /* El dia que vence el plazo se enciende la senal QUE EL MOTOR YA
      ESPERABA, y es el motor -no la pantalla- quien decide proponer la
      reclamacion. Aqui no se decide nada. */
+  /* el paso del motor que reclama cada gestion cuando vence */
+  var RECLAMO = { pedir_comunidad: "reclamar_comunidad" };
+
   function revisarGestiones() {
     var cambio = false;
     G.gestiones.forEach(function (g) {
-      if (g.estado !== "esperando" || !g.vence) return;
+      /* L-51: tambien vence otra vez lo que ya se reclamo una vez */
+      if ((g.estado !== "esperando" && g.estado !== "reclamada") || !g.vence) return;
       if (diasHasta(g.vence) > 0) return;
       g.estado = "vencida";
       var s = SALIDAS[g.paso];
-      if (s && s.senal && G.expediente.senales.indexOf(s.senal) === -1) {
-        G.expediente.senales.push(s.senal);
-        /* lo vencido vuelve a poder preguntarse: ya no es el mismo caso */
-        G.expediente.avisados = G.expediente.avisados.filter(function (x) { return x !== g.paso; });
+      if (s && s.senal) {
+        if (G.expediente.senales.indexOf(s.senal) === -1) G.expediente.senales.push(s.senal);
+        /* lo vencido vuelve a poder preguntarse: ya no es el mismo caso. Lo que
+           se vuelve a preguntar es la RECLAMACION, no la peticion (antes se
+           quitaba el paso equivocado). */
+        var r = RECLAMO[g.paso];
+        if (r) ["avisados", "en_marcha", "hechos", "rechazados"].forEach(function (k) {
+          G.expediente[k] = (G.expediente[k] || []).filter(function (x) { return x !== r; });
+        });
       }
       cambio = true;
     });
@@ -277,6 +299,8 @@
   var ultimo = null;
 
   function calcular() {
+    /* L-52: si el motor aun no ha llegado, no se calcula (antes: TypeError) */
+    if (!M) { M = window.IMMOIA_MOTOR || null; if (!M) return ultimo; }
     revisarGestiones();
     var tengo = new Set(G.llaves);
     var datos = new Set(G.expediente.datos);
@@ -377,7 +401,7 @@
     G.expediente.aviso_abierto = null; G.expediente.abiertos = [];
     guardar(G); calcular(); pintar();
   }
-  function empezarDeCero() { G = enBlanco(); guardar(G); calcular(); pintar(); }
+  function empezarDeCero() { G = enBlanco(); guardar(G); if (M || window.IMMOIA_MOTOR) { calcular(); pintar(); } }
 
   /* La ficha: se escribe una vez y no se vuelve a preguntar. Cada dato
      que entra apaga una pregunta del motor. */
@@ -404,6 +428,10 @@
         g.vence = masDias(hoyISO(), s ? s.dias : 7);
       }
     });
+    /* L-50: ya ha salido, asi que esta HECHO (no solo en marcha): el motor
+       necesita verlo en hechos para proponer la reclamacion cuando venza. */
+    G.expediente.en_marcha = G.expediente.en_marcha.filter(function (x) { return x !== paso; });
+    if (G.expediente.hechos.indexOf(paso) === -1) G.expediente.hechos.push(paso);
     guardar(G); calcular(); pintar();
   }
   function gestionLlegada(paso) {
@@ -456,7 +484,11 @@
     h += '</div></div>';
 
     if (d.diario.length) {
-      h += '<div class="ban-bloque"><h3>Hecho, sin preguntarte</h3><ul>'
+      /* 18/09 · AUDITORIA (L-21, P1): aqui NO se ha hecho nada fuera de la
+         pantalla: no hay conexion con Catastro, Hacienda, Registro ni correo.
+         Lo que hay es que los datos ya estan para hacerlo. Se dice asi. */
+      h += '<div class="ban-bloque"><h3>Listo para hacer: ya tienes los datos</h3>'
+        + '<p class="ban-nota">Esto no se ha presentado ni enviado a ningún sitio. Hazlo tú o pídemelo y te lo preparo.</p><ul>'
         + d.diario.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></div>';
     }
 
@@ -638,7 +670,8 @@
     correoDe: correoDe, SALIDAS: SALIDAS,
     decirQueSi: decirQueSi, decirQueNo: decirQueNo,
     empezarDeCero: empezarDeCero,
-    guardado: function () { return G; }
+    guardado: function () { return G; },
+    _hoy: hoyISO   /* para las pruebas (L-25) */
   };
 
   /* Espera al motor sin bloquear la pagina. Si no llega, no monta

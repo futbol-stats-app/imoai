@@ -66,9 +66,9 @@ ANTES DE FIRMAR ARRAS: nota simple nueva, no la de hace seis meses. Un embargo a
     impuestos: {
       pistas: /impuesto|itp|ajd|plusval|irpf|gastos de|quien paga|modelo 600|modelo 211|no residente|ganancia patrimonial/i,
       texto: "IMPUESTOS Y PLAZOS (los tipos exactos los fija cada comunidad: hay que confirmarlos en la agencia tributaria de esa comunidad, nunca decirlos de memoria):\n\
-- ITP, lo paga el COMPRADOR en vivienda de segunda mano. Tipo segun comunidad. Plazo habitual 30 dias habiles. OJO: sin el modelo 600 sellado el Registro NO inscribe la escritura. El comprador puede pasarse meses creyendose propietario sin estarlo.\n\
-- Obra nueva: en vez de ITP van IVA y AJD.\n\
-- PLUSVALIA MUNICIPAL (IIVTNU), la paga el VENDEDOR: 30 DIAS HABILES. Es la trampa clasica: el vendedor cobra, se despreocupa o se va, y la deuda queda con afeccion real sobre el inmueble. Recordarselo el mismo dia de la firma y otra vez a los 15 dias.\n\
+- ITP, lo paga el COMPRADOR en vivienda de segunda mano. Tipo segun comunidad. Plazo: el que fije cada comunidad (segun la comunidad, 30 dias habiles o un mes desde la firma; en Canarias, un mes): confirmarlo en su agencia tributaria. OJO: sin el modelo 600 sellado el Registro NO inscribe la escritura. El comprador puede pasarse meses creyendose propietario sin estarlo.\n\
+- Obra nueva: en vez de ITP van IVA y AJD. En Canarias no hay IVA: va el IGIC (Impuesto General Indirecto Canario) y el AJD; confirma el tipo del IGIC con la Agencia Tributaria Canaria.\n\
+- PLUSVALIA MUNICIPAL (IIVTNU), la paga el VENDEDOR: 30 DIAS HABILES. Es la trampa clasica: el vendedor cobra, se despreocupa o se va, y el ayuntamiento le reclama a el con recargos; si el vendedor no es residente, el que paga como sustituto es el COMPRADOR (art. 106.2 del TRLRHL). Recordarselo el mismo dia de la firma y otra vez a los 15 dias.\n\
 - IRPF del vendedor por la ganancia patrimonial: en la declaracion del ano siguiente. Por eso hace falta la escritura de cuando compro.\n\
 - VENDEDOR NO RESIDENTE: el comprador esta obligado a retener el 3% e ingresarlo con el modelo 211 en 1 mes. Si no se detecta, el comprador responde de la deuda. Preguntar la residencia fiscal EN CAPTACION.\n\
 - Del comprador ademas: notaria, registro y gestoria."
@@ -78,21 +78,21 @@ ANTES DE FIRMAR ARRAS: nota simple nueva, no la de hace seis meses. Un embargo a
       texto: "ALQUILER:\n\
 - LAU: prorrogas obligatorias para el arrendador y el inquilino decide. Los plazos cambian segun sea persona fisica o juridica y segun la fecha del contrato: confirmarlo con el contrato delante.\n\
 - Fianza: un mes en vivienda, art. 36 LAU, y hay que DEPOSITARLA en el organismo de la comunidad autonoma. El organismo y el plazo cambian por comunidad: confirmarlo.\n\
-- Actualizacion de la renta: depende de si el contrato es anterior o posterior al 26 de mayo de 2023. Los anteriores van por IPC; los posteriores por el indice de referencia (IRAV). El valor del mes concreto se mira en el INE. No decirlo de memoria.\n\
+- Actualizacion de la renta: la manda LO QUE DIGA EL CONTRATO. Si pacta actualizacion, para los contratos desde el 26 de mayo de 2023 el indice de referencia (IRAV) funciona como limite o como indice si no se dijo otro. El valor del mes se mira en el INE. Confirmarlo siempre con el contrato delante, no decirlo de memoria.\n\
 - Zona tensionada: cambia topes y condiciones. Si el municipio esta declarado se mira en el listado oficial del ministerio, que se actualiza.\n\
 - Honorarios de la agencia en alquiler de vivienda: desde la ley de vivienda los paga el ARRENDADOR, no el inquilino.\n\
 - Papeles: DNI, justificantes de ingresos, certificado energetico, cedula donde se exija, e inventario y fotos del estado del piso el dia de la entrega."
     },
     alarmas: {
       pistas: /plazo|caduca|se retrasa|se cae|atasc|urgente|alarma|riesgo|que falta|repasa|revisa el expediente/i,
-      texto: "LA LISTA DE ALARMAS (lo que hunde una venta, por orden de frecuencia):\n\
-1. Certificado energetico: caduca a los 10 anos, y NO vale si no esta registrado en la comunidad autonoma. El error mas comun es tener el PDF del tecnico y no el registro.\n\
+      texto: "LA LISTA DE ALARMAS (lo que hunde una venta, por orden de frecuencia). Los plazos en semanas o meses son LO QUE SE TARDA DE NORMAL, no plazos legales: dilo asi:\n\
+1. Certificado energetico: caduca a los 10 anos (a los 5 si la calificacion es G), y NO vale si no esta registrado en la comunidad autonoma. El error mas comun es tener el PDF del tecnico y no el registro.\n\
 2. Hipoteca del vendedor pagada pero sin cancelar en el registro: 4 a 8 semanas. Se detecta en la nota simple del dia 1.\n\
 3. Certificado de deuda de la comunidad caducado cuando la firma se mueve: el notario puede rechazarlo.\n\
 4. Nota simple vieja: no caduca por ley, pero una de hace seis meses no ve un embargo nuevo. Una antes de arras y otra 48 horas antes de notaria.\n\
 5. Los 10 dias de la Ley 5/2019 mal contados.\n\
 6. Plusvalia municipal: 30 dias habiles desde la firma.\n\
-7. ITP: 30 dias habiles, y sin el sello no hay inscripcion.\n\
+7. ITP: el plazo de cada comunidad (30 dias habiles o un mes; en Canarias, un mes), y sin el sello no hay inscripcion.\n\
 8. Cedula de habitabilidad donde se exige: 2 a 6 semanas.\n\
 9. Herencia sin aceptar o sin inscribir: 1 a 3 meses.\n\
 10. Poderes: desde el extranjero con apostilla, 2 a 4 semanas. Un poder caducado o corto lo rechaza el notario en el acto.\n\
@@ -115,7 +115,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     oficina: {
       pistas: /anuncio|publicar|portal|idealista|fotocasa|blanqueo|sepblac|hoja de visita|rgpd|comision|honorarios de la agencia/i,
       texto: "LA OFICINA POR DENTRO:\n\
-- ANUNCIOS: desde la Ley 10/2025 cada anuncio tiene que llevar quien lo anuncia, las caracteristicas esenciales, el PRECIO FINAL con impuestos y comisiones incluidas, y la referencia a zona tensionada o VPO si toca. Aplica a portales, redes, escaparate, web y video. Las multas van de 150 a 10.000 euros POR ANUNCIO. Si te ensenan un anuncio, repasalo contra esto.\n\
+- ANUNCIOS: desde la Ley 10/2025 cada anuncio tiene que llevar quien lo anuncia, las caracteristicas esenciales, el PRECIO FINAL con impuestos y comisiones incluidas, y la referencia a zona tensionada o VPO si toca. Aplica a portales, redes, escaparate, web y video. Las multas pueden llegar a 10.000 euros (la cuantia exacta, en la propia ley: no la des de memoria). Si te ensenan un anuncio, repasalo contra esto.\n\
 - HOJA DE VISITA: es la prueba de que fue la agencia quien puso en contacto a comprador y vendedor. Sin ella, en un pleito por la comision la agencia va a ciegas. Que se firme siempre, en la puerta.\n\
 - BLANQUEO: la agencia es sujeto obligado ante el SEPBLAC. Identificar al cliente y al titular real si hay sociedades, analisis de riesgo propio, manual interno, responsable designado, formacion, y conservar 10 anos. Las sanciones habituales no son por delito: son por no tener la documentacion en regla.\n\
 - RGPD: base legal en la hoja de encargo y en la hoja de visita.\n\
@@ -125,8 +125,16 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
 
   /* ---------------- 3. elegir la ficha que toca ---------------- */
 
+  /* L-29: sin tildes y sin eñes, para que «captación», «cédula», «señal»,
+     «Málaga» o «Ávila» se reconozcan igual que escritos sin tilde. */
+  function plano(texto) {
+    return String(texto || "").toLowerCase()
+      .replace(/[áàä]/g, "a").replace(/[éèë]/g, "e").replace(/[íìï]/g, "i")
+      .replace(/[óòö]/g, "o").replace(/[úùü]/g, "u").replace(/ñ/g, "n");
+  }
+
   function fichaPara(texto) {
-    var t = String(texto || "");
+    var t = plano(texto);
     var elegidas = [];
     Object.keys(FICHAS).forEach(function (k) {
       if (FICHAS[k].pistas.test(t)) elegidas.push(k);
@@ -198,35 +206,25 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
      la salida que se le ofrece a la persona cuando dos aparatos han
      escrito, y la unica que no tira trabajo de nadie. */
   function juntarMesas(a, b) {
+    /* L-61: se cuentan las veces. Las guardadas entran TODAS, aunque haya
+       dos notas iguales; de este aparato solo entran las que sobran
+       respecto a las guardadas. Antes dos notas iguales se quedaban en una. */
     var vistas = {}, salida = [];
-    function meter(t) {
-      var lineas = String(quitarSello(t) || "").split(/\r\n|\r|\n/);
-      for (var i = 0; i < lineas.length; i++) {
-        var l = lineas[i], clave = l.trim();
-        if (!clave) continue;
-        if (Object.prototype.hasOwnProperty.call(vistas, clave)) continue;
-        vistas[clave] = true;
-        salida.push(l);
-      }
-    }
-    meter(a); meter(b);
+    function lineas(t) { return String(quitarSello(t) || "").split(/\r\n|\r|\n/); }
+    lineas(a).forEach(function (l) {
+      var clave = l.trim(); if (!clave) return;
+      vistas[clave] = (vistas[clave] || 0) + 1;
+      salida.push(l);
+    });
+    lineas(b).forEach(function (l) {
+      var clave = l.trim(); if (!clave) return;
+      if (vistas[clave] > 0) { vistas[clave]--; return; }
+      salida.push(l);
+    });
     return salida.join("\n");
   }
 
-  /* El codigo de la oficina viene en el enlace: inmobiliaria.html?oficina=xxxx
-     ESTO YA NO DECIDE NADA SOBRE LA MESA. Se queda solo porque es lo que
-     apunta en este navegador el codigo que venga en el enlace, por si lo
-     mira otro modulo que no tenemos delante. Donde vive la mesa lo decide
-     cuentaAbierta(), que es la MISMA llave con la que se guarda: antes se
-     preguntaba por aqui y se guardaba por alli, y de esas dos llaves
-     distintas venia que la caja saliera vacia en el segundo aparato. */
-  function codigoOficina() {
-    try {
-      var m = /[?&]oficina=([A-Za-z0-9_-]{3,64})/.exec(location.search || "");
-      if (m) { try { localStorage.setItem("immoia.oficina.v1", m[1]); } catch (e) {} return m[1]; }
-      return localStorage.getItem("immoia.oficina.v1") || "";
-    } catch (e) { return ""; }
-  }
+  /* (L-70: aqui estaba codigoOficina(), que ya no decidia nada y no la llamaba nadie. Borrada.) */
 
   function api() {
     try {
@@ -302,11 +300,22 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     return c.id || c.usuario || "";
   }
 
+  /* 18/09 · AUDITORIA (L-02, L-03): sin cuenta abierta, lo que hay es de
+     la ultima oficina que estuvo (llave caducada): no se borra. Y lo
+     escrito sin marca antes de entrar se ADOPTA, igual que la cartera. */
+  function marcaMesa() {
+    try {
+      var q = cuentaDeAhora();
+      if (q === "" && String(localStorage.getItem(DUENO) || "") !== "") return;
+      localStorage.setItem(DUENO, q);
+    } catch (e) {}
+  }
   function esDeOtra() {
     try {
       var marca = String(localStorage.getItem(DUENO) || "");
       var c = cuentaAhoraDatos();
-      if (!c) return marca !== "";
+      if (!c) return false;
+      if (marca === "") return false;
       if (c.id && marca === c.id) return false;
       if (c.usuario && marca === c.usuario) return false;
       return true;
@@ -325,11 +334,43 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       enMemoria = "";
     } catch (e) { }
   }
+  /* L-11: en inmobiliaria.html este fichero se carga ANTES que nucleo.js,
+     asi que al arrancar todavia no hay nucleo. Si no esta, se engancha
+     en cuanto la pagina termina de cargar. */
+  function engancharCambioDeCuenta() {
+    if (!(window.IMMOIA_NUCLEO && typeof window.IMMOIA_NUCLEO.cuando === "function")) return false;
+    window.IMMOIA_NUCLEO.cuando("oficina:cambio", alCambiarDeCuenta);
+    return true;
+  }
   try {
-    if (window.IMMOIA_NUCLEO && typeof window.IMMOIA_NUCLEO.cuando === "function") {
-      window.IMMOIA_NUCLEO.cuando("oficina:cambio", function () { olvidarSiEsDeOtra(); });
-    }
+    if (!engancharCambioDeCuenta()) document.addEventListener("DOMContentLoaded", engancharCambioDeCuenta);
   } catch (e) { }
+  function alCambiarDeCuenta(ev) {
+    {
+      (function (ev) {
+        /* JUNTADO 18/09 · LAS DOS PALABRAS. El paquete del auditor escribio
+           "salir"; E1/Z hacen que oficina.js diga "salida". Si aqui solo se
+           mirase una de las dos, la mesa NO se borraria al salir y la
+           siguiente oficina se encontraria las notas de la anterior en el
+           mismo ordenador: seria deshacer sin querer el arreglo del 13/09.
+           Se entienden las dos, igual que en cartera.js. */
+        var mot = String((ev && ev.motivo) || "");
+        if (mot === "salir" || mot === "salida") {
+          /* Salir de verdad (lo pendiente ya se subio): no queda rastro */
+          try { localStorage.removeItem(LLAVE); localStorage.removeItem(SELLO); localStorage.setItem(DUENO, ""); } catch (e) {}
+          enMemoria = "";
+          try { var tx = document.getElementById("inmo-mesa-txt"); if (tx) tx.value = ""; } catch (e) {}
+          return;
+        }
+        olvidarSiEsDeOtra();
+        if (!esDeOtra()) { try { var m = String(localStorage.getItem(DUENO) || ""); if (m === "" && cuentaDeAhora() !== "") localStorage.setItem(DUENO, cuentaDeAhora()); } catch (e) {} }
+        try {
+          var tx = document.getElementById("inmo-mesa-txt");
+          if (tx && document.activeElement !== tx) tx.value = quitarSello(leerMesa());
+        } catch (e) {}
+      })(ev);
+    }
+  }
 
   function leerMesa() {
     if (esDeOtra()) {
@@ -359,7 +400,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     enMemoria = quitarSello(guardada);
     try {
       localStorage.setItem(LLAVE, enMemoria);
-      localStorage.setItem(DUENO, cuentaDeAhora());
+      marcaMesa();
     } catch (e) {}
     ponerSelloAqui(n);
     return enMemoria;
@@ -385,26 +426,34 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     }).then(function (r) { estado = r.status; return r.json(); })
       .then(function (d) {
         if (siCaduco(estado, d)) { luego(false, "", 0, "caducada"); return; }
-        var t = (d && typeof d.texto === "string") ? d.texto : "";
-        luego(true, quitarSello(t), numeroDelSello(t), "");
+        /* L-05: un 429, 502 o 503 NO es «la mesa esta vacia». Si la
+           lectura no ha ido bien, no se sabe que hay alla: no se escribe. */
+        if (estado < 200 || estado >= 300 || !d || d.error) { luego(false, "", 0, "sin conexion"); return; }
+        var t = (typeof d.texto === "string") ? d.texto : "";
+        /* L-06: el servidor nuevo dice en que version esta la mesa; se
+           guarda para escribir SOBRE esa version y no pisar a otro aparato */
+        luego(true, quitarSello(t), numeroDelSello(t), "", (typeof d.v === "number") ? d.v : null);
       })
       .catch(function () { luego(false, "", 0, "sin conexion"); });
   }
 
   /* ESCRIBIR DE VERDAD, con el numero que toca. Solo se llama cuando ya
      se ha leido lo que habia y se sabe que no se pisa nada. */
-  function escribirMesa(t, n, luego) {
+  function escribirMesa(t, n, luego, siVersion) {
     var c = cuentaAbierta(), a = api();
     enMemoria = t;
-    try { localStorage.setItem(LLAVE, t); localStorage.setItem(DUENO, cuentaDeAhora()); } catch (e) {}
+    try { localStorage.setItem(LLAVE, t); marcaMesa(); } catch (e) {}
     if (!c || !a) { ponerSelloAqui(n); if (luego) luego(true, "Guardado en este ordenador."); return; }
     var estado = 0;
     fetch(a + "/hablar", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify(cuerpoCon(c, { memoria: "guardar", texto: conSello(t, n) }))
+      body: JSON.stringify(cuerpoCon(c, siVersion == null ? { memoria: "guardar", texto: conSello(t, n) } : { memoria: "guardar", texto: conSello(t, n), si_version: siVersion }))
     }).then(function (r) { estado = r.status; return r.json(); })
       .then(function (d) {
         if (siCaduco(estado, d)) { if (luego) luego(false, "Guardado en este ordenador: hay que volver a entrar en la cuenta."); return; }
+        /* L-06: otro aparato guardo entre que leimos y escribimos: no se pisa */
+        if (estado === 409 || (d && d.conflicto)) { if (luego) luego(false, "Alguien acaba de guardar desde otro aparato. No he pisado nada: vuelve a pulsar Guardar y te enseño las dos listas."); return; }
+        if (estado === 413) { if (luego) luego(false, "La lista es demasiado larga para guardarla en la oficina. Se queda en este ordenador: acórtala y vuelve a guardar."); return; }
         if (d && d.ok) { ponerSelloAqui(n); if (luego) luego(true, "Guardado. Lo ves desde cualquier ordenador."); return; }
         if (luego) luego(false, "Guardado en este ordenador: ahora mismo no llego a los demás aparatos.");
       })
@@ -424,8 +473,15 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
           persona, con tres salidas; mientras no conteste, no se toca nada
           en ningun sitio.
        4. EL NUMERO SUBE, con su fecha y hora. */
+  var MAX_MESA = 19000;   /* L-07: el servidor no admite mas de 20.000 con el sello */
   function guardarMesa(t, luego, vaciarAdrede) {
     t = quitarSello(String(t || ""));
+    if (t.length > MAX_MESA) {
+      enMemoria = t;
+      try { localStorage.setItem(LLAVE, t); marcaMesa(); } catch (e) {}
+      if (luego) luego(false, "La lista tiene " + t.length.toLocaleString("es-ES") + " letras y el máximo son " + MAX_MESA.toLocaleString("es-ES") + ". Se queda en este ordenador, pero no la subo cortada: borra lo que ya no haga falta y vuelve a guardar.");
+      return;
+    }
     var c = cuentaAbierta(), a = api();
 
     /* sin cuenta abierta la mesa se queda aqui y se dice, como siempre */
@@ -435,13 +491,13 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       return;
     }
 
-    pedirMesa(function (bien, guardada, n) {
+    pedirMesa(function (bien, guardada, n, _motivo, vS) {
       var aqui = selloDeAqui().n;
 
       /* 1. no se ha podido leer: NO se escribe a ciegas */
       if (!bien) {
         enMemoria = t;
-        try { localStorage.setItem(LLAVE, t); localStorage.setItem(DUENO, cuentaDeAhora()); } catch (e) {}
+        try { localStorage.setItem(LLAVE, t); marcaMesa(); } catch (e) {}
         if (luego) luego(false, "Guardado en este ordenador: ahora mismo no llego a los demás aparatos.");
         return;
       }
@@ -475,7 +531,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
         var salidas = [
           { texto: "Con las dos, juntas", hacer: function () {
               if (hecho) return; hecho = true;
-              escribirMesa(juntarMesas(guardada, t), (n > aqui ? n : aqui) + 1, luego);
+              escribirMesa(juntarMesas(guardada, t), (n > aqui ? n : aqui) + 1, luego, vS);
             } },
           { texto: "Con las guardadas", hacer: function () {
               if (hecho) return; hecho = true;
@@ -484,7 +540,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
             } },
           { texto: "Con las de este aparato", hacer: function () {
               if (hecho) return; hecho = true;
-              escribirMesa(t, (n > aqui ? n : aqui) + 1, luego);
+              escribirMesa(t, (n > aqui ? n : aqui) + 1, luego, vS);
             } }
         ];
         var aviso = "Esta oficina tiene notas más nuevas guardadas, escritas desde otro aparato. " +
@@ -498,7 +554,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       }
 
       /* 4. el numero sube */
-      escribirMesa(t, (n > aqui ? n : aqui) + 1, luego);
+      escribirMesa(t, (n > aqui ? n : aqui) + 1, luego, vS);
     });
   }
 
@@ -763,7 +819,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
   function traerFiscal() {
     if (window.IMMOIA_FISCAL || document.querySelector('script[data-fiscal]')) return;
     var s = document.createElement("script");
-    s.src = "fiscal.js?v=2";
+    s.src = "fiscal.js?v=18c";
     s.setAttribute("data-fiscal", "si");
     s.onerror = function () {};
     document.head.appendChild(s);
@@ -773,22 +829,23 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
   var PISTAS_FISCAL = /itp|ajd|transmisiones|actos juridicos|impuesto|modelo 600|fianza|cedula|habitabilidad|plusval|cuanto paga|que se paga|tipo aplicable/i;
 
   /* de donde estamos hablando: si esta saber.js lo sabe el, si no, lo basico */
-  var MINI = [["cn",/canarias|tenerife|gran canaria|adeje|arona|las palmas|lanzarote|fuerteventura/i],
-              ["ma",/madrid/i], ["ca",/catalu|barcelona|girona|tarragona|lleida/i],
-              ["an",/andaluc|sevilla|malaga|granada|cadiz|cordoba|almeria|huelva|jaen/i],
-              ["vc",/valencia|alicante|castellon/i], ["ga",/galicia|coruna|coruña|vigo|lugo|ourense|pontevedra/i],
-              ["pv",/pais vasco|euskadi|bilbao|vitoria|donostia|san sebastian/i],
-              ["ib",/baleares|mallorca|menorca|ibiza/i], ["cl",/castilla y leon|salamanca|valladolid|burgos|leon|zamora|segovia|soria|palencia|avila/i],
-              ["cm",/castilla-la mancha|toledo|albacete|cuenca|guadalajara|ciudad real/i],
-              ["ar",/aragon|zaragoza|huesca|teruel/i], ["as",/asturias|oviedo|gijon/i],
-              ["mu",/murcia|cartagena/i], ["ex",/extremadura|badajoz|caceres/i],
-              ["ct",/cantabria|santander/i], ["na",/navarra|pamplona/i], ["ri",/rioja|logrono|logroño/i]];
+  var MINI = [["cn",/\b(?:canarias|tenerife|gran canaria|adeje|arona|las palmas|lanzarote|fuerteventura)\b/i],
+              ["ma",/\b(?:madrid)\b/i], ["ca",/\b(?:catalu\w*|barcelona|girona|tarragona|lleida)\b/i],
+              ["an",/\b(?:andaluc\w*|sevilla|malaga|granada|cadiz|cordoba|almeria|huelva|jaen)\b/i],
+              ["vc",/\b(?:valencia|alicante|castellon)\b/i], ["ga",/\b(?:galicia|coruna|coruña|vigo|lugo|ourense|pontevedra)\b/i],
+              ["pv",/\b(?:pais vasco|euskadi|bilbao|vitoria|donostia|san sebastian)\b/i],
+              ["ib",/\b(?:baleares|mallorca|menorca|ibiza)\b/i], ["cl",/\b(?:castilla y leon|salamanca|valladolid|burgos|leon|zamora|segovia|soria|palencia|avila)\b/i],
+              ["cm",/\b(?:castilla-la mancha|toledo|albacete|cuenca|guadalajara|ciudad real)\b/i],
+              ["ar",/\b(?:aragon|zaragoza|huesca|teruel)\b/i], ["as",/\b(?:asturias|oviedo|gijon)\b/i],
+              ["mu",/\b(?:murcia|cartagena)\b/i], ["ex",/\b(?:extremadura|badajoz|caceres)\b/i],
+              ["ct",/\b(?:cantabria|santander)\b/i], ["na",/\b(?:navarra|pamplona)\b/i], ["ri",/\b(?:rioja|logrono|logroño)\b/i]];
 
   function dondeEs(t) {
     try { if (window.IMMOIA_SABER && window.IMMOIA_SABER.donde) {
       var d = window.IMMOIA_SABER.donde(t); if (d) return d;
     } } catch (e) {}
-    for (var i = 0; i < MINI.length; i++) if (MINI[i][1].test(t)) return MINI[i][0];
+    var p = plano(t);
+    for (var i = 0; i < MINI.length; i++) if (MINI[i][1].test(p)) return MINI[i][0];
     return null;
   }
 
@@ -827,7 +884,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     var t = sinTildesF(c);
     if (!t) return "sin dato";
     var malo = /no verificad|no oficial/.test(t);
-    var parcial = /parcial/.test(t);
+    var parcial = /parcial|advertencia|posible modificacion|confirmar|pendiente/.test(t);   /* L-65 */
     if (malo) return /^oficial/.test(t) ? "a medias" : "sin verificar";
     if (parcial) return "a medias";
     if (/oficial/.test(t)) return "oficial";
@@ -877,7 +934,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
 
   function fichaFiscal(texto) {
     var F = window.IMMOIA_FISCAL;
-    if (!F || !PISTAS_FISCAL.test(texto)) return null;
+    if (!F || !PISTAS_FISCAL.test(plano(texto))) return null;
     var cc = dondeEs(texto);
     if (!cc || !F.ccaa || !F.ccaa[cc]) return null;
     var c = F.ccaa[cc], l = [];
@@ -978,21 +1035,27 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
         }
 
         if (m && m.length && !(m[0] && String(m[0].texto || "").indexOf(MARCA) === 0)) {
-          var delante = [{ papel: "yo", texto: ENCARGO }];
+          var delante = [{ papel: "yo", texto: ENCARGO, ficha: true }];
           var mesa = fichaDeLaMesa();
-          if (mesa) delante.push({ papel: "yo", texto: mesa });
+          if (mesa) delante.push({ papel: "yo", texto: mesa, ficha: true });
           var ahora = loDeAhora(m);
           var f = fichaPara(ahora);
-          if (f) f.forEach(function (x) { delante.push({ papel: "yo", texto: x }); });
+          if (f) f.forEach(function (x) { delante.push({ papel: "yo", texto: x, ficha: true }); });
           var fis = fichaFiscal(ahora);
-          if (fis) delante.push({ papel: "yo", texto: fis });
+          if (fis) delante.push({ papel: "yo", texto: fis, ficha: true });
 
           /* El worker solo se queda con los 20 ultimos mensajes. Si la
              conversacion se alarga, recortaria justamente estas
              instrucciones y la secretaria dejaria de ser secretaria.
              Asi que recortamos nosotros la conversacion, no el encargo. */
+          /* L-30: las fichas que ya traia el mensaje (las pone saber.js al
+             principio: contexto, ayudas, impuestos) NO son conversacion: se
+             apartan antes de recortar, para que no se caigan a los 14 mensajes. */
+          var traidas = [], resto = m.slice();
+          while (resto.length && resto[0] && resto[0].ficha === true) traidas.push(resto.shift());
+          delante = delante.concat(traidas);
           var sitio = Math.max(6, 19 - delante.length);
-          var conversacion = m.length > sitio ? m.slice(-sitio) : m;
+          var conversacion = resto.length > sitio ? resto.slice(-sitio) : resto;
           while (conversacion.length && conversacion[0] && conversacion[0].papel !== "yo") conversacion.shift();
 
           cuerpo.mensajes = delante.concat(conversacion);
@@ -1081,7 +1144,21 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
       avisar(como || "");
     }
 
+    /* L-60: pulsar Guardar con el cuadro enfocado disparaba dos guardados a la
+       vez (al salir del cuadro y al pulsar). Ahora el de salir espera un
+       momento y el boton lo anula; y mientras hay uno en marcha no sale otro. */
+    var relojBlur = null, guardando = false;
+    function guardarUnaVez(texto, luego, vaciar) {
+      if (guardando) return;
+      guardando = true;
+      var suelta = setTimeout(function () { guardando = false; }, 60000);   /* por si se queda una pregunta sin contestar */
+      guardarMesa(texto, function (bien, como) { clearTimeout(suelta); guardando = false; luego(bien, como); }, vaciar);
+    }
+    document.getElementById("inmo-mesa-guardar").addEventListener("mousedown", function () {
+      if (relojBlur) { clearTimeout(relojBlur); relojBlur = null; }
+    });
     document.getElementById("inmo-mesa-guardar").addEventListener("click", function () {
+      if (relojBlur) { clearTimeout(relojBlur); relojBlur = null; }
       /* DEJARLA EN BLANCO SE PREGUNTA. Una lista vacia no se sube sola
          nunca; y si de verdad se quiere vaciar, se dice antes que se
          queda en blanco tambien en los demas aparatos. */
@@ -1098,26 +1175,43 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
               } },
             { texto: "Sí, dejarla en blanco", hacer: function () {
                 if (hecho) return; hecho = true;
-                guardarMesa("", alGuardar, true);
+                guardarUnaVez("", alGuardar, true);
               } }
           ]
         )) { avisar("No he tocado nada."); }
         return;
       }
+      if (guardando) return;
       avisar("Guardando…");
-      guardarMesa(txt.value, alGuardar);
+      guardarUnaVez(txt.value, alGuardar);
     });
     /* y tambien al salir del cuadro, para que no se pierda nada. Vacio no:
        salir de una caja vacia no puede borrar el trabajo de la semana. */
     txt.addEventListener("blur", function () {
       if (!txt.value.trim()) return;
-      if (txt.value !== quitarSello(leerMesa())) guardarMesa(txt.value, alGuardar);
+      if (relojBlur) clearTimeout(relojBlur);
+      relojBlur = setTimeout(function () {
+        relojBlur = null;
+        if (txt.value !== quitarSello(leerMesa())) guardarUnaVez(txt.value, alGuardar);
+      }, 300);
     });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ponerCuadro);
   else ponerCuadro();
 
+  /* Para Salir (oficina.js): si la caja tiene algo sin guardar, se
+     guarda ya y se contesta cuando el servidor lo tiene. */
+  window.IMMOIA_MESA = {
+    subirYa: function (cb) {
+      cb = cb || function () {};
+      try {
+        var tx = document.getElementById("inmo-mesa-txt");
+        if (!tx || !tx.value.trim() || tx.value === quitarSello(leerMesa())) { cb({ ok: true }); return; }
+        guardarMesa(tx.value, function (bien, como) { cb(bien ? { ok: true } : { error: como || "no subido" }); });
+      } catch (e) { cb({ error: "no subido" }); }
+    }
+  };
   window.IMMOIA_INMO = {
     version: "1.4",
     encargo: function () { return ENCARGO; },
@@ -1125,6 +1219,7 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     mesa: function () { return quitarSello(leerMesa()); },
     fiscal: fichaFiscal,
     donde: dondeEs,
+    _juntar: juntarMesas,   /* para las pruebas (L-61) */
     ponerMesa: guardarMesa,
     fichaMesa: fichaDeLaMesa,
     /* lo que sigue es para poder probar esto sin abrir un navegador; son

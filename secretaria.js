@@ -1,5 +1,5 @@
 /* ============================================================
-   secretaria.js — que InmoIA hable como una persona, no como un robot.
+   secretaria.js — que IMMO IA hable como una persona, no como un robot.
 
    NO toca charla.js. Se carga DESPUÉS y mejora lo que ya hay:
      1. Lee bien: dice «euros», no «€»; «metros cuadrados», no «m²».
@@ -24,6 +24,31 @@
   var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio",
                "agosto","septiembre","octubre","noviembre","diciembre"];
 
+  /* 18/09 (OT-12) — LAS FECHAS, EN PALABRAS.
+     Una voz de Windows leyó «la firma es el 15/10/2026» como «el quinto»:
+     las voces tratan el número suelto como ordinal. Escrito en palabras no
+     hay forma de que se equivoque. Es la misma regla que ya está probada
+     en VOZ_PIEZAS (lectura.js), traída aquí tal cual. */
+  var UNI = ["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez",
+             "once","doce","trece","catorce","quince","dieciséis","diecisiete","dieciocho","diecinueve",
+             "veinte","veintiuno","veintidós","veintitrés","veinticuatro","veinticinco",
+             "veintiséis","veintisiete","veintiocho","veintinueve"];
+  var DEC = ["", "", "", "treinta","cuarenta","cincuenta","sesenta","setenta","ochenta","noventa"];
+  var CEN = ["", "ciento","doscientos","trescientos","cuatrocientos","quinientos","seiscientos",
+             "setecientos","ochocientos","novecientos"];
+
+  /* 0..9999, que es lo que hace falta para días y años */
+  function enLetras(n) {
+    n = Math.floor(Number(n));
+    if (!(n >= 0) || n > 9999) return String(n);
+    if (n < 30) return UNI[n];
+    if (n < 100) return DEC[Math.floor(n / 10)] + (n % 10 ? " y " + UNI[n % 10] : "");
+    if (n === 100) return "cien";
+    if (n < 1000) return CEN[Math.floor(n / 100)] + (n % 100 ? " " + enLetras(n % 100) : "");
+    var mil = Math.floor(n / 1000), resto = n % 1000;
+    return (mil === 1 ? "mil" : enLetras(mil) + " mil") + (resto ? " " + enLetras(resto) : "");
+  }
+
   function paraDecir(t) {
     t = String(t == null ? "" : t);
 
@@ -31,10 +56,31 @@
     t = t.replace(/https?:\/\/\S+/g, " el enlace que te dejo ");
     t = t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, " ");  /* emojis fuera */
 
-    /* fechas: 31/07/2027 -> 31 de julio de 2027 */
-    t = t.replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, function (_, d, m, a) {
-      var i = parseInt(m, 10) - 1;
-      return MESES[i] ? d + " de " + MESES[i] + " de " + a : d + " " + m + " " + a;
+    /* fechas, en palabras:
+         15/10/2026 -> quince de octubre de dos mil veintiséis
+         5/10       -> cinco de octubre
+         5 de octubre de 2026, el 24 -> cinco de octubre…, el veinticuatro
+       Lo que NO se toca: «3/4 partes», «1/2 del piso», 13/13/2026 (mes que
+       no existe), 5.000, 12,5 %, «24 años». */
+    t = t.replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, function (x, d, m, a) {
+      var i = parseInt(m, 10) - 1, dd = parseInt(d, 10);
+      if (!MESES[i] || dd < 1 || dd > 31) return x;
+      return enLetras(dd) + " de " + MESES[i] + " de " + enLetras(parseInt(a, 10));
+    });
+    t = t.replace(/\b(\d{1,2})\/(\d{1,2})\b(?!\s*(?:partes?|del?\b))/g, function (x, d, m) {
+      var i = parseInt(m, 10) - 1, dd = parseInt(d, 10);
+      if (!MESES[i] || dd < 1 || dd > 31) return x;
+      return enLetras(dd) + " de " + MESES[i];
+    });
+    t = t.replace(new RegExp("\\b(\\d{1,2})\\s+de\\s+(" + MESES.join("|") + ")\\b(?:\\s+de\\s+(\\d{4})\\b)?", "gi"), function (x, d, mes, a) {
+      var dd = parseInt(d, 10);
+      if (dd < 1 || dd > 31) return x;
+      return enLetras(dd) + " de " + mes + (a ? " de " + enLetras(parseInt(a, 10)) : "");
+    });
+    t = t.replace(/\b(el|del|al|d[ií]a)\s+(\d{1,2})(?=\s*(?:[.,;:!?)](?!\d)|$|y\s|o\s|al\s|a\s+las?\s))/gi, function (x, art, d) {
+      var dd = parseInt(d, 10);
+      if (dd < 1 || dd > 31) return x;
+      return art + " " + enLetras(dd);
     });
 
     /* números con punto de miles: 5.500 -> 5500 para que no diga «cinco punto quinientos» */
@@ -264,8 +310,29 @@
     try { localStorage.setItem(LLAVE_MANOS, v ? "si" : "no"); } catch (e) {}
   }
 
+  /* L-44: en iPhone y iPad el navegador solo deja hablar y abrir el microfono
+     si viene de un toque. (1) Con el primer toque se «despierta» la voz con una
+     frase vacia, y a partir de ahi ya deja leer las respuestas. (2) El microfono
+     no se reabre solo: se le dice que toque el boton, sin el aviso de permisos. */
+  var ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var vozDespierta = false;
+  function despertarVoz() {
+    if (vozDespierta) return; vozDespierta = true;
+    try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; u.__nuestra = true; speakOriginal(u); } catch (e) {}
+  }
+  if (ES_IOS) {
+    document.addEventListener("touchend", despertarVoz, { passive: true });
+    document.addEventListener("click", despertarVoz);
+  }
+
   function volverAEscuchar() {
     if (!manosLibres()) return;
+    if (ES_IOS) {
+      var mic = document.getElementById("cha-mic");
+      if (mic) mic.setAttribute("title", "Toca aquí para contestar");
+      return;
+    }
     setTimeout(function () {
       if (hablando) return;
       try { if (window.__chaEscuchar) window.__chaEscuchar(); } catch (e) {}

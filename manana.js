@@ -18,7 +18,20 @@
   /* ---------- fechas ---------- */
   var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
-  function hoyISO() { var d = new Date(); return d.toISOString().slice(0, 10); }
+  /* QUE DIA ES HOY. Aqui se calculaba en hora universal (la de Greenwich),
+     y la bandeja y la cartera lo calculaban en hora local: pasada la
+     medianoche en Espana esta pantalla y la bandeja no coincidian en que
+     dia es hoy (L-25 del auditor y el fallo 2 de E1 son el mismo fallo).
+     Ahora es UNA SOLA CUENTA, en la hora de aqui, y NO depende de que otro
+     fichero haya cargado antes: con "||", el primero que llegue la deja
+     puesta y los demas usan la que ya hay. Su sitio es nucleo.js; esta
+     misma linea esta ahi, en cartera.js y en bandeja.js, para que esta
+     pantalla sepa que dia es aunque se abra sola. */
+  window.IMMOIA_HOY = window.IMMOIA_HOY || function () {
+    var d = new Date(), m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (x < 10 ? "0" + x : x);
+  };
+  function hoyISO() { return window.IMMOIA_HOY(); }
   function diasHasta(iso) {
     if (!iso) return null;
     var a = new Date(iso + "T12:00:00"), b = new Date(hoyISO() + "T12:00:00");
@@ -256,12 +269,27 @@
       + '<div id="ma-dice"></div></section>';
 
     caja.innerHTML = h;
+    /* L-48: el repintado de cada 15 s ya no borra lo que ha contado la IA */
+    var ds = document.getElementById("ma-dice");
+    if (ds && DICHO) ds.textContent = DICHO;
+    var bp = document.getElementById("ma-pedir");
+    if (bp && PIDIENDO) bp.disabled = true;
 
     caja.querySelectorAll("[data-ir]").forEach(function (b) {
       b.addEventListener("click", function () {
         var cual = b.getAttribute("data-ir");
         try { C.abrir(cual); } catch (e) {}
-        location.href = "inmobiliaria.html";
+        /* L-49: antes de irse, se sube el cambio de expediente activo (como mucho 3 s) */
+        var ir = function () { location.href = "inmobiliaria.html"; };
+        try {
+          if (typeof C.subir === "function") {
+            var hecho = false, fuera = function () { if (!hecho) { hecho = true; ir(); } };
+            setTimeout(fuera, 3000);
+            C.subir(fuera);
+            return;
+          }
+        } catch (e) {}
+        ir();
       });
     });
     var p = document.getElementById("ma-pedir");
@@ -284,25 +312,28 @@
     return l.join("\n");
   }
 
+  var DICHO = "", PIDIENDO = false;
+  function poner(t) {
+    DICHO = t;
+    var s = document.getElementById("ma-dice"); if (s) s.textContent = t;
+    var b = document.getElementById("ma-pedir"); if (b) b.disabled = PIDIENDO;
+  }
   function pedirleALaIA() {
     var sitio = document.getElementById("ma-dice");
-    var boton = document.getElementById("ma-pedir");
-    if (!sitio) return;
+    if (!sitio || PIDIENDO) return;
     var a = "";
     try { a = (window.CONFIG && window.CONFIG.api) ? String(window.CONFIG.api).replace(/\/$/, "") : ""; } catch (e) {}
-    if (!a) { sitio.textContent = "Esta página no sabe a qué servidor llamar."; return; }
-    sitio.textContent = "Mirándolo…";
-    if (boton) boton.disabled = true;
+    if (!a) { poner("Esta página no sabe a qué servidor llamar."); return; }
+    PIDIENDO = true; poner("Mirándolo…");
     fetch(a + "/hablar", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ codigo: (window.CONFIG && window.CONFIG.codigo) || "leire2026",
                              mensajes: [{ papel: "yo", texto: parteParaLaIA() }] })
     }).then(function (r) { return r.json(); })
       .then(function (d) {
-        if (boton) boton.disabled = false;
-        sitio.textContent = (d && d.respuesta) || (d && d.error) || "No he podido.";
+        PIDIENDO = false; poner((d && d.respuesta) || (d && d.error) || "No he podido.");
       })
-      .catch(function () { if (boton) boton.disabled = false; sitio.textContent = "Sin conexión con el servidor."; });
+      .catch(function () { PIDIENDO = false; poner("Sin conexión con el servidor."); });
   }
 
   /* ---------- arranque: espera al motor y a la cartera ---------- */

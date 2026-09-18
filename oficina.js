@@ -53,6 +53,7 @@
     if (!c || !c.usuario) return null;
     return {
       usuario: String(c.usuario),
+      id: c.id ? String(c.id) : null,   /* L-56: el identificador de la cuenta, que es con lo que se marca la mesa */
       sesion: c.sesion || null,
       sesion_vence: c.sesion_vence || null
     };
@@ -79,14 +80,50 @@
     } catch (e) {}
     return cuenta;
   }
-  function apuntarCuenta(c) {
+  /* AQUI SE DICE POR QUE SE HA CERRADO LA CUENTA, Y NO SE DEJA ADIVINAR.
+     (L-01..L-04 del auditor y el fallo 1 de E1 piden lo mismo; se juntan
+     aqui con las palabras de E1/Z, que son las que lee cartera.js:)
+        motivo "entrada"  -> acaba de entrar una oficina
+        motivo "salida"   -> la persona pulso «Salir de esta cuenta»: lo
+                             pendiente ya se ha subido y se limpia
+        motivo "caducada" -> la llave de paso dejo de valer: lo del
+                             ordenador NO se borra, se queda guardado
+                             hasta que la MISMA oficina vuelva a entrar
+     Antes cartera.js lo adivinaba mirando si alguien habia pulsado un
+     boton con el id «ofi-salir»: si se salia desde el codigo o desde otro
+     sitio, se tomaba por una caducidad y no se limpiaba nada. Quien lo
+     sabe de verdad es este fichero, asi que lo dice.
+     Si no se dice el motivo, se pone el que toca segun haya cuenta o no,
+     para que ninguna llamada antigua se quede sin decirlo. */
+  /* JUNTADO 18/09 · LA CADUCIDAD SE DEJA ESCRITA, NO SOLO AVISADA.
+     El aviso por el nucleo solo lo oye quien ya este cargado, y aqui la
+     llave se comprueba con setTimeout(0): en inmobiliaria.html eso cae
+     ENTRE oficina.js y cartera.js, asi que la cartera no se enteraba, veia
+     la llave ya borrada y daba la caducidad por «esto es de otra oficina»
+     -borrandole a la directora la cartera entera al abrir la pagina-. Es
+     el fallo L-57 del auditor.
+     Se deja escrita la nota que la cartera ya usa para eso, para que el
+     orden de carga deje de decidir nada. Es el apaño que el informe E1
+     dejaba apuntado: «si algun dia se quiere hacer mas directo, ese es el
+     sitio: oficina.js». La nota la borra la cartera al volver a entrar. */
+  var NOTA_CADUCADA = "immoia.cartera.v1.caducada";
+  function apuntarCuenta(c, motivo) {
+    var antes = cuenta ? cuenta.usuario : null;
+    if (motivo === "caducada" && antes) {
+      try { localStorage.setItem(NOTA_CADUCADA, String(antes)); } catch (e) {}
+    }
     cuenta = soloLoQueHaceFalta(c);
     try { if (cuenta) localStorage.setItem(LLAVE, JSON.stringify(cuenta)); else localStorage.removeItem(LLAVE); } catch (e) {}
-    avisar();
+    avisar(motivo || "", antes);
   }
-  function avisar() {
+  function avisar(motivo, antes) {
     try {
-      if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.avisar("oficina:cambio", { hay: !!cuenta, usuario: cuenta ? cuenta.usuario : null });
+      if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.avisar("oficina:cambio", {
+        hay: !!cuenta,
+        usuario: cuenta ? cuenta.usuario : null,
+        motivo: motivo || (cuenta ? "entrada" : "salida"),
+        antes: antes || null
+      });
     } catch (e) {}
   }
 
@@ -142,11 +179,12 @@
     pedir({ codigo: codigoWeb(), oficina_accion: "entrar", usuario: usuario, clave: clave }, function (d) {
       if (d && d.ok && d.sesion) {
         apuntarCuenta({
-          usuario: d.usuario || usuario,
+          usuario: d.usuario || usuario, id: d.id || null,
           sesion: d.sesion, sesion_vence: d.sesion_vence || null
-        });
+        }, "entrada");
       } else if (d && d.ok && !d.sesion) {
-        apuntarCuenta(null);
+        /* no ha llegado a entrar: no es una caducidad, se deja limpio */
+        apuntarCuenta(null, "salida");
         d = { error: "He entrado, pero este servidor no me ha dado con qué mantener la sesión abierta." };
       }
       luego(d);
@@ -162,17 +200,88 @@
      guardando solo en su ordenador creyendo que sube. */
   function caduco() {
     if (!leerCuenta()) return;
-    apuntarCuenta(null);
+    apuntarCuenta(null, "caducada");
     try { if (typeof repintar === "function") repintar(); } catch (e) {}
   }
+
+  /* L-57: la fecha de caducidad de la llave SI se mira. Si ya paso, se dice
+     al abrir la pagina (y cada minuto), en vez de seguir pintando «se guarda
+     en tu cuenta» hasta el primer fallo. Lo del ordenador no se borra (L-01). */
+  function mirarCaducidad() {
+    var c = leerCuenta();
+    if (c && c.sesion_vence && Date.parse(c.sesion_vence) <= Date.now()) caduco();
+  }
+  try { setTimeout(mirarCaducidad, 0); setInterval(mirarCaducidad, 60 * 1000); } catch (e) {}
 
   /* Al abrir la pagina no hay nada que pedir por lo bajo: o hay llave de
      paso y vale, o hace falta que la persona entre. Se queda por si algun
      dia el servidor sabe renovar una llave con otra llave (ver el informe:
      eso es lo que habria que anadirle a worker.js). */
-  function asegurarLlave() { leerCuenta(); }
+  /* 18/09 · RENOVAR LA LLAVE CON LA LLAVE. El servidor nuevo cambia una
+     llave que todavia vale por otra (paquete del servidor del 18/09): asi
+     no se pide la clave cada 12 horas mientras se trabaja. Si el servidor
+     todavia no sabe hacerlo, contesta que no y AQUI NO SE HACE NADA: la
+     llave sigue valiendo hasta que caduque, como hasta ahora. */
+  var renovando = false;
+  function asegurarLlave() {
+    var c = leerCuenta();
+    if (!c || !c.sesion || !c.sesion_vence || renovando) return;
+    var queda = Date.parse(c.sesion_vence) - Date.now();
+    if (!(queda > 0 && queda < 6 * 3600 * 1000)) return;
+    /* Una sola vez por llave: si el servidor dice que no (el de antes no
+       sabe renovar), no se insiste, para no contar como intentos fallidos. */
+    try { if (localStorage.getItem("immoia.renovar.probado") === c.sesion) return; localStorage.setItem("immoia.renovar.probado", c.sesion); } catch (e) { return; }
+    renovando = true;
+    pedir({ codigo: codigoWeb(), oficina_accion: "entrar", usuario: c.usuario, sesion: c.sesion }, function (d) {
+      renovando = false;
+      if (d && d.ok && d.sesion && cuenta && cuenta.usuario === c.usuario) {
+        cuenta = soloLoQueHaceFalta({ usuario: c.usuario, id: d.id || c.id || null, sesion: d.sesion, sesion_vence: d.sesion_vence || null });
+        try { localStorage.setItem(LLAVE, JSON.stringify(cuenta)); } catch (e) {}
+      }
+    });
+  }
+  try { setTimeout(asegurarLlave, 3000); setInterval(asegurarLlave, 20 * 60 * 1000); } catch (e) {}
 
-  function salir() { apuntarCuenta(null); }
+  /* SALIR SIN PERDER NADA: primero se sube lo que falte (cartera y
+     mesa), y solo cuando el servidor lo ha recibido se cierra y se
+     limpia. Si no se puede subir, se cierra igual pero se avisa y lo
+     del ordenador se queda guardado (escondido) para la proxima vez. */
+  function salir(luego) {
+    luego = typeof luego === "function" ? luego : function () {};
+    var pendientes = 0, fallos = 0, hecho = false;
+    var cuentaQueSale = leerCuenta();
+    function fin() {
+      if (hecho) return; hecho = true;
+      /* L-55: salir tambien cierra la llave en el servidor, para que no siga
+         valiendo 12 horas en un ordenador compartido. No se espera: si falla,
+         la llave caduca sola igual. */
+      try {
+        var cs = cuentaQueSale;
+        if (cs && cs.sesion && cs.usuario) {
+          pedir({ codigo: codigoWeb(), oficina_accion: "cerrar_sesion", usuario: cs.usuario,
+                  sesion: cs.sesion, cual: String(cs.sesion).split(".")[0] }, function () {});
+        }
+      } catch (e) {}
+      /* JUNTADO 18/09: la palabra es "salida" (la que lee cartera.js desde
+         E1/Z). Si NO se ha podido subir lo pendiente se dice "caducada" a
+         proposito, que es lo del auditor (L-01): limpiar en ese momento
+         seria borrar trabajo que el servidor todavia no tiene. Se le dice
+         por pantalla, en el aviso de aqui abajo. */
+      apuntarCuenta(null, fallos ? "caducada" : "salida");
+      luego(fallos ? { aviso: "No he podido subir los últimos cambios. Se quedan guardados en este ordenador y se subirán cuando vuelvas a entrar." } : { ok: true });
+    }
+    function uno(fn) {
+      pendientes++;
+      try {
+        fn(function (d) { if (!d || d.error) fallos++; if (--pendientes === 0) fin(); });
+      } catch (e) { fallos++; if (--pendientes === 0) fin(); }
+    }
+    if (!leerCuenta()) { fin(); return; }
+    if (window.IMMOIA_CARTERA && window.IMMOIA_CARTERA.subir) uno(function (cb) { window.IMMOIA_CARTERA.subir(function (d) { cb(d && d.error === "sin cuenta" ? {} : d); }); });
+    if (window.IMMOIA_MESA && window.IMMOIA_MESA.subirYa) uno(function (cb) { window.IMMOIA_MESA.subirYa(cb); });
+    if (!pendientes) { fin(); return; }
+    setTimeout(function () { if (!hecho) { fallos++; fin(); } }, 8000);
+  }
 
   function traer(luego) { conCuenta("leer", null, luego); }
   function guardar(datos, si_version, luego) {
@@ -227,7 +336,11 @@
           + '<button type="button" class="ofi-2" id="ofi-salir">Salir de esta cuenta</button></div>';
         var b = document.getElementById("ofi-salir");
         if (b) b.addEventListener("click", function () {
-          salir(); pintar();
+          b.disabled = true; b.textContent = "Guardando antes de salir…";
+          salir(function (r) {
+            pintar();
+            if (r && r.aviso) { var p = document.createElement("p"); p.className = "ofi-aviso"; p.setAttribute("role", "status"); p.textContent = r.aviso; caja.appendChild(p); }
+          });
         });
         return;
       }

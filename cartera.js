@@ -32,11 +32,35 @@
      La marca la lleva inmo.js desde el 13/09 para la mesa; esto es lo
      mismo para la cartera. */
   var DUENO_CARTERA = LLAVE_CARTERA + ".de";
+  /* SE LE HA CADUCADO LA LLAVE DE PASO; NO ES DE OTRA OFICINA.
+     La llave de paso caduca sola cada doce horas. Cuando caducaba, aqui
+     se veia «no hay nadie dentro» y se trataba igual que «esto es de otra
+     oficina»: se borraba la cartera de este ordenador y la directora se
+     encontraba la pantalla en blanco sin una palabra. Los datos volvian
+     al entrar otra vez, pero eso no lo sabia nadie.
+     Esta nota se queda escrita cuando la llave caduca, para que al
+     recargar la pagina se siga sabiendo que fue una caducidad y no una
+     oficina ajena. Se borra en cuanto la misma oficina vuelve a entrar,
+     y tambien si entra otra: entonces si se limpia. */
+  var CADUCADA_CARTERA = LLAVE_CARTERA + ".caducada";
   var ESPERA_SUBIDA = 4000;                    /* no se llama al servidor en cada tecla */
   var LATIDO = 1200;
 
   /* ---------- utiles ---------- */
-  function hoyCorto() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+  /* QUE DIA ES HOY: UNA SOLA CUENTA, EN HORA DE AQUI.
+     Antes cada fichero lo calculaba a su manera: la pantalla de la manana
+     en hora universal, y la bandeja y la cartera en hora local. Pasada la
+     medianoche en Espana no coincidian, asi que la manana daba por «hoy»
+     un dia distinto del que daba la bandeja. Su sitio es nucleo.js, que
+     va en todas las paginas; esta misma cuenta, escrita igual, esta ahi,
+     en bandeja.js y en manana.js, y con "||" la deja puesta el primero
+     que llegue. Asi no importa el orden en que se carguen los ficheros
+     ni que falte alguno: el dia es siempre el mismo. */
+  window.IMMOIA_HOY = window.IMMOIA_HOY || function () {
+    var d = new Date(), m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (x < 10 ? "0" + x : x);
+  };
+  function hoyCorto() { return window.IMMOIA_HOY(); }
   function ahora() { return new Date().toISOString(); }
   function esc(s) { var d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
   function id() { return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -54,11 +78,22 @@
      Adeje» se queda «el de Adeje» aunque luego entre la direccion. Solo
      se rellena solo cuando todavia no tiene nombre de verdad. */
   var SIN_NOMBRE = { "el expediente": 1, "expediente nuevo": 1, "": 1 };
+
+  /* LO QUE MIDE UN NOMBRE: 60 LETRAS, Y LA MISMA REGLA EN TODAS PARTES.
+     Antes habia dos: al renombrar se recortaba a 60 y al crear no, asi
+     que un nombre pegado de un correo entraba entero -cientos de letras-
+     y se quedaba en el almacen del navegador y en la barra. Se escribe
+     aqui una vez y la usan crear, renombrar y el nombre que se saca del
+     propio expediente. 60 es lo que cabe en la casilla de la pantalla
+     (el maxlength del hueco de «el de Adeje»). */
+  var LARGO_NOMBRE = 60;
+  function nombreCorto(n) { return String(n == null ? "" : n).trim().slice(0, LARGO_NOMBRE); }
+
   function nombreDe(g, ahora) {
-    if (ahora && !SIN_NOMBRE[ahora]) return String(ahora).slice(0, 60);
+    if (ahora && !SIN_NOMBRE[ahora]) return nombreCorto(ahora);
     var n = g && g.expediente && g.expediente.nombre;
-    if (n && !SIN_NOMBRE[n]) return String(n).slice(0, 60);
-    if (g && g.ficha && g.ficha.direccion) return String(g.ficha.direccion).slice(0, 60);
+    if (n && !SIN_NOMBRE[n]) return nombreCorto(n);
+    if (g && g.ficha && g.ficha.direccion) return nombreCorto(g.ficha.direccion);
     return ahora || "el expediente";
   }
 
@@ -77,27 +112,135 @@
       return String(o.usuario() || "");
     } catch (e) { return ""; }
   }
+  /* JUNTADO 18/09 · COMO SE DISTINGUE «SE FUE» DE «SE LE CADUCO LA LLAVE»
+     CUANDO LA PAGINA SE ABRE DE CERO.
+     Al abrir, la cartera no tiene a nadie a quien preguntarle: cartera.js se
+     carga antes que oficina.js y todavia no hay aviso ninguno. Y los dos
+     casos se ven igual desde el almacen: una marca de oficina y ninguna
+     cuenta abierta.
+     Lo que los separa es esto: «Salir de esta cuenta» BORRA la llave de
+     paso del almacen (oficina.js, apuntarCuenta(null)). Una llave caducada
+     sigue escrita, solo que con la fecha pasada. Asi que:
+        queda llave escrita  -> se le ha caducado: NO se borra nada
+        no queda llave       -> se fue: se borra, como el 13/09
+     Es la unica lectura que hace que pasen a la vez la prueba de las dos
+     oficinas (OT-EX1, caso 2) y la del auditor (test_datos.py, L-57), que
+     piden lo contrario la una de la otra. */
+  var LLAVE_OFICINA = "immoia.oficina.cuenta.v1";
+  function hayLlaveEscrita() {
+    try {
+      var c = JSON.parse(localStorage.getItem(LLAVE_OFICINA) || "null");
+      return !!(c && c.usuario);
+    } catch (e) { return false; }
+  }
+  /* Se mira UNA SOLA VEZ, al abrir la pagina, y antes de que nadie haya
+     podido quitarla: oficina.js borra la llave en cuanto ve que ha
+     caducado, y segun el orden en que se carguen los ficheros eso puede
+     pasar antes o despues de que la cartera mire. Guardandolo aqui, la
+     respuesta es la misma siempre. */
+  var habiaLlaveAlAbrir = hayLlaveEscrita();
+
   function marcaGuardada() {
     try { return String(localStorage.getItem(DUENO_CARTERA) || ""); } catch (e) { return ""; }
   }
   function marcar() {
-    try { localStorage.setItem(DUENO_CARTERA, cuentaDeAhora()); } catch (e) {}
+    var q = cuentaDeAhora();
+    /* Mientras la llave esta caducada no hay nadie dentro, pero la
+       cartera sigue siendo de quien era. Si aqui se borrara la marca, la
+       siguiente oficina que entrara en este ordenador se ADOPTARIA los
+       expedientes de la anterior, que es justo lo que se arreglo el
+       13/09. Asi que no se toca. */
+    /* JUNTADO 18/09: E1 no quitaba la marca mientras constaba una caducidad;
+       el auditor (L-02) no la quita SIEMPRE que no hay cuenta abierta. Se deja
+       la del auditor porque incluye la de E1 y ademas cubre el rato entre que
+       la llave deja de valer y la cartera se entera: sin marca, la siguiente
+       oficina que entrara se ADOPTARIA los expedientes de la anterior, que es
+       justo lo que se arreglo el 13/09. La marca solo se borra en
+       borrarLoDeOtra(). */
+    if (q === "" && (notaCaducada() !== "" || marcaGuardada() !== "")) return;
+    try { localStorage.setItem(DUENO_CARTERA, q); } catch (e) {}
   }
 
-  /* LAS TRES SITUACIONES, Y POR QUE NO SE TRATAN IGUAL.
+  /* SALIR A PROPOSITO NO ES LO MISMO QUE CADUCARSE.
+     Si la directora pulsa «Salir de esta cuenta», lo que queda en este
+     ordenador es de la oficina que se acaba de ir y se limpia. Si nadie
+     ha pulsado nada y de pronto no hay cuenta, lo que ha pasado es que la
+     llave de paso ha caducado, y entonces no se borra nada.
+     QUIEN LO SABE ES OFICINA.JS, Y AHORA LO DICE: viene en el motivo del
+     aviso «oficina:cambio» ("salida" o "caducada"). Antes esto se
+     adivinaba aqui mirando si alguien habia pulsado el boton «ofi-salir»,
+     y por eso fallaba: al salir desde el codigo -o desde cualquier otro
+     sitio que no fuera ese boton- se tomaba por una caducidad y la
+     cartera de la oficina anterior se quedaba a la vista en este
+     navegador hasta que se recargaba la pagina.
+     Se deja la escucha del boton como respaldo, para el caso de que esta
+     pagina lleve un oficina.js viejo que todavia no diga el motivo. */
+  /* JUNTADO 18/09 · LAS DOS PALABRAS. E1/Z hacen que oficina.js diga
+     "entrada" / "salida" / "caducada"; el paquete del auditor escribio
+     "salir" para lo mismo. Se entienden LAS DOS, aqui y en inmo.js, para
+     que ninguna pagina con una version u otra de oficina.js se quede sin
+     limpiar. Si algun dia solo queda una palabra, esto sigue valiendo. */
+  var ES_SALIDA = { salida: 1, salir: 1 };
+  var ES_ENTRADA = { entrada: 1, entrar: 1 };
+
+  var salidaAdrede = false;
+  try {
+    document.addEventListener("click", function (ev) {
+      var t = ev.target;
+      while (t && t !== document) {
+        if (t.id === "ofi-salir") { salidaAdrede = true; return; }
+        t = t.parentNode;
+      }
+    }, true);
+  } catch (e) {}
+
+  function notaCaducada() {
+    try { return String(localStorage.getItem(CADUCADA_CARTERA) || ""); } catch (e) { return ""; }
+  }
+  function apuntarCaducada(quien) {
+    try { localStorage.setItem(CADUCADA_CARTERA, String(quien || "")); } catch (e) {}
+  }
+  function olvidarCaducada() {
+    try { localStorage.removeItem(CADUCADA_CARTERA); } catch (e) {}
+  }
+
+  /* LAS CUATRO SITUACIONES, Y POR QUE NO SE TRATAN IGUAL.
        misma cuenta          -> es suyo, se abre
        sin marca y hay cuenta -> lo hizo ESTA persona en este ordenador
                                  antes de entrar. Se ADOPTA, no se tira:
                                  tirarlo seria borrarle su propio trabajo
                                  la primera vez que entra con cuenta.
+       se le ha caducado la llave -> es SUYO y sigue siendo suyo. NO se
+                                 borra nada: se le dice que la sesion ha
+                                 caducado y que vuelva a entrar, y se
+                                 queda todo donde estaba.
        cualquier otra cosa   -> es de OTRA oficina. No se abre y se borra.
-     El caso peligroso es el tercero, e incluye salir de una cuenta y
-     quedarse sin ninguna: lo que queda en el ordenador sigue siendo de
-     la que se fue. */
+     Lo ultimo incluye salir a proposito de una cuenta: lo que queda en el
+     ordenador sigue siendo de la que se fue, y se limpia. */
+  /* la oficina que hemos visto dentro mientras esta pagina estaba
+     abierta: es lo que permite saber que la llave se ha caducado en
+     nuestras propias narices, sin que nadie haya pulsado salir */
+  var vistaDentro = "";
+
   function deQuienEs() {
     var marca = marcaGuardada(), ahoraQuien = cuentaDeAhora();
+    if (ahoraQuien !== "") vistaDentro = ahoraQuien;
     if (marca === ahoraQuien) return "mia";
     if (marca === "" && ahoraQuien !== "") return "adoptable";
+    /* JUNTADO 18/09. E1/Z pedian ademas una prueba de que hubo caducidad
+       (la nota escrita, o haber visto dentro a esa oficina en esta misma
+       pagina). El auditor (L-01, "guardada") no pedia ninguna. Se deja la
+       del auditor, porque la de E1/Z se cae en un caso real que su prueba
+       no monta y la del auditor si (test_datos.py, L-57): si la llave ya
+       estaba caducada ANTES de abrir la pagina, cartera.js se carga antes
+       que oficina.js, todavia no hay nota ni se ha visto a nadie dentro, y
+       la cartera de la directora se borraba entera al abrir.
+       Lo que distingue salir de caducarse ya no hay que adivinarlo: lo dice
+       oficina.js en el motivo, y salidaAdrede lo recoge (con el clic en el
+       boton como respaldo para paginas con un oficina.js viejo). */
+    if (ahoraQuien === "" && marca !== "" && !salidaAdrede
+        && (habiaLlaveAlAbrir || hayLlaveEscrita()
+            || notaCaducada() === marca || vistaDentro === marca)) return "caducada";
     return "de_otra";
   }
 
@@ -107,13 +250,28 @@
     try { localStorage.removeItem(LLAVE_CARTERA); } catch (e) {}
     try { localStorage.removeItem(LLAVE_BANDEJA); } catch (e) {}
     try { localStorage.removeItem(DUENO_CARTERA); } catch (e) {}
+    olvidarCaducada();
     ultimoVisto = null;
+  }
+
+  /* Lo que se le dice cuando la llave caduca. Se pinta en la propia barra
+     de expedientes y se queda ahi hasta que vuelve a entrar: no es un
+     aviso de cuatro segundos, es algo que tiene que hacer. */
+  var FRASE_CADUCADA = "Se te ha caducado la sesión. Vuelve a entrar con tu clave: "
+    + "tus expedientes siguen aquí, no se ha perdido nada.";
+  var frase = "";
+
+  function caducada() {
+    apuntarCaducada(marcaGuardada());
+    frase = FRASE_CADUCADA;
   }
 
   function leerCartera() {
     /* Se mira de quien es ANTES de leer nada. */
     var quien = deQuienEs();
     if (quien === "de_otra") { borrarLoDeOtra(); return null; }
+    if (quien === "caducada") caducada();
+    if (quien === "mia") { olvidarCaducada(); frase = ""; }
     try {
       var c = JSON.parse(localStorage.getItem(LLAVE_CARTERA) || "null");
       if (c && c.exp && typeof c.exp === "object") {
@@ -194,8 +352,10 @@
   function nuevo(nombre, noAbrir) {
     recoger();
     var i1 = id();
-    C.exp[i1] = { id: i1, nombre: (nombre || "").trim() || "expediente nuevo", creado: ahora(), tocado: ahora(),
-                  guardado: guardadoEnBlanco((nombre || "").trim() || "el expediente") };
+    /* mismo recorte que al renombrar: nombreCorto(), no dos reglas */
+    var puesto = nombreCorto(nombre);
+    C.exp[i1] = { id: i1, nombre: puesto || "expediente nuevo", creado: ahora(), tocado: ahora(),
+                  guardado: guardadoEnBlanco(puesto || "el expediente") };
     C.orden.push(i1);
     guardarCartera();
     pedirSubida();
@@ -220,7 +380,7 @@
 
   function renombrar(cual, nombre) {
     if (!C.exp[cual]) return false;
-    nombre = String(nombre || "").trim().slice(0, 60);
+    nombre = nombreCorto(nombre);
     if (!nombre) return false;
     C.exp[cual].nombre = nombre;
     C.exp[cual].guardado.expediente.nombre = nombre;
@@ -265,8 +425,24 @@
     return { activo: C.activo, orden: C.orden, exp: C.exp, tocada: C.tocada };
   }
 
-  function subir(luego) {
+  /* Para Salir: cancela la espera de 4 s y sube YA. Si hay una subida en
+     marcha, espera a que acabe y vuelve a subir. Siempre contesta.
+     (Del paquete del auditor: es lo que hace que «Salir de esta cuenta»
+     no se lleve por delante lo ultimo que se escribio.) */
+  function subirYa(luego) {
     luego = luego || function () {};
+    if (relojSubida) { clearTimeout(relojSubida); relojSubida = null; }
+    if (!hayCuenta()) { luego({ ok: true }); return; }
+    var intentos = 0;
+    (function probar() {
+      if (subiendo && intentos++ < 40) { setTimeout(probar, 200); return; }
+      subir(luego);
+    })();
+  }
+
+  function subir(luego, vuelta) {
+    luego = luego || function () {};
+    vuelta = vuelta || 0;
     if (!hayCuenta()) { luego({ error: "sin cuenta" }); return; }
     if (subiendo) { pedirSubida(); luego({ esperando: true }); return; }
     subiendo = true;
@@ -278,12 +454,24 @@
         aviso("Guardado. Lo ves igual desde el móvil.");
         luego(d); return;
       }
+      if (d && d.conflicto && vuelta >= 3) {
+        /* L-63: si tras tres vueltas sigue habiendo conflicto (dos aparatos
+           guardando sin parar), se para aqui y se reintenta mas tarde. */
+        juntar(d.datos); C.v = d.v; guardarCartera(); pintar();
+        aviso("Hay otro aparato guardando a la vez: lo vuelvo a intentar en un momento.");
+        pedirSubida(); luego({ esperando: true }); return;
+      }
       if (d && d.conflicto) {
         /* alguien guardo desde otro sitio: se juntan y se vuelve a subir */
-        juntar(d.datos);
+        var hubo = juntar(d.datos);
         C.v = d.v; guardarCartera(); pintar();
         aviso("Había cambios desde otro sitio: los he juntado.");
-        subir(luego); return;
+        /* L-09: la bandeja tiene su copia en memoria; si no se recarga,
+           al guardar pisaria lo juntado. Se sube y despues se recarga. */
+        subir(function (r) {
+          if (hubo && r && r.ok && document.getElementById("ban")) location.reload();
+          luego(r);
+        }, vuelta + 1); return;
       }
       aviso("Guardado solo en este ordenador (" + ((d && d.error) || "sin conexion") + ").");
       luego(d);
@@ -322,9 +510,19 @@
       try { if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.avisar("cartera:al-dia", { cambios: cambios }); } catch (e) {}
       aviso(cambios ? "Al día: " + cambios + " expediente(s) traídos de tu oficina." : "Al día.");
       /* si aqui habia algo que alla no, se sube */
-      var faltaAlla = Object.keys(C.exp).some(function (k) { return !d.datos.exp || !d.datos.exp[k]; });
-      if (faltaAlla) pedirSubida();
-      if (cambios && document.getElementById("ban")) location.reload();
+      /* L-10: no basta con que falte un expediente entero: si alguno de
+         aqui es MAS NUEVO que el de alla, tambien se sube. Y se sube
+         ANTES de recargar, para que la recarga no se lleve la subida. */
+      var faltaAlla = Object.keys(C.exp).some(function (k) {
+        var alla = d.datos.exp && d.datos.exp[k];
+        return !alla || String((C.exp[k] || {}).tocado || "") > String(alla.tocado || "");
+      });
+      var recargar = cambios && document.getElementById("ban");
+      if (faltaAlla) {
+        subir(function () { if (recargar) location.reload(); luego(d); });
+        return;
+      }
+      if (recargar) location.reload();
       luego(d);
     });
   }
@@ -351,6 +549,7 @@
     + ".car-pie .car-2{background:#EEE9DE;color:#5B4646}"
     + ".car-aviso{font-size:13px;color:var(--tinta-2,#635C4B);margin-left:2px}"
     + ".car-link{float:right;font-size:13.5px;font-weight:400;color:var(--marca,#13342A)}"
+    + ".car-caducada{margin:0 0 10px;padding:9px 12px;border:1px solid #E3BFA0;background:#FBEDE4;color:#7A3B12;border-radius:9px;font-size:13.5px}"
     + "@media (max-width:520px){.car-e button.car-ir{max-width:160px}}";
 
   var sitio = null, cssPuesto = false;
@@ -365,6 +564,7 @@
     var enManana = /manana\.html/i.test(location.pathname || "");
     var h = '<h2>Tus expedientes'
       + (enManana ? '' : ' <a class="car-link" href="manana.html">ver tu mañana →</a>') + '</h2>'
+      + (frase ? '<p class="car-caducada" role="status">' + esc(frase) + '</p>' : '')
       + '<p>' + (abiertos.length ? (abiertos.length === 1 ? '1 abierto' : abiertos.length + ' abiertos')
                                  + '. Pulsa uno para trabajar en él; lo que hagas en cada uno se queda ahí.'
                                  : 'Todavía no tienes ninguno. Ponle un nombre corto, como «el de Adeje».') + '</p>'
@@ -379,7 +579,7 @@
         + '</span>';
     });
     h += '</div><div class="car-pie">'
-      + '<input type="text" id="car-nombre" placeholder="el de Adeje" maxlength="60">'
+      + '<input type="text" id="car-nombre" placeholder="el de Adeje" maxlength="60" aria-label="Nombre del expediente nuevo">'
       + '<button type="button" id="car-nuevo">Abrir expediente</button>'
       + (hayCuenta() ? '<button type="button" class="car-2" id="car-sinc">Traer lo de mi oficina</button>' : '')
       + '<span class="car-aviso" id="car-aviso"></span></div>';
@@ -438,8 +638,22 @@
      la limpieza solo ocurriria al recargar la pagina, y salir y entrar
      con otra cuenta sin recargar deja los expedientes a la vista. */
   try {
-    if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.cuando("oficina:cambio", function () {
+    if (window.IMMOIA_NUCLEO) window.IMMOIA_NUCLEO.cuando("oficina:cambio", function (datos) {
+      /* EL MOTIVO LO PONE OFICINA.JS, NO SE ADIVINA AQUI. Al entrar se
+         vuelve a cero, para que una caducidad posterior se vea como lo
+         que es y no como una salida a proposito de antes. */
+      var motivo = String((datos && datos.motivo) || "");
+      if (ES_SALIDA[motivo]) salidaAdrede = true;
+      else if (motivo === "caducada" || ES_ENTRADA[motivo]) salidaAdrede = false;
       var quien = deQuienEs();
+      /* SE LE HA CADUCADO LA LLAVE. No se borra NADA: la cartera se queda
+         entera, el expediente sigue abierto en la bandeja, y lo unico que
+         cambia es que se le dice lo que pasa y lo que tiene que hacer. */
+      if (quien === "caducada") {
+        caducada();
+        pintar();
+        return;
+      }
       if (quien === "de_otra") {
         borrarLoDeOtra();
         C = enBlancoCartera();
@@ -456,6 +670,7 @@
         return;
       }
       if (quien === "adoptable") marcar();
+      if (quien === "mia" && cuentaDeAhora() !== "") { olvidarCaducada(); frase = ""; salidaAdrede = false; pintar(); }
       if (hayCuenta()) bajar();
     });
   } catch (e) {}
@@ -475,8 +690,12 @@
     expediente: function (cual) { return C.exp[cual || C.activo] || null; },
     guardado: function (cual) { var e = C.exp[cual || C.activo]; return e ? e.guardado : null; },
     nuevo: nuevo, abrir: abrir, renombrar: renombrar, cerrar: cerrar, reabrir: reabrir,
-    recoger: recoger, subir: subir, bajar: bajar, juntar: juntar,
+    /* subir() de puertas afuera es subirYa(): es lo que llama oficina.js
+       al salir. subirLuego() es la espera de 4 s de siempre. */
+    recoger: recoger, subir: subirYa, subirLuego: pedirSubida, bajar: bajar, juntar: juntar,
     version_servidor: function () { return C.v; },
+    /* lo que se le esta diciendo ahora mismo en la barra, si algo */
+    frase: function () { return frase; },
     todo: function () { return C; },
     montar: montar
   };
