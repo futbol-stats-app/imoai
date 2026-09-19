@@ -33,7 +33,11 @@ const GRAVES = new Set(["not-allowed", "service-not-allowed", "audio-capture", "
    descansar, y cuanto se descansa cada vez. Despues del ultimo descanso, y
    solo entonces, se rinde y LO DICE. */
 export const TOPE_REENGANCHES = 8;
-export const ESPERAS = Object.freeze([5000, 15000, 30000, 60000]);
+/* EL MOVIL 19/09: los descansos eran 5, 15, 30 y 60 segundos. En un movil el
+   reconocedor se corta muchisimo mas que en un ordenador, asi que se llegaba
+   al descanso largo enseguida y la secretaria se quedaba sorda un minuto
+   entero. Se acortan. Siguen subiendo, pero el primero es corto. */
+export const ESPERAS = Object.freeze([3000, 8000, 20000, 40000]);
 
 export function crearTranscripcion({ avisar, idioma = "es-ES", Reconocedor = null }) {
   const Rec = Reconocedor || window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -154,6 +158,22 @@ export function crearTranscripcion({ avisar, idioma = "es-ES", Reconocedor = nul
        corta eso solo puede ser el eco de la propia voz. */
     pausar() { pausada = true; clearTimeout(relojDescanso); relojDescanso = null; const r = rec; rec = null; try { r && r.abort(); } catch (e) {} trozos = new Map(); },
     reanudar() { if (!activa || !pausada) return; pausada = false; reinicios = []; arrancar(); },
+    /* EL MOVIL 19/09. AL VOLVER DE SEGUNDO PLANO, SIN ESPERAR AL DESCANSO.
+       Mientras el movil tiene la pagina apartada, el reconocedor se corta una
+       y otra vez y se come los ocho reenganches en un momento; al volver se
+       quedaba dormido hasta 40 segundos, callada y sin oir. Esto cancela el
+       descanso y arranca ya: la situacion es nueva, no la continuacion de la
+       de antes. */
+    despertarYa() {
+      clearTimeout(relojDescanso); relojDescanso = null;
+      reinicios = []; descansos = 0;
+      pausada = false;
+      const r = rec; rec = null;
+      try { r && r.abort(); } catch (e) {}
+      activa = true;
+      arrancar();
+      return true;
+    },
     /* tira lo acumulado hasta ahora y sigue escuchando desde cero */
     tirar() {
       const a = pendiente();

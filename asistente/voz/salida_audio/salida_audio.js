@@ -10,6 +10,13 @@
    - terminarTurno(turno): el cerebro avisa de que no llegan mas
      frases; cuando se han dicho todas sale "salida:fin".
    - callar(): corta ya (la persona interrumpe).
+   - callarRelleno(): EL SILENCIO 19/09 (tanda 10). Corta SOLO las
+     frases de relleno -las de la casa, que suenan mientras viene la
+     respuesta- y deja intacto todo lo demas. callar() no vale para
+     esto: callar() sube "cortadoHasta" al turno de ahora, y entonces
+     la respuesta de verdad, que es de ESE MISMO turno, ya no podria
+     entrar. Esto tira las de relleno que esperan en la cola y corta
+     en seco la que este sonando, sin tocar el turno.
    - Sin voz en el aparato, o con la voz apagada: las frases se dan
      por dichas al momento, para que la conversacion siga por escrito.
 
@@ -36,6 +43,7 @@ export function crearSalidaAudio({ bus, opciones = {}, motor = null }) {
   let empezo = false;          /* ya se emitio salida:empieza en este turno */
   let cerrado = false;         /* el cerebro dijo que no llegan mas */
   let avisadoSinVoz = false;
+  let tipoSonando = null;      /* tipo de la frase que esta sonando AHORA (tanda 10) */
 
   const sinVoz = () => !o.conVoz || !voz.disponible;
 
@@ -59,6 +67,7 @@ export function crearSalidaAudio({ bus, opciones = {}, motor = null }) {
       return;
     }
     ocupada = true;
+    tipoSonando = f.tipo;
     const t = turno;
     if (!empezo) { empezo = true; bus.emitir("salida:empieza", { turno: t }); }
 
@@ -79,8 +88,9 @@ export function crearSalidaAudio({ bus, opciones = {}, motor = null }) {
         bus.emitir("salida:error", { mensaje: "Se me ha cortado la voz. Lo que te digo lo tienes escrito aqu\u00ed mismo." });
       }
     }
-    if (t !== turno || t <= cortadoHasta) return;   /* mientras hablaba, lo cortaron */
+    if (t !== turno || t <= cortadoHasta) { tipoSonando = null; return; }   /* mientras hablaba, lo cortaron */
     ocupada = false;
+    tipoSonando = null;
     if (!r.cortado) bus.emitir("salida:frase_dicha", { turno: t, n: f.n, tipo: f.tipo });
     siguiente();
   }
@@ -100,12 +110,28 @@ export function crearSalidaAudio({ bus, opciones = {}, motor = null }) {
     if (!ocupada) siguiente();
   }
 
+  /* EL SILENCIO 19/09 (tanda 10). Callar SOLO el relleno.
+     Se llama en dos momentos: cuando llega la respuesta de verdad y
+     cuando la persona empieza a hablar. Si se solapan, es peor que el
+     silencio. No toca "cortadoHasta" ni el turno: lo que viene detras
+     -que es la respuesta del mismo turno- entra igual. */
+  function callarRelleno(motivo = "llega_la_respuesta") {
+    const enCola = cola.some((f) => f.tipo === "relleno");
+    if (enCola) cola = cola.filter((f) => f.tipo !== "relleno");
+    let cortada = false;
+    if (ocupada && tipoSonando === "relleno") {
+      if (voz.callar) voz.callar();   /* la que suena se corta en seco */
+      cortada = true;
+    }
+    return { habia: enCola || cortada, sonaba: cortada, enCola, motivo };
+  }
+
   function callar(motivo = "interrupcion") {
     const t = turno;
     const habia = ocupada || cola.length > 0;
     cortadoHasta = Math.max(cortadoHasta, t);
     cola = [];
-    ocupada = false; empezo = false; cerrado = false;
+    ocupada = false; empezo = false; cerrado = false; tipoSonando = null;
     if (voz.callar) voz.callar();
     if (habia) bus.emitir("salida:callada", { turno: t, motivo });
     return habia;
@@ -115,7 +141,10 @@ export function crearSalidaAudio({ bus, opciones = {}, motor = null }) {
     encolar,
     terminarTurno,
     callar,
+    callarRelleno,
     hablando: () => ocupada || cola.length > 0,
+    /* lo que suena AHORA MISMO es relleno de la casa (tanda 10) */
+    sonandoRelleno: () => ocupada && tipoSonando === "relleno",
     turno: () => turno,
     tieneVoz: () => !!voz.disponible,
     /* ha sonado de verdad por el altavoz alguna vez (no es una suposicion) */

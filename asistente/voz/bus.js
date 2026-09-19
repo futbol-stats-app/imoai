@@ -30,6 +30,15 @@ export const EVENTOS = Object.freeze([
   "entrada:recuperada",         /* {intentos} */
   "entrada:rendida",            /* {intentos, mensaje}  ya no vuelve sola: hay que decirlo en pantalla */
 
+  /* EL MOVIL 19/09 - el oido esta abierto pero NO llega sonido */
+  "entrada:dormida",            /* {codigo, porque}  pantalla apagada, llamada, otra app */
+  "entrada:despierta",          /* {porque} */
+
+  /* EL MOVIL 19/09 - la pagina se esconde, se congela y vuelve */
+  "pagina:escondida",           /* {} */
+  "pagina:vuelve",              /* {msFuera, comoVuelve} */
+  "pantalla:despierta",         /* {puesta, porque}  la pantalla no se apaga / no se ha podido */
+
   /* PIEZA 2 - cerebro_datos (analitico) */
   "datos:listo",                /* {documentos, herramientas, enSegundoPlano} */
   "datos:pedido",               /* {id, herramienta, entrada} */
@@ -48,6 +57,12 @@ export const EVENTOS = Object.freeze([
   "hablador:pausa",             /* {turno}  "voy a comer": descansa, la conversacion sigue viva */
   "hablador:vuelta",            /* {turno}  "ya estoy": se retoma donde se dejo */
   "hablador:error",             /* {turno, mensaje} */
+
+  /* EL SILENCIO 19/09 (tanda 10) - las frases de relleno de la casa.
+     NO las genera nadie y NO se guardan en la conversacion: salen con
+     tipo "relleno", que es lo que ya mira primer_minuto/memoria.js. */
+  "relleno:frase",              /* {turno, texto, tramo, n, msDeSilencio}  tramo: corto | medio | largo | sigue */
+  "relleno:callado",            /* {turno, porque, habiaVoz}  se ha callado en el acto */
 
   /* PIEZA 4 - salida_audio (voz) */
   "salida:empieza",             /* {turno}  empieza a sonar */

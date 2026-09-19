@@ -33,6 +33,8 @@ const ARCHIVOS = [
   "./voz/arranque_solo.js",
   "./voz/bus.js",
   "./voz/main.js",
+  "./voz/despertador.js",
+  "./voz/relleno.js",
   "./voz/cerebro_datos/buscador.js",
   "./voz/cerebro_datos/cerebro_datos.js",
   "./voz/cerebro_datos/herramientas.js",

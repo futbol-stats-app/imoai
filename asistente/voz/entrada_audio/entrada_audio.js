@@ -102,6 +102,17 @@ export function crearEntradaAudio({ bus, opciones = {}, Reconocedor = null }) {
   function alDetector(tipo, d) {
     if (tipo === "nivel") { bus.emitir("entrada:nivel", d); return; }
     if (tipo === "lista") { bus.emitir("entrada:lista", Object.assign({ transcribe: transcribe() }, d)); return; }
+    /* EL MOVIL · 19/09/2026: el sistema nos ha quitado el microfono sin
+       cerrarlo (pantalla apagada, llamada, otra app). No se cierra nada: se
+       dice, y se espera a que vuelva. Si no vuelve, lo caza revisar(). */
+    if (tipo === "mudo") {
+      bus.emitir("entrada:dormida", { codigo: "mudo", porque: d.mensaje });
+      return;
+    }
+    if (tipo === "vuelve_el_sonido") {
+      bus.emitir("entrada:despierta", { porque: "el aparato me ha devuelto el micrófono" });
+      return;
+    }
     if (tipo === "desconectado") {
       /* IDA Y VUELTA 18/09. AQUI SE QUEDABA MUERTA: avisaba y llamaba a
          parar(), y no lo volvia a intentar nunca. Ahora vuelve sola. */
@@ -293,11 +304,67 @@ export function crearEntradaAudio({ bus, opciones = {}, Reconocedor = null }) {
     }, espera);
   }
 
+  /* ---------- LA REVISION: ¿sigo oyendo de verdad? ----------
+     EL MOVIL · 19/09/2026. Se llama cuando la pagina vuelve de estar
+     escondida o congelada, y tambien cada latido. Hace tres cosas, de la mas
+     barata a la mas cara:
+       1. le pregunta al detector si esta vivo DE VERDAD (no la bandera)
+       2. si no lo esta, prueba a despertar el sonido, que suele bastar
+       3. y si sigue sin estarlo, vuelve a abrir el microfono entero
+     Devuelve que ha hecho, para poder escribirlo en la pantalla. */
+  async function revisar(porque = "revision", { vuelveDeFuera = false } = {}) {
+    if (!encendida) return { ok: false, hecho: "nada", porque: "el oído no está abierto" };
+
+    /* EL MOVIL 19/09. Si la pagina viene de estar apartada, el reconocedor se
+       habra cortado muchas veces seguidas y estara durmiendo un descanso
+       largo. No se le espera: se le despierta. */
+    if (vuelveDeFuera && oido.disponible && oido.despertarYa && oido.descansando && oido.descansando()) {
+      oido.despertarYa();
+      bus.emitir("entrada:despierta", { porque: "he despertado el reconocedor, que estaba descansando" });
+    }
+
+    let s = detector.salud();
+    if (s.ok) {
+      /* el microfono va bien; miro que el reconocedor no se haya quedado
+         parado sin estar descansando */
+      if (oido.disponible && oido.activa && !oido.activa() && !(oido.descansando && oido.descansando())) {
+        oido.empezar();
+        bus.emitir("entrada:despierta", { porque: "he vuelto a arrancar el reconocedor" });
+        return { ok: true, hecho: "reconocedor" };
+      }
+      return { ok: true, hecho: "nada" };
+    }
+
+    bus.emitir("entrada:dormida", { codigo: s.codigo, porque: s.porque, revision: porque });
+
+    if (s.codigo === "suspendido" || s.codigo === "sin_sonido") {
+      const despierto = await detector.despertar();
+      if (despierto) {
+        await new Promise((r) => setTimeout(r, 250));   /* que le de tiempo a medir */
+        s = detector.salud();
+        if (s.ok) {
+          if (oido.disponible && oido.activa && !oido.activa() && !(oido.descansando && oido.descansando())) oido.empezar();
+          bus.emitir("entrada:despierta", { porque: "he despertado el sonido" });
+          return { ok: true, hecho: "despertado" };
+        }
+      }
+    }
+
+    /* no ha bastado: se abre entero. Y se le devuelven los intentos, porque
+       esto es una situacion nueva, no la continuacion de la de antes. */
+    rendida = false;
+    intentosVolver = 0;
+    volverAAbrir(s.porque);
+    return { ok: false, hecho: "reabriendo", porque: s.porque };
+  }
+
   return {
     empezar, parar, pausar, reanudar,
     /* lo que llama main.js cuando la secretaria empieza y termina de hablar */
     ponerSordina, quitarSordina,
     volverAAbrir,
+    revisar,
+    salud: () => detector.salud(),
     encendida: () => encendida,
     pausada: () => pausada,
     enSordina: () => enSordina,

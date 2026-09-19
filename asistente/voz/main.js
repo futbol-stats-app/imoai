@@ -25,6 +25,8 @@ import { crearConexionSimulada } from "./cerebro_hablador/conexion_simulada.js";
 import { crearConexionWorker } from "./cerebro_hablador/conexion_worker.js";
 import { crearConexionStream } from "./cerebro_hablador/conexion_stream.js";
 import { crearSalidaAudio } from "./salida_audio/salida_audio.js";
+import { crearDespertador } from "./despertador.js";
+import { crearRelleno } from "./relleno.js";
 
 /* EL INTERRUPTOR NO ESTA AQUI: esta en ../configuracion.js, que es lo
    unico que hay que tocar para cambiar de cerebro. Lo de abajo solo se
@@ -41,6 +43,12 @@ export const CONFIG_POR_DEFECTO = Object.freeze({
   /* IDA Y VUELTA 18/09 */
   sePuedeInterrumpir: true,      /* el oido NO se apaga mientras ella habla: se la puede cortar */
   latidoMs: 5000,                /* cada cuanto se comprueba que el oido sigue abierto */
+  /* EL MOVIL 19/09 */
+  noApagarLaPantalla: true,      /* pedirle al navegador que no apague la pantalla */
+  revisarAlVolverMs: 400,        /* lo que se espera al volver antes de revisar el oido */
+  /* EL SILENCIO 19/09 (tanda 10) */
+  conRelleno: true,              /* que no haya silencio sin explicar mientras se piensa */
+  relleno: {},                   /* los tramos y las frases: ver relleno.js */
   entrada: {},
   datos: {},
   hablador: {},
@@ -92,6 +100,58 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
   let relojReanudar = null;
   let latido = null;
   let interrupciones = 0;
+  /* EL MOVIL 19/09 */
+  const despertador = crearDespertador({
+    avisar: (tipo, d) => {
+      if (tipo === "puesto") { bus.emitir("pantalla:despierta", { puesta: true }); avisar("pantalla", { puesta: true }); }
+      else if (tipo === "no_se_puede") { bus.emitir("pantalla:despierta", { puesta: false, porque: d.porque }); avisar("pantalla", { puesta: false, porque: d.porque, codigo: d.codigo }); }
+    }
+  });
+  let escondidaDesde = 0;
+  let quitarCiclo = null;
+
+  /* ============================================================
+     EL SILENCIO · 19/09/2026 · TANDA 10
+
+     La direccion lo midio en su telefono: entre que termina de hablar
+     y la secretaria abre la boca pasan CINCO O SEIS SEGUNDOS, y en
+     silencio absoluto. «A veces voy a hablar de nuevo o pienso que se
+     apago.» Cinco segundos de silencio no se leen como «esta
+     pensando»: se leen como «se ha roto».
+
+     El relleno son frases de la casa, escritas en relleno.js, que
+     dice el propio telefono. NO se llama al modelo para decir «mmm»:
+     eso seria pagar por un ruido. Y no se pone delante de nada: el
+     reloj arranca en hablador:pensando, que sale DESPUES de haber
+     pedido el turno, asi que el relleno suena MIENTRAS viene la
+     respuesta y no le anade ni un milisegundo.
+
+     Con -1 en la "n" se marcan las frases que salen de aqui, para
+     distinguirlas de los rellenos que suelta el propio cerebro
+     hablador mientras busca en los archivos (esos tienen su n de
+     verdad). Sirve para devolver el oido a su sitio despues de
+     decirlas, sin tocar como se comportan los otros.
+     ============================================================ */
+  const relleno = crearRelleno({
+    opciones: c.relleno,
+    decir: (d) => {
+      if (!encendido) return;
+      bus.emitir("relleno:frase", { turno: d.turno, texto: d.texto, tramo: d.tramo, n: d.n, msDeSilencio: d.msDeSilencio });
+      /* la pantalla la pinta como relleno (en cursiva) y la memoria la
+         tira sola: primer_minuto/memoria.js ya mira tipo === "relleno" */
+      avisar("frase", { turno: d.turno, n: -1, texto: d.texto, tipo: "relleno", tramo: d.tramo });
+      salida.encolar({ turno: d.turno, n: -1, texto: d.texto, tipo: "relleno" });
+    }
+  });
+  /* Se calla EN EL ACTO: cuando llega la respuesta de verdad y cuando
+     la persona empieza a hablar. Si se solapan, es peor que el silencio. */
+  function callarElRelleno(porque) {
+    const r = relleno.parar(porque);
+    const cortado = salida.callarRelleno(porque);
+    if (cortado.habia) bus.emitir("relleno:callado", { turno: salida.turno(), porque, habiaVoz: cortado.sonaba });
+    return r.parado || cortado.habia;
+  }
+
   function ponerEstado(e) {
     if (e === estado) return;
     estado = e;
@@ -106,7 +166,14 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
     hablador.turno(d.texto);
   });
   bus.en("entrada:texto_parcial", (d) => avisar("parcial", d));
-  bus.en("entrada:empieza_a_hablar", (d) => { console.log("Usuario empez\u00f3 a hablar"); avisar("empieza", d); });
+  bus.en("entrada:empieza_a_hablar", (d) => {
+    console.log("Usuario empez\u00f3 a hablar");
+    /* TANDA 10: si estaba soltando un \u00abmmm\u00bb, se calla. Que se solapen es
+       peor que el silencio. (Si estaba en sordina, de esto se encarga
+       entrada:interrumpe, que salta antes.) */
+    callarElRelleno("ha empezado a hablar la persona");
+    avisar("empieza", d);
+  });
   bus.en("entrada:termino_de_hablar", (d) => { console.log("Usuario termin\u00f3 de hablar"); avisar("termina", d); });
   bus.en("entrada:nivel", (d) => avisar("nivel", d));
   bus.en("entrada:lista", (d) => { avisar("lista", d); if (encendido && estado !== "hablando") ponerEstado("escuchando"); });
@@ -121,6 +188,7 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
   bus.en("entrada:interrumpe", (d) => {
     if (!encendido) return;
     interrupciones++;
+    relleno.parar("la persona ha hablado encima");   /* TANDA 10: el reloj, ya; la voz la calla interrumpir() */
     const habia = interrumpir();
     avisar("interrumpida", Object.assign({ n: interrupciones, habiaVoz: habia }, d));
   });
@@ -129,15 +197,30 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
   bus.en("entrada:reintentando", (d) => avisar("reintentando", d));
   bus.en("entrada:recuperada", (d) => avisar("recuperada", d));
   bus.en("entrada:rendida", (d) => avisar("rendida", d));
+  /* EL MOVIL 19/09: el oido esta abierto pero no llega sonido */
+  bus.en("entrada:dormida", (d) => { console.warn("[entrada dormida]", d.porque); avisar("dormida", d); });
+  bus.en("entrada:despierta", (d) => avisar("despierta", d));
 
-  bus.en("hablador:pensando", (d) => { ponerEstado("pensando"); avisar("pensando", d); });
+  /* TANDA 10. AQUI EMPIEZA EL SILENCIO QUE SE MIDE. hablador:pensando sale
+     en cuanto el turno esta pedido y ANTES de leer ni un trozo de la
+     respuesta, asi que el reloj del relleno corre mientras la respuesta
+     viene de camino: no la retrasa, la acompana. */
+  bus.en("hablador:pensando", (d) => {
+    ponerEstado("pensando");
+    avisar("pensando", d);
+    if (c.conRelleno) relleno.empezar(d.turno);
+  });
   bus.en("hablador:frase", (d) => {
+    /* Ha sonado algo de verdad (o el propio hablador ha soltado su relleno
+       de busqueda): el reloj se para y lo que estuviera diciendo se corta. */
+    callarElRelleno(d.tipo === "relleno" ? "habla el hablador" : "ha llegado la respuesta");
     avisar("frase", d);
     salida.encolar(d);
   });
   bus.en("hablador:busca", (d) => avisar("busca", d));
   bus.en("hablador:sin_dato", (d) => avisar("sin_dato", d));
   bus.en("hablador:fin", (d) => {
+    relleno.parar("se ha acabado el turno");   /* TANDA 10 */
     avisar("fin_turno", d);
     salida.terminarTurno(d.turno);
     /* turno sin nada que decir: vuelve a escuchar */
@@ -180,6 +263,16 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
   };
   bus.en("salida:fin", trasHablar);
   bus.en("salida:callada", trasHablar);
+  /* TANDA 10. Un relleno NO cierra el turno, asi que salida_audio no manda
+     "salida:fin" detras: sin esto, la pantalla se quedaria diciendo «estoy
+     hablando» durante los cinco segundos de despues, que es justo la
+     mentira que se viene a quitar, y el oido se quedaria en sordina. Con
+     esto vuelve a «un momento, que lo miro» y el oido a su sitio, igual que
+     detras de cualquier otra frase. Solo las de esta casa (n = -1): los
+     rellenos del cerebro hablador se quedan como estaban. */
+  bus.en("salida:frase_dicha", (d) => {
+    if (d.tipo === "relleno" && d.n === -1 && !salida.hablando()) trasHablar();
+  });
   bus.en("salida:error", (d) => avisar("error", Object.assign({ pieza: "salida" }, d)));
 
   /* ---------- lo que se puede hacer desde fuera ---------- */
@@ -213,13 +306,19 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
     }
     if (!entrada.transcribe()) avisar("sin_transcripcion", {});
     ponerLatido(true);
+    /* EL MOVIL 19/09: en cuanto hay oido abierto, que no se apague la
+       pantalla, y que la pagina se entere si se esconde o se congela. */
+    if (!quitarCiclo) quitarCiclo = engancharElCicloDeVida();
+    if (c.noApagarLaPantalla) { try { await despertador.encender(); } catch (e) {} }
     return true;
   }
 
   async function parar() {
     if (!encendido) return;
     encendido = false;
+    relleno.parar("se ha parado el asistente");   /* TANDA 10 */
     ponerLatido(false);
+    try { await despertador.apagar(); } catch (e) {}   /* que se pueda apagar la pantalla otra vez */
     clearTimeout(relojReanudar);
     hablador.cortar();
     salida.callar("parada");
@@ -243,13 +342,86 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
      Si no lo esta, y no se esta intentando ya, se intenta. */
   function mirarElOido() {
     if (!encendido) return;
-    if (!entrada.encendida() && !entrada.volviendo() && !entrada.rendida()) {
-      entrada.volverAAbrir("el latido ha visto el oído cerrado");
+    if (!entrada.encendida()) {
+      if (!entrada.volviendo() && !entrada.rendida()) entrada.volverAAbrir("el latido ha visto el oído cerrado");
+      return;
     }
+    /* EL MOVIL · 19/09/2026. ANTES ESTO SE ACABABA AQUI, y por eso «se
+       quedaba callado»: encendida() es una BANDERA que sigue diciendo que si
+       aunque el movil haya dejado de mandar sonido. Ahora, con el oido
+       abierto, se MIDE si de verdad esta llegando algo. */
+    if (entrada.volviendo() || entrada.pausada() || salida.hablando()) return;
+    entrada.revisar("latido");
   }
   function ponerLatido(si) {
     clearInterval(latido); latido = null;
     if (si && c.latidoMs > 0) latido = setInterval(mirarElOido, c.latidoMs);
+  }
+
+  /* ============================================================
+     EL MOVIL · 19/09/2026 · QUE SE ENTERE DE QUE HA VUELTO
+
+     La direccion lo probo en un movil de verdad: «se corta mucho, se queda
+     callado, se apaga el telefono y se corta». Hasta hoy esta pagina NO
+     escuchaba ni uno de los avisos que da el navegador cuando se esconde,
+     se congela o vuelve: ni visibilitychange, ni pageshow, ni freeze, ni
+     resume. Comprobado buscandolos en toda la carpeta: no habia ninguno.
+     Asi que al volver de apagar la pantalla se quedaba muerta y habia que
+     recargar.
+
+     Lo que se escucha, y por que cada uno:
+       visibilitychange  lo tienen TODOS los navegadores. Es el que vale en
+                         el iPhone, porque Safari NO manda freeze ni resume
+                         (developer.chrome.com, Page Lifecycle API: «Firefox
+                         and Safari do not fire them», consultado 19/09/2026).
+       freeze / resume   solo Chrome y Edge. En Android es el aviso bueno:
+                         dice que el sistema ha congelado la pestana de
+                         verdad, no solo que se ha escondido.
+       pageshow          cuando la pagina vuelve de la memoria del navegador
+                         (event.persisted). Ahi no se recarga nada, asi que
+                         si no se mira, se vuelve con todo parado.
+     ============================================================ */
+  function engancharElCicloDeVida() {
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") return null;
+    const doc = document;
+    const quitar = [];
+    const oir = (obj, ev, fn) => {
+      if (!obj || !obj.addEventListener) return;
+      obj.addEventListener(ev, fn);
+      quitar.push(() => { try { obj.removeEventListener(ev, fn); } catch (e) {} });
+    };
+
+    const seEsconde = () => {
+      if (!escondidaDesde) escondidaDesde = Date.now();
+      bus.emitir("pagina:escondida", {});
+      avisar("escondida", {});
+    };
+
+    const vuelve = async (comoVuelve) => {
+      const msFuera = escondidaDesde ? Date.now() - escondidaDesde : 0;
+      escondidaDesde = 0;
+      bus.emitir("pagina:vuelve", { msFuera, comoVuelve });
+      avisar("vuelve", { msFuera, comoVuelve });
+      if (!encendido) return;
+      /* 1. la pantalla: el navegador SUELTA el permiso al esconderse la
+            pagina, asi que hay que volver a pedirlo siempre. */
+      if (c.noApagarLaPantalla) { try { await despertador.alVolver(); } catch (e) {} }
+      /* 2. el oido: se le da un respiro al sistema y se revisa de verdad */
+      await new Promise((r) => setTimeout(r, c.revisarAlVolverMs));
+      if (!encendido) return;
+      try { await entrada.revisar("ha vuelto la página (" + comoVuelve + ")", { vuelveDeFuera: true }); } catch (e) {}
+    };
+
+    oir(doc, "visibilitychange", () => {
+      if (doc.visibilityState === "hidden") seEsconde();
+      else vuelve("visibilitychange");
+    });
+    oir(doc, "freeze", seEsconde);
+    oir(doc, "resume", () => vuelve("resume"));
+    if (typeof window !== "undefined") {
+      oir(window, "pageshow", (ev) => { if (ev && ev.persisted) vuelve("pageshow"); });
+    }
+    return () => quitar.forEach((f) => f());
   }
 
   /* escribir en vez de hablar: mismo camino que una frase oida */
@@ -276,6 +448,13 @@ export function crearAsistente(config = {}, { avisar = () => {}, registro = null
     gasta: () => hablador.gasta(),
     /* para poder comprobarlo desde fuera (pruebas y pantalla) */
     interrupciones: () => interrupciones,
-    mirarElOido
+    mirarElOido,
+    /* EL MOVIL 19/09 */
+    despertador,
+    /* EL SILENCIO 19/09 (tanda 10) */
+    relleno,
+    callarElRelleno,
+    salud: () => entrada.salud(),
+    revisar: (porque) => entrada.revisar(porque || "a mano")
   };
 }

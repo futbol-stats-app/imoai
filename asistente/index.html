@@ -236,6 +236,7 @@ let memoria = null;
 let estadoUltimo = "apagado";
 let hayAvisoDelOido = false;      /* ya se ha contado por que no se puede escuchar */
 let volviendo = false;            /* el oido se esta reenganchando */
+let dormida = false;              /* el oido esta abierto pero no llega sonido */
 const portero = crearPortero();   /* cada frase de la casa, una sola vez */
 
 /* ---------- piezas de la pantalla ---------- */
@@ -281,10 +282,15 @@ function pintar() {
   $("luz").dataset.on = oyendo ? "si" : "no";
   if (!oyendo) $("barra").style.width = "0%";
   const trabajando = estadoUltimo === "pensando" || estadoUltimo === "hablando";
-  $("pie").textContent = (oyendo || trabajando)
-    ? (PIE[estadoUltimo] || PIE_APAGADO)
-    : (volviendo ? "Se me ha ido el oído, ya vuelvo"
-                 : (escrituraALaVista ? PIE_APAGADO : PIE_ESPERA));
+  $("pie").textContent = dormida
+    ? "Me he quedado sin micrófono, ya vuelvo"
+    : (oyendo || trabajando)
+      ? (PIE[estadoUltimo] || PIE_APAGADO)
+      : (volviendo ? "Se me ha ido el oído, ya vuelvo"
+                   : (escrituraALaVista ? PIE_APAGADO : PIE_ESPERA));
+  /* dormida = el oido figura abierto pero no llega sonido: la luz NO puede
+     seguir roja como si estuviera escuchando, porque no escucha */
+  if (dormida) $("luz").dataset.on = "no";
 }
 
 /* ---------- lo que cuenta el asistente ---------- */
@@ -346,6 +352,40 @@ function alAviso(tipo, d) {
       ponerAviso("rendida", d.mensaje);
       mostrarEscritura();
       pintar();
+      break;
+
+    /* ---------- EL MÓVIL · 19/09/2026 ----------
+       Lo peor del fallo del móvil no era cortarse: era quedarse callada sin
+       decir por qué. Aquí se dice todo, siempre. */
+    case "dormida":
+      dormida = true;
+      ponerAviso("dormida", "Me he quedado sin micrófono: " + d.porque +
+                 ". Estoy volviendo, no hace falta que toques nada.", "vuelve");
+      pintar();
+      break;
+    case "despierta":
+      dormida = false;
+      quitarAviso("dormida");
+      pintar();
+      break;
+    case "escondida":
+      /* no se pinta nada: nadie está mirando la pantalla en ese momento */
+      break;
+    case "vuelve":
+      if (d.msFuera > 1500) {
+        ponerAviso("vuelve-pagina", "Ya estoy otra vez. He estado " +
+                   Math.round(d.msFuera / 1000) + " segundos parada mientras el teléfono tenía la pantalla apagada.", "vuelve");
+        setTimeout(() => quitarAviso("vuelve-pagina"), 8000);
+      }
+      pintar();
+      break;
+    case "pantalla":
+      if (d.puesta) { quitarAviso("pantalla"); }
+      else {
+        /* NO SE DISIMULA: si no se puede impedir que se apague la pantalla,
+           se dice, porque si se apaga se corta. */
+        ponerAviso("pantalla", d.porque + " Así que, mientras hablamos, no dejes que se apague la pantalla del teléfono.");
+      }
       break;
 
     case "sin_microfono":
