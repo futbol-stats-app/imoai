@@ -473,6 +473,11 @@ h1{
   text-wrap:balance;
 }
 .entradilla{font-size:16.5px;color:var(--tinta-2);margin:0 0 16px;max-width:46ch}
+/* LA CUENTA DE ELLA · 19/09/2026. Un enlace, nada mas: esta portada no
+   llevaba a inmobiliaria.html desde ningun sitio, asi que a la pagina de la
+   inmobiliaria solo llegaba quien se supiera la direccion de memoria. */
+.para-inmo{margin:0 0 14px;font-size:15px}
+.para-inmo a{color:var(--marca);font-weight:700}
 .sellos{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px}
 .sello{
   font-size:12.5px;padding:4px 10px;border:1px solid var(--linea);
@@ -939,6 +944,10 @@ html.cerrado body>*:not(#cortina){display:none!important}
 
 <header>
   <div class="ref"><span>IMMO IA · Ayudas a la vivienda</span><span id="fecha-consulta"></span></div>
+  <!-- LA CUENTA DE ELLA · 19/09/2026. El enlace que faltaba: esta página es la
+       calculadora de ayudas, para un particular. Quien trabaja en una
+       inmobiliaria tiene que poder llegar a su página en un clic. -->
+  <p class="para-inmo"><a href="inmobiliaria.html" id="ir-inmobiliaria">¿Trabajas en una inmobiliaria? Entra en la tuya: tus expedientes y tu secretaria →</a></p>
   <div class="titulo-fila">
     <h1>¿Qué ayudas públicas te tocan a ti?</h1>
     <div id="mi-ia"></div>

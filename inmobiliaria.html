@@ -18,11 +18,14 @@
   .marca{font-weight:700;color:var(--marca);font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
   h1{font-size:27px;line-height:1.2;margin:0 0 8px;color:var(--marca)}
   .lema{margin:0;color:var(--tinta-2);font-size:16px}
-  .tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:0 0 24px}
-  .t{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:14px 16px}
-  .t b{display:block;color:var(--marca);font-size:15px;margin-bottom:3px}
-  .t span{font-size:14px;color:var(--tinta-2)}
-  .prueba{background:#EDF1EE;border:1px solid #CBD9D0;border-radius:12px;padding:15px 17px;margin:0 0 24px}
+  /* EL ENLACE AL ASISTENTE. Un enlace, no un rediseño: desde aquí se
+     llega a hablar con ella en un clic, que antes no se podía. */
+  .al-asistente{margin:14px 0 0}
+  .al-asistente a{display:inline-block;padding:11px 18px;border-radius:10px;
+    background:var(--marca);color:#fff;text-decoration:none;font-weight:700;font-size:15.5px}
+  .al-asistente a:hover{filter:brightness(1.15)}
+  .al-asistente small{display:block;margin-top:6px;font-size:13px;color:var(--tinta-2)}
+  .prueba{background:#EDF1EE;border:1px solid #CBD9D0;border-radius:12px;padding:15px 17px;margin:22px 0 24px}
   .prueba p{margin:0 0 8px;font-size:14.5px;color:var(--tinta-2)}
   .prueba ul{margin:0;padding-left:19px;font-size:14.5px}
   .prueba li{margin:3px 0}
@@ -51,16 +54,23 @@
     <h1>La secretaria de la inmobiliaria</h1>
     <p class="lema">Lleva los expedientes, sabe los papeles y los plazos, y se adelanta:
        te dice lo que viene detrás antes de que lo preguntes.</p>
+    <p class="al-asistente">
+      <a href="asistente/index.html">Hablar con ella ahora</a>
+      <small>Se abre y te habla. Hace falta micrófono y decirle que sí al navegador.</small>
+    </p>
   </header>
 
-  <div class="tarjetas">
-    <div class="t"><b>Se adelanta</b><span>No espera a que preguntes. Si pides el certificado energético, ya te dice qué va detrás.</span></div>
-    <div class="t"><b>Pide todo de golpe</b><span>Si falta un papel se va el cliente. Te da la lista entera y cuál hay que lanzar primero.</span></div>
-    <div class="t"><b>De las arras a la notaría</b><span>El tramo donde se cae una venta. Repasa ella sola la lista de alarmas.</span></div>
-    <div class="t"><b>Hecha para no inventar</b><span>Importes y plazos que no tiene delante, los manda confirmar y te dice dónde. Aun así se puede equivocar.</span></div>
-  </div>
+  <!-- LA CUENTA DE ELLA · 19/09/2026.
+       Aquí ya no van las cuatro tarjetas de lo que promete la secretaria.
+       Lo que hace falta en los primeros treinta segundos son SUS
+       expedientes y SUS notas, no promesas: cuanto más vacía la pantalla
+       de todo lo demás, mejor. Lo que hace de verdad se lee abajo, en
+       «Lo que llevo yo», que lo calcula el motor con su expediente. -->
 
+  <div id="lo-de-ella-aviso"></div>
+  <div id="cartera" class="car"></div>
   <div id="inmo-mesa"></div>
+  <div class="asis"></div>
 
   <div class="prueba">
     <p><b>Para probarla</b>, háblale como le hablarías a una compañera. Por ejemplo:</p>
@@ -68,11 +78,14 @@
       <li>«Tengo una captación nueva en Adeje, ¿qué le pido al propietario?»</li>
       <li>«Firmamos arras el jueves, ¿qué se me puede escapar?»</li>
       <li>«El vendedor vive en Alemania, ¿eso cambia algo?»</li>
-      <li>«Repásame el expediente de José, que la firma es en dos semanas.»</li>
+      <li>«Repásame el expediente de Tabaiba Dulce, que la firma es en dos semanas.»</li>
     </ul>
   </div>
 
-  <div class="asis"></div>
+  <!-- La cuenta de la oficina, ABAJO y no arriba: es lo último que hace
+       falta para trabajar, y un formulario vacío no puede ser lo primero
+       que se vea. Lo pinta oficina.js, que ya buscaba este hueco. -->
+  <div id="cuenta-oficina"></div>
 
   <footer>
     <b>Versión de demostración: no metas datos reales de clientes.</b>
@@ -87,6 +100,10 @@
 <script>
   window.CONFIG = { api: "https://immoia.ley1998ortizz.workers.dev" };
 </script>
+<!-- lo_de_ella.js va ANTES que todo: deja puestos los cuatro expedientes de
+     ejemplo si este navegador no tiene ninguno, para que cartera.js e inmo.js
+     se los encuentren ya escritos y no salga la pantalla en blanco. -->
+<script src="lo_de_ella.js?v=1"></script>
 <!-- inmo.js va ANTES que charla.js: asi el encargo queda el primero de todo -->
 <script src="inmo.js?v=4"></script>
 <script src="nucleo.js?v=3"></script><script src="motor.js?v=2"></script><script src="oficina.js?v=3"></script><script src="cartera.js?v=1"></script><script src="bandeja.js?v=3"></script><script src="charla.js?v=12"></script><script src="leer.js?v=1"></script>
