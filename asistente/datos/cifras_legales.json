@@ -1,0 +1,165 @@
+{
+  "nota": "TABLA DE CIFRAS LEGALES COMPROBADAS. Esta es la UNICA fuente de la que la secretaria puede sacar una cifra, un plazo o un porcentaje de ley. Si un dato no esta aqui, no se dice: se dice que no se tiene y donde se confirma. Cada ficha lleva su norma, su boletin y la fecha en que se comprobo. Cerrada por DP el 18/09/2026 sobre los 14 puntos que estaban sin verificar.",
+  "como_se_usa": "Busca por 'tema' o por las palabras de 'busca_por'. Usa el texto de 'como_se_dice' TAL CUAL, que ya lleva la cita dentro. Si el estado es 'no_confirmado' o 'no_existe', usa 'como_se_dice' igualmente: ahi esta escrito lo que si se puede decir.",
+  "fecha_de_la_tabla": "2026-09-18",
+  "cifras": [
+    {
+      "id": "ITP-01",
+      "tema": "Impuesto de transmisiones (ITP) en Canarias, tipo general",
+      "busca_por": ["itp", "impuesto de transmisiones", "6,5", "comprar piso impuesto", "transmisiones patrimoniales"],
+      "estado": "confirmado",
+      "dato": "Tipo general del 6,5 % en la transmision de inmuebles. Si el inmueble va a ser la vivienda habitual del contribuyente, el 5 %.",
+      "norma": "Decreto Legislativo 1/2009, articulo 31, en la redaccion de la Ley 4/2018",
+      "boletin": "BOC num. 77 de 23/04/2009 y BOC num. 235 de 04/12/2018",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "En Canarias el ITP general es el 6,5 %, y el 5 % si va a ser su vivienda habitual. Lo fija el articulo 31 del Decreto Legislativo 1/2009."
+    },
+    {
+      "id": "ITP-02",
+      "tema": "Ventaja del ITP para jovenes en Canarias",
+      "busca_por": ["joven", "menores de 35", "menores de 40", "bonificacion itp", "primera vivienda impuesto"],
+      "estado": "confirmado",
+      "dato": "Desde el 01/01/2026: hasta 40 anos (no 35), vivienda de hasta 200.000 euros y renta de hasta 46.445 euros. Y NO es un tipo reducido: es el 5 % con una bonificacion del 20 % en la cuota.",
+      "norma": "Ley 9/2025, disposicion final decimosexta",
+      "boletin": "BOC num. 256 de 29/12/2025",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Ojo, que esto cambio: la ventaja para jovenes llega hasta los 40 anos, con vivienda de hasta 200.000 euros, y no es un tipo mas bajo sino una bonificacion del 20 % sobre el 5 %. Lo cambio la Ley 9/2025 y se aplica desde enero de 2026.",
+      "aviso": "Antes deciamos 'menores de 35 y 150.000 euros'. Eso ya no vale."
+    },
+    {
+      "id": "ITP-03",
+      "tema": "Tipos del 1 % y del 0 % del ITP (familia numerosa, monoparental, discapacidad, vivienda protegida)",
+      "busca_por": ["familia numerosa", "monoparental", "discapacidad itp", "vivienda protegida impuesto", "1 %"],
+      "estado": "no_confirmado",
+      "dato": "Existen, pero solo estan vistos en la guia de la Agencia Tributaria Canaria, no en el articulo leido. El texto de 2009 decia 4 %.",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Hay tipos rebajados para familia numerosa, monoparental y discapacidad, pero el numero exacto no se lo confirmo yo: se mira en la guia del ITP de la Agencia Tributaria Canaria. Lo que si le puedo decir es el 6,5 % general y el 5 % de vivienda habitual."
+    },
+    {
+      "id": "FIANZA-01",
+      "tema": "Plazo para depositar la fianza del alquiler en Canarias",
+      "busca_por": ["fianza", "deposito fianza", "alquiler fianza", "mes fianza", "multa fianza"],
+      "estado": "confirmado",
+      "dato": "Un mes desde que se firma el contrato. No depositarla es infraccion grave, con multa del 35 % al 100 % de la fianza. Y la obligacion existe aunque el inquilino no la haya entregado.",
+      "norma": "Ley 2/2014 de Canarias, articulos 2.2, 2.3, 5.1 y 13",
+      "boletin": "BOC num. 123 de 27/06/2014 y BOE-A-2014-7325",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "La fianza hay que depositarla en el plazo de un mes desde la firma del contrato, y no hacerlo es infraccion grave: del 35 % al 100 % de la fianza. Lo dice el articulo 2.3 de la Ley 2/2014 de Canarias. Y cuenta aunque el inquilino todavia no se la haya dado a usted.",
+      "aviso": "El literal no se ha podido leer en el PDF del boletin (el BOE sirve la ley truncada). Para avisar de un plazo sobra; antes de meterlo en un contrato o un escrito, se coteja con el BOE num. 168 de 11/07/2014."
+    },
+    {
+      "id": "COMUNIDAD-01",
+      "tema": "Certificado de estar al dia con la comunidad",
+      "busca_por": ["certificado comunidad", "deuda comunidad", "administrador certificado", "caducidad certificado comunidad", "7 dias"],
+      "estado": "confirmado",
+      "dato": "El administrador tiene 7 dias naturales para emitirlo. El certificado NO tiene caducidad: la ley no la fija. Lo que si acota la ley es la deuda que persigue al piso: la anualidad en curso y los tres anos naturales anteriores.",
+      "norma": "Ley de Propiedad Horizontal, articulo 9.1.e",
+      "boletin": "BOE-A-1960-10906, texto consolidado",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "El administrador tiene siete dias naturales para darselo, y eso si esta en la ley: articulo 9.1.e de la Ley de Propiedad Horizontal. El certificado en si no caduca. Y lo importante: la deuda que persigue al piso es la del ano en curso y los tres anteriores."
+    },
+    {
+      "id": "NOTA-SIMPLE-01",
+      "tema": "Validez de la nota simple del registro",
+      "busca_por": ["nota simple", "caduca nota simple", "validez nota simple", "9 dias", "registro propiedad"],
+      "estado": "confirmado",
+      "dato": "No tiene validez fijada por norma. Los 9 dias naturales que se citan son un deber DEL REGISTRADOR de avisar al notario si entra otro titulo sobre la misma finca, no la caducidad del papel. Confundir las dos cosas es el error clasico.",
+      "norma": "Reglamento Hipotecario, articulo 354.a",
+      "boletin": "Citado literalmente en la Resolucion de la DGSJFP de 06/02/2023, BOE-A-2023-5665",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "La nota simple no tiene una caducidad puesta por ley. Los nueve dias de los que se habla son otra cosa: es el deber del registrador de avisar al notario si entra otro titulo sobre esa finca. Dicho eso, para firmar conviene pedirla de dias antes, no de meses."
+    },
+    {
+      "id": "IBI-01",
+      "tema": "Vigencia de los recibos del IBI",
+      "busca_por": ["ibi", "recibo ibi", "caduca ibi", "afeccion real"],
+      "estado": "confirmado",
+      "dato": "Los recibos no tienen vigencia. Lo que existe es la afeccion real: el inmueble queda afecto al pago de la cuota en regimen de responsabilidad subsidiaria, y el notario debe advertirlo.",
+      "norma": "Texto refundido de Haciendas Locales, RDL 2/2004, articulo 64",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "El recibo del IBI no caduca. Lo que hay que mirar es otra cosa: el piso queda afecto al pago del IBI impagado, asi que la deuda viaja con el inmueble. Lo dice el articulo 64 del texto refundido de Haciendas Locales."
+    },
+    {
+      "id": "CATASTRO-01",
+      "tema": "Plazo para actualizar el catastro",
+      "busca_por": ["catastro", "plazo catastro", "actualizar catastro", "superficie catastro"],
+      "estado": "confirmado",
+      "dato": "Ni el texto refundido de la Ley del Catastro ni el RD 417/2006 fijan plazo de actualizacion.",
+      "norma": "RDL 1/2004, articulo 3.2, y RD 417/2006",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "La norma del catastro no pone un plazo para eso. Se tramita y no hay un numero de dias en la ley que yo le pueda dar."
+    },
+    {
+      "id": "OCUPACION-01",
+      "tema": "Primera ocupacion en Canarias: es comunicacion previa, no licencia",
+      "busca_por": ["primera ocupacion", "licencia de ocupacion", "habitabilidad", "cedula de habitabilidad", "m111"],
+      "estado": "confirmado",
+      "dato": "La primera ocupacion esta sujeta a comunicacion previa, no a licencia. Surte efectos al mes de presentarla y el Ayuntamiento tiene 6 meses para comprobarla.",
+      "norma": "Ley 4/2017 del Suelo de Canarias, articulo 332.1.c; ordenanza municipal de Santa Cruz, articulo 30",
+      "boletin": "BOP num. 23 de 22/02/2017 (ordenanza)",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "En Canarias eso no es una licencia: es una comunicacion previa de ocupacion. Surte efectos al mes de presentarla, y el Ayuntamiento tiene seis meses para comprobarla. Lo fija el articulo 332.1.c de la Ley 4/2017.",
+      "aviso": "El '2 a 6 semanas' que se decia antes es practica de oficina, no plazo de norma. El plazo de norma es el mes."
+    },
+    {
+      "id": "URBANISTICO-01",
+      "tema": "El 'certificado urbanistico de compatibilidad' NO existe con ese nombre",
+      "busca_por": ["certificado urbanistico", "compatibilidad urbanistica", "certificado de compatibilidad"],
+      "estado": "no_existe",
+      "dato": "No existe con ese nombre en el catalogo de Santa Cruz ni de La Laguna, y la Ley 6/2025 no lo crea. Lo que hay: cedula urbanistica (63,60 euros), certificado de disciplina urbanistica (26,50 euros), y el tramite 117, informe de viabilidad urbanistica, que es la consulta vinculante: 3 meses y silencio negativo.",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Ese papel con ese nombre no existe. Lo que le van a pedir es la cedula urbanistica y la comunicacion de primera ocupacion. Y si lo que quiere es una respuesta que vincule al Ayuntamiento, eso es el informe de viabilidad urbanistica, que tarda tres meses y si no contestan es un no."
+    },
+    {
+      "id": "BLANQUEO-01",
+      "tema": "Comunicacion mensual de blanqueo para inmobiliarias",
+      "busca_por": ["blanqueo", "sepblac", "comunicacion mensual", "prevencion blanqueo", "diligencia debida"],
+      "estado": "confirmado",
+      "dato": "Las inmobiliarias estan exceptuadas de la comunicacion mensual. NO estan exceptuadas de la comunicacion por indicio ni de la diligencia debida.",
+      "norma": "RD 304/2014, articulo 27.3, parrafos k a y",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "De la comunicacion mensual las inmobiliarias estan exceptuadas, por el articulo 27.3 del RD 304/2014. Pero cuidado, que de dos cosas no lo estan: si hay indicio, hay que comunicarlo, y la diligencia debida con el cliente sigue siendo obligatoria."
+    },
+    {
+      "id": "VACACIONAL-01",
+      "tema": "El 31 de julio de 2027 del vacacional",
+      "busca_por": ["31/07/2027", "2027 vacacional", "plazo vacacional", "comunicacion previa vacacional", "ley 7/2026"],
+      "estado": "no_confirmado",
+      "dato": "La fecha solo la respalda una nota de la Consejeria de Turismo del 16/09/2026, NO el boletin. La Ley 7/2026 existe pero es una ley de licencias urbanisticas, no de vivienda vacacional; la disposicion transitoria decima es de la Ley 6/2025 y la 7/2026 se la anade.",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Hay una obligacion en marcha para el vacacional en Canarias, con una fecha anunciada por la Consejeria y pendiente de publicarse en el boletin. Por eso no le doy la fecha como segura: lo que si le digo es que conviene no esperar al ultimo dia.",
+      "aviso": "PROHIBIDO dar esa fecha con cita de boletin hasta que alguien lea el BOC num. 163 de 14/08/2026, anuncio 2922, disposicion final undecima."
+    },
+    {
+      "id": "VACACIONAL-02",
+      "tema": "Minimos tecnicos del vacacional (metros, certificado energetico, agua caliente)",
+      "busca_por": ["35 metros", "metros minimos", "clase energetica vacacional", "agua caliente renovables", "dt7"],
+      "estado": "no_confirmado",
+      "dato": "Los minimos que se manejan (35 m2 utiles, clase F si es anterior a 2007 y D si es posterior, 70 % del agua caliente con renovables y 90 % si es posterior a 2007) vienen de UNA sola fuente especializada, no del boletin leido.",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Los minimos tecnicos se los digo de memoria y no se los confirmo: hay que leer la disposicion transitoria septima en el boletin antes de ponerlos en una oferta. Si quiere, se los miro y se los mando con la cita."
+    },
+    {
+      "id": "PLUSVALIA-01",
+      "tema": "Plusvalia municipal: dos metodos y plazo para reclamar",
+      "busca_por": ["plusvalia", "plusvalia municipal", "reclamar plusvalia", "vendio con perdidas"],
+      "estado": "no_confirmado",
+      "dato": "Desde el RDL 26/2021 hay dos metodos de calculo y el contribuyente elige el que le salga menor; si vendio con perdidas no paga. El plazo de 4 anos para reclamar se cita de memoria del articulo 66 de la Ley General Tributaria y NO esta leido en el boletin.",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Hay dos formas de calcular la plusvalia y usted puede elegir la que salga menor, y si vendio con perdidas no se paga. Si pago de mas, se puede reclamar: el plazo exacto se lo confirmo antes de que haga nada, que no me lo quiero jugar de memoria."
+    },
+    {
+      "id": "REGISTRO-VAC-01",
+      "tema": "Certificado que NO hace falta para el vacacional",
+      "busca_por": ["decreto 113/2015", "ley 6/2025 vacacional", "que papeles vacacional"],
+      "estado": "confirmado",
+      "dato": "Ni el Decreto 113/2015 ni la Ley 6/2025 exigen el certificado que se venia dando por obligatorio, y el formulario de la sede tampoco lo pide.",
+      "norma": "Decreto 113/2015 y Ley 6/2025",
+      "boletin": "BOC num. 101 de 28/05/2015 y BOE-A-2025-26358",
+      "comprobado": "2026-09-18",
+      "como_se_dice": "Ese papel no se lo piden: no lo exige ni el Decreto 113/2015 ni la Ley 6/2025, y el formulario de la sede tampoco.",
+      "aviso": "Quedan sin leer los anexos 2 y 3 del Decreto 113/2015 (BOC num. 101, paginas 15308-15309). El articulado no lo exige."
+    }
+  ],
+  "lo_que_no_esta_aqui": "Si le preguntan una cifra, un plazo o un porcentaje de ley que no este en esta tabla, la secretaria NO lo dice de memoria. Dice que no lo tiene confirmado, dice donde se mira, y ofrece mirarlo y mandarlo con la cita."
+}

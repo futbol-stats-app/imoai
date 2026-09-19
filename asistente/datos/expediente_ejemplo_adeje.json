@@ -1,0 +1,13 @@
+{
+  "aviso": "EJEMPLO FICTICIO PARA PRUEBAS. No es un cliente real.",
+  "nombre": "Expediente de ejemplo de Adeje",
+  "tipo": "compraventa",
+  "municipio": "Adeje",
+  "estado": "arras firmadas, pendiente de notaria",
+  "plazos": [
+    { "que": "firma de arras", "fecha": "2026-09-10", "hecho": true },
+    { "que": "firma en notaria", "fecha": "2026-10-15", "hecho": false }
+  ],
+  "documentos_que_faltan": ["nota simple actualizada", "certificado de eficiencia energetica"],
+  "contacto_oficina": "Oficina de ejemplo"
+}

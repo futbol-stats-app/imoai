@@ -1,0 +1,21 @@
+{
+  "name": "Asistente de IMMO IA",
+  "short_name": "IMMO IA",
+  "description": "El asistente de voz de IMMO IA. Se abre y te habla: cuéntale qué necesitas de tu vivienda.",
+  "lang": "es-ES",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "immoia-asistente",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FAF8F3",
+  "theme_color": "#13342A",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "./iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./iconos/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

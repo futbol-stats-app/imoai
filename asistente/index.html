@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13342A">
+<meta name="description" content="Asistente de voz de IMMO IA. Se abre y te habla: cuéntale qué necesitas de tu vivienda.">
+<title>Asistente de IMMO IA</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./iconos/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./iconos/icono-192.png">
+<style>
+  :root{
+    --marca:#13342A; --marca-claro:#1C4A3B; --oro:#D4A017;
+    --fondo:#FAF8F3; --papel:#FFFFFF; --linea:#DED7C6;
+    --texto:#1B231F; --gris:#5F5A4E; --suave:#EDF1EE;
+    --aviso-fondo:#FBEFE3; --aviso-linea:#E0BD98; --aviso-texto:#7A4318;
+    --ok:#2E7D4F; --piensa:#8A6A12; --voz:#A8341F;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  .pantalla{min-height:100%; max-width:720px; margin:0 auto; display:flex; flex-direction:column}
+
+  /* ---------- cabecera ---------- */
+  header{padding:18px 16px 12px; border-bottom:1px solid var(--linea); background:var(--fondo)}
+  h1{margin:0; font-size:20px; line-height:1.25; color:var(--marca); letter-spacing:-.01em}
+  .insignia{
+    display:inline-block; margin-top:8px; padding:4px 11px; border-radius:999px;
+    background:var(--suave); color:var(--marca); font-size:13px; font-weight:700;
+    border:1px solid #C8D8CF;
+  }
+
+  /* ---------- EL ÚNICO TOQUE ----------
+     Un botón, grande, y sólo la primera vez: en cuanto el navegador se
+     queda con el permiso, esta parte no vuelve a aparecer nunca. */
+  .puerta{padding:24px 16px 8px}
+  .puerta[hidden]{display:none}
+  .empezar{
+    display:block; width:100%; font:inherit; font-size:21px; font-weight:800;
+    line-height:1.3; padding:26px 20px; border-radius:18px; cursor:pointer;
+    background:var(--marca); color:#fff; border:none; text-align:center;
+    box-shadow:0 4px 0 #0B221B;
+  }
+  .empezar:active{transform:translateY(2px); box-shadow:0 2px 0 #0B221B}
+  .puerta-letra{margin:12px 2px 0; font-size:14.5px; color:var(--gris)}
+
+  /* ---------- avisos ---------- */
+  .avisos{padding:0 16px}
+  .aviso{
+    margin:12px 0 0; padding:11px 14px; border-radius:11px;
+    background:var(--aviso-fondo); border:1px solid var(--aviso-linea);
+    color:var(--aviso-texto); font-size:15px;
+  }
+  .aviso[data-tipo="vuelve"]{background:var(--suave); border-color:#C8D8CF; color:var(--marca)}
+
+  /* ---------- la conversación, rodando en texto ---------- */
+  .charla{
+    flex:1 1 auto; padding:14px 16px 8px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .linea{margin:0; font-size:16.5px; white-space:pre-wrap; overflow-wrap:anywhere}
+  .linea .quien{display:block; font-size:12.5px; font-weight:700; letter-spacing:.02em; color:var(--gris)}
+  .de-secretaria .quien{color:var(--marca)}
+  .fr-relleno,.fr-preambulo{color:#4C574F; font-style:italic}
+  .fr-aviso{color:var(--texto)}
+  .cortada{opacity:.72}
+  .cortada::after{content:" — te he dejado hablar"; font-size:12.5px; color:var(--gris); font-style:italic}
+  .parcial{margin:0; font-style:italic; color:#4C574F; font-size:16px}
+  .parcial:empty{display:none}
+  .memoria-aviso{margin:10px 0 0; font-size:13px; color:var(--gris)}
+  .memoria-aviso[hidden]{display:none}
+  .extras button[hidden]{display:none}
+
+  /* ---------- barra de abajo: no hay nada que pulsar ---------- */
+  footer{
+    position:sticky; bottom:0; background:var(--fondo);
+    border-top:1px solid var(--linea);
+    padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+  .mando{display:flex; align-items:center; gap:12px}
+  .luz{
+    flex:0 0 auto; width:44px; height:44px; border-radius:50%;
+    background:var(--suave); border:2px solid #C8D8CF;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .luz svg{width:22px; height:22px; display:block; color:var(--marca)}
+  .luz[data-on="si"]{background:var(--voz); border-color:var(--voz); animation:late 1.6s ease-in-out infinite}
+  .luz[data-on="si"] svg{color:#fff}
+  @keyframes late{0%,100%{box-shadow:0 0 0 0 rgba(168,52,31,.45)}50%{box-shadow:0 0 0 12px rgba(168,52,31,0)}}
+  @media (prefers-reduced-motion: reduce){.luz[data-on="si"]{animation:none}}
+  .junto{flex:1 1 auto; min-width:0}
+  .pie-texto{margin:0; font-size:14.5px; font-weight:700; color:var(--marca)}
+  .pie-ayuda{margin:2px 0 0; font-size:13.5px; color:var(--gris)}
+  .medidor{height:6px; border-radius:3px; background:#E6E1D4; overflow:hidden; margin-top:8px}
+  .barra{height:100%; width:0; background:var(--marca-claro); transition:width .08s linear}
+  .barra[data-voz="si"]{background:var(--voz)}
+
+  /* ---------- el respaldo por escrito: escondido hasta que hace falta ---------- */
+  .escribir{margin-top:12px}
+  .escribir[hidden]{display:none}
+  .escribir label{display:block; font-size:13.5px; color:var(--gris); margin-bottom:6px}
+  .escribir input{
+    width:100%; min-width:0; font:inherit; font-size:16.5px;
+    padding:12px 14px; border:1px solid var(--linea); border-radius:12px; background:var(--papel);
+    color:var(--texto);
+  }
+  .extras{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+  .extras button{
+    font:inherit; font-size:14.5px; font-weight:700; padding:9px 15px;
+    border:2px solid var(--marca); border-radius:999px;
+    background:var(--papel); color:var(--marca); cursor:pointer;
+  }
+  button:focus-visible,input:focus-visible{outline:3px solid var(--oro); outline-offset:2px}
+  .legal{margin:14px 0 0; font-size:12.5px; color:var(--gris)}
+
+  @media (min-width:600px){
+    header{padding:26px 16px 16px}
+    h1{font-size:25px}
+    .charla{padding:18px 16px 10px}
+    .empezar{font-size:24px; padding:32px 24px}
+  }
+</style>
+</head>
+<body>
+<div class="pantalla">
+
+  <header>
+    <h1>Asistente de IMMO IA</h1>
+    <span class="insignia">Soy una inteligencia artificial, no una persona</span>
+  </header>
+
+  <!-- EL ÚNICO TOQUE. Un botón, uno solo, y sólo la primera vez. Nace
+       escondido: sólo se enseña si el navegador todavía no tiene el
+       permiso del micrófono. -->
+  <section class="puerta" id="puerta" hidden>
+    <button class="empezar" id="empezar" type="button">Toca aquí y empezamos a hablar</button>
+    <p class="puerta-letra" id="puerta-letra">Sólo esta vez. El navegador te preguntará por el micrófono: dile que sí y no te lo vuelve a preguntar.</p>
+  </section>
+
+  <div class="avisos" id="avisos"></div>
+
+  <!-- Aquí va rodando lo que se dice: se lee, no se escribe. -->
+  <main class="charla" id="charla" aria-live="polite" aria-label="Lo que vamos hablando"></main>
+
+  <footer>
+    <div class="mando">
+      <span class="luz" id="luz" data-on="no" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 15a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v5.5A3.5 3.5 0 0 0 12 15z"/>
+          <path d="M18.5 11.5a1 1 0 1 0-2 0 4.5 4.5 0 0 1-9 0 1 1 0 1 0-2 0 6.5 6.5 0 0 0 5.5 6.42V21H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-3.08a6.5 6.5 0 0 0 5.5-6.42z"/>
+        </svg>
+      </span>
+      <div class="junto">
+        <p class="pie-texto" id="pie">Un momento, que ya te hablo</p>
+        <p class="pie-ayuda" id="pie-ayuda">No tienes que pulsar nada: habla cuando quieras.</p>
+        <div class="medidor" aria-hidden="true"><div class="barra" id="barra"></div></div>
+      </div>
+    </div>
+
+    <!-- EL RESPALDO POR ESCRITO. Sale solo si no hay micrófono, no hay
+         permiso o falla la voz. No tiene botón: se manda con Intro. -->
+    <div class="escribir" id="por-escrito" hidden>
+      <label for="texto">Escríbeme aquí y dale a la tecla Intro.</label>
+      <input type="text" id="texto" autocomplete="off" enterkeyhint="send"
+             placeholder="Escríbeme aquí…" aria-label="Escríbeme aquí y dale a la tecla Intro">
+    </div>
+
+    <div class="extras">
+      <button id="silencio" type="button">Silenciar la voz</button>
+      <button id="borrar" type="button" hidden>Borrar lo que hemos hablado</button>
+    </div>
+    <p class="memoria-aviso" id="memoria-aviso" role="status" hidden></p>
+
+    <p class="legal">Esto es una demostración de IMMO IA. No gestiona trámites y no cobra nada.</p>
+  </footer>
+
+</div>
+
+<script type="module">
+/* ============================================================
+   LA PUERTA
+   Une la pantalla con el asistente de cuatro piezas. Aqui no hay
+   ninguna decision sobre con quien se habla: eso esta en
+   configuracion.js, que es el unico sitio que hay que tocar.
+
+   LA IDA Y VUELTA · 18/09/2026 · UNA SOLA VERSION QUE ARRANCA
+   Esta carpeta es la de SUBIR\asistente\ (completa, las cuatro piezas)
+   con lo bueno de ASISTENTE_SIN_BOTONES y de PRIMER_MINUTO encima:
+
+   1. NI BOTON DE MICROFONO NI BOTON DE ENVIAR. Si el permiso ya esta
+      dado, arranca sola. Si no, UN SOLO BOTON GRANDE, una sola vez, y
+      despues de ese toque nada mas.
+   2. SE LA PUEDE CORTAR. Mientras habla, el oido NO se apaga: se queda
+      en sordina. Si ella arranca a hablar, la secretaria se calla en el
+      acto y lo que diga SI aparece. Lo que entra mientras habla la
+      secretaria y nadie la corta se tira, para que no se conteste sola.
+   3. SI SE PARA, VUELVE SOLA, y si no puede, LO DICE EN PANTALLA.
+   4. La conversacion va rodando en texto (primer_minuto/cinta.js): no
+      es un chat, ahi no se escribe.
+   5. La memoria (primer_minuto/memoria.js) guarda lo hablado en la
+      cuenta de la oficina. SOLO SE ENCIENDE si el servidor sabe hacerlo;
+      hoy la ruta /conversacion no existe en el worker, asi que se queda
+      quieta y lo dice en una linea.
+   ============================================================ */
+
+import { CONFIGURACION } from "./configuracion.js";
+import { crearAsistente } from "./voz/main.js";
+import { FRASES, mirarPermiso, mirarMicrofono, decidirArranque, crearPortero } from "./voz/arranque_solo.js";
+import { crearCinta } from "./primer_minuto/cinta.js";
+import { crearMemoria } from "./primer_minuto/memoria.js";
+import { leerCuenta, tomarLlaveDelEnlace, pedidor } from "./primer_minuto/mesa.js";
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------- lo que se lee al lado de la luz ---------- */
+const PIE_APAGADO = "Ahora mismo no te estoy escuchando";
+const PIE_ESPERA  = "Un momento, que ya te hablo";
+const PIE = {
+  escuchando: "Te escucho",
+  pensando:   "Un momento, que lo miro",
+  hablando:   "Estoy hablando",
+  pausa:      "Un momento"
+};
+const AYUDA_ESCUCHA  = "Habla con normalidad y calla al terminar. Puedes cortarme cuando quieras.";
+const AYUDA_ESCRITO  = "Escríbeme aquí abajo y te contesto igual.";
+const AYUDA_VOLVIENDO = "Se me ha ido el oído. Estoy volviendo a abrirlo, no toques nada.";
+
+let asistente = null;
+let cinta = null;
+let memoria = null;
+let estadoUltimo = "apagado";
+let hayAvisoDelOido = false;      /* ya se ha contado por que no se puede escuchar */
+let volviendo = false;            /* el oido se esta reenganchando */
+const portero = crearPortero();   /* cada frase de la casa, una sola vez */
+
+/* ---------- piezas de la pantalla ---------- */
+function abajo() {
+  try { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); } catch (e) {}
+}
+function avisar1vez(clave, texto, tipo) {
+  const frase = portero.unaVez(clave, texto);
+  if (!frase) return null;
+  return ponerAviso(clave, frase, tipo);
+}
+function ponerAviso(clave, texto, tipo) {
+  let p = document.getElementById("aviso-" + clave);
+  if (!p) {
+    p = document.createElement("p");
+    p.className = "aviso";
+    p.id = "aviso-" + clave;
+    p.setAttribute("role", "status");
+    $("avisos").appendChild(p);
+  }
+  if (tipo) p.dataset.tipo = tipo;
+  p.textContent = texto;
+  return p;
+}
+function quitarAviso(clave) {
+  const p = document.getElementById("aviso-" + clave);
+  if (p && p.parentNode) p.parentNode.removeChild(p);
+}
+
+/* ---------- el respaldo por escrito: escondido hasta que hace falta ---------- */
+let escrituraALaVista = false;
+function mostrarEscritura() {
+  if (escrituraALaVista) return;
+  escrituraALaVista = true;
+  $("por-escrito").hidden = false;
+  $("pie-ayuda").textContent = AYUDA_ESCRITO;
+  try { $("texto").focus({ preventScroll: true }); } catch (e) {}
+}
+
+/* ---------- pintar la luz y el pie segun como este la cosa ---------- */
+function pintar() {
+  const oyendo = !!(asistente && asistente.piezas.entrada.encendida());
+  $("luz").dataset.on = oyendo ? "si" : "no";
+  if (!oyendo) $("barra").style.width = "0%";
+  const trabajando = estadoUltimo === "pensando" || estadoUltimo === "hablando";
+  $("pie").textContent = (oyendo || trabajando)
+    ? (PIE[estadoUltimo] || PIE_APAGADO)
+    : (volviendo ? "Se me ha ido el oído, ya vuelvo"
+                 : (escrituraALaVista ? PIE_APAGADO : PIE_ESPERA));
+}
+
+/* ---------- lo que cuenta el asistente ---------- */
+function alAviso(tipo, d) {
+  switch (tipo) {
+    case "nivel":
+      $("barra").style.width = Math.max(0, Math.min(100, (d.db + 90) / 80 * 100)) + "%";
+      $("barra").dataset.voz = d.hablando ? "si" : "no";
+      break;
+    case "estado":
+      estadoUltimo = d.estado;
+      pintar();
+      break;
+    case "lista":
+      if (!escrituraALaVista) $("pie-ayuda").textContent = d.transcribe ? AYUDA_ESCUCHA : AYUDA_ESCRITO;
+      break;
+
+    /* la conversación, rodando en texto, y la memoria */
+    case "parcial":  if (cinta) cinta.parcial(d.texto); break;
+    case "persona":
+      if (cinta) cinta.deElla(d.texto);
+      if (memoria) memoria.apuntar("ella", d.texto);
+      break;
+    case "frase":
+      if (cinta) cinta.deLaSecretaria(d.turno, d.texto, d.tipo);
+      if (memoria) memoria.trozoDeLaSecretaria(d.turno, d.texto, d.tipo);
+      break;
+    case "fin_turno":
+      if (memoria) {
+        memoria.finDeTurno(d.turno, d.motivo);
+        if (d.motivo === "despedida") memoria.cerrar();
+      }
+      break;
+
+    /* LA INTERRUPCIÓN: se marca la línea que se quedó a medias, para que se
+       vea que la ha cortado ella y no que se ha perdido algo. */
+    case "interrumpida":
+      if (cinta && d.habiaVoz) cinta.marcarCortada(asistente ? asistente.piezas.salida.turno() : 0);
+      break;
+
+    /* EL OÍDO SE HA CAÍDO. No se calla: se dice, y se dice que vuelve. */
+    case "reintentando":
+      volviendo = true;
+      ponerAviso("vuelve", "Se me ha ido el oído (" + d.porque + "). Vuelvo a intentarlo en " +
+                 Math.round(d.dentroMs / 1000) + " segundos. No hace falta que toques nada.", "vuelve");
+      $("pie-ayuda").textContent = AYUDA_VOLVIENDO;
+      pintar();
+      break;
+    case "recuperada":
+      volviendo = false;
+      quitarAviso("vuelve");
+      $("pie-ayuda").textContent = AYUDA_ESCUCHA;
+      pintar();
+      break;
+    case "rendida":
+      volviendo = false;
+      quitarAviso("vuelve");
+      hayAvisoDelOido = true;
+      ponerAviso("rendida", d.mensaje);
+      mostrarEscritura();
+      pintar();
+      break;
+
+    case "sin_microfono":
+      /* si el oido ya ha contado lo suyo con su propia frase, no se pone
+         otra casi igual detras: una sola cosa, dicha una sola vez */
+      if (!hayAvisoDelOido) {
+        hayAvisoDelOido = true;
+        avisar1vez("sin_microfono", "No he podido abrir el micrófono. Escríbeme aquí abajo y te contesto igual.");
+      }
+      mostrarEscritura();
+      pintar();
+      break;
+    case "sin_transcripcion":
+      hayAvisoDelOido = true;
+      avisar1vez("sin_transcripcion", "Te oigo, pero este navegador no me pasa tu voz a texto. Con Chrome sí; mientras, escríbeme aquí abajo.");
+      mostrarEscritura();
+      break;
+    case "error":
+      /* La pieza de los archivos trabaja por detras: si le pasa algo no se
+         le cuenta a nadie, porque no cambia lo que la persona puede hacer.
+         Queda en el registro del navegador y ya esta. */
+      if (d.pieza === "datos") { try { console.warn("[datos]", d.mensaje); } catch (e) {} break; }
+      /* un fallo del que se vuelve solo no saca su propio cartel: ya lo
+         cuenta "reintentando", que ademas dice cuando vuelve */
+      if (d.seRecupera) { try { console.warn("[entrada]", d.mensaje); } catch (e) {} break; }
+      if (d.pieza === "entrada") hayAvisoDelOido = true;
+      avisar1vez(String(d.codigo || d.mensaje).slice(0, 60), d.mensaje);
+      /* si falla el oido o falla la voz, ENTONCES aparece la forma de escribir */
+      if (d.pieza === "entrada" || d.pieza === "salida") mostrarEscritura();
+      break;
+  }
+}
+
+/* ---------- montar el asistente (sin abrir el microfono) ---------- */
+function crear() {
+  asistente = crearAsistente({
+    conexion: CONFIGURACION.cerebro,
+    urlCerebro: CONFIGURACION.urlCerebro,
+    codigo: CONFIGURACION.codigo,
+    conVoz: CONFIGURACION.conVoz,
+    esperarSaludoMs: 12000,
+    hablador: {
+      /* frases escritas, no generadas: no cuestan nada y siempre son iguales.
+         EL AVISO DE IA ES ESTE Y NO HAY OTRO. */
+      avisoIA: CONFIGURACION.avisoDeIA,
+      avisoIAcorto: CONFIGURACION.avisoDeIAcorto,
+      mensajeError: "Perdona, ahora mismo no he podido contestarte. Vuelve a preguntarme, por favor.",
+      mensajeTiempo: "Esto está tardando más de lo normal. Vuelve a preguntarme, por favor.",
+      despedida: "Muy bien, lo dejamos aquí. Cuando quieras seguir, aquí estoy."
+    }
+  }, { avisar: alAviso });
+
+  if (!asistente.piezas.salida.tieneVoz()) {
+    avisar1vez("sin_voz", "Este aparato no tiene voz, así que te contesto por escrito.");
+    mostrarEscritura();
+  }
+  window.ASISTENTE = asistente;   /* por si hay que mirar algo desde la propia pagina */
+}
+
+/* ---------- LA MEMORIA ----------
+   Si este ordenador tiene abierta la cuenta de la oficina, lo hablado se
+   guarda alli. Si no, o si el servidor todavia no sabe guardarlo, esta
+   pieza SE QUEDA QUIETA: no hay plan B en el navegador, a proposito. */
+async function montarMemoria() {
+  let almacen;
+  try { almacen = window.localStorage; almacen.getItem("x"); }
+  catch (e) { const m = new Map(); almacen = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; }
+  try { tomarLlaveDelEnlace({ location: window.location, history: window.history, almacen }); } catch (e) {}
+  const cuenta = leerCuenta(almacen);
+  const pedir = cuenta ? pedidor({ api: CONFIGURACION.urlCerebro, codigo: CONFIGURACION.codigo, cuenta, fetchFn: (u, o) => fetch(u, o) }) : null;
+  memoria = crearMemoria({ pedir });
+  /* Sin la cuenta de la oficina abierta no hay dónde guardar nada, y se dice.
+     Callarse aquí sería dejar creer que se guarda. */
+  if (!cuenta) {
+    $("memoria-aviso").textContent = "Lo que hablemos no se guarda en ningún sitio: este ordenador no tiene abierta la cuenta de tu oficina.";
+    $("memoria-aviso").hidden = false;
+    return;
+  }
+  try { await Promise.race([memoria.traer(), new Promise((r) => setTimeout(r, 6000))]); } catch (e) {}
+  const aviso = $("memoria-aviso");
+  if (memoria.activa()) {
+    aviso.textContent = "Lo que hablamos se guarda en la cuenta de tu oficina para acordarme otro día. Con el botón de al lado se borra.";
+    aviso.hidden = false;
+    $("borrar").hidden = false;
+  } else {
+    aviso.textContent = "Esta vez lo que hablemos no se guarda: el servidor todavía no sabe guardarlo.";
+    aviso.hidden = false;
+  }
+}
+
+/* ---------- EL ÚNICO TOQUE ----------
+   No es un botón de micrófono ni de enviar: es la puerta, y sale una sola
+   vez, cuando el navegador todavía no tiene el permiso. En cuanto lo tiene,
+   esto no vuelve a aparecer nunca. */
+let puertaAbierta = false;
+function abrirPuertaConUnToque(letra) {
+  if (puertaAbierta) return;
+  $("puerta").hidden = false;
+  if (letra) $("puerta-letra").textContent = letra;
+  $("pie").textContent = PIE_APAGADO;
+  $("pie-ayuda").textContent = "Toca el botón de arriba y ya está.";
+}
+function cerrarPuerta() {
+  puertaAbierta = true;
+  $("puerta").hidden = true;
+}
+
+/* ---------- arrancar sola ---------- */
+async function arrancarSola() {
+  if (!asistente) return false;
+  cerrarPuerta();
+  $("pie").textContent = PIE_ESPERA;
+  const ok = await asistente.arrancar();
+  pintar();
+  if (ok) vigilarQueSuene();
+  return ok;
+}
+
+/* Si el navegador no deja sonar nada (pasa en el movil y en Safari), lo que
+   dice ya esta escrito en la pantalla. ANTES esto se miraba UNA VEZ a los
+   1500 ms con speechSynthesis.speaking, y si el saludo ya habia terminado
+   salia el aviso aunque la voz hubiera funcionado perfectamente. AHORA se
+   mira el dato de verdad: si el aparato ha sonado alguna vez (onstart del
+   propio enunciado), y se mira durante 6 segundos, no en un instante. */
+function vigilarQueSuene() {
+  const salida = asistente.piezas.salida;
+  if (!salida.tieneVoz()) return;
+  const hasta = Date.now() + 6000;
+  const mirar = () => {
+    if (!asistente) return;
+    if (salida.haSonado()) return;                       /* ha sonado: nada que avisar */
+    if (Date.now() < hasta) { setTimeout(mirar, 200); return; }
+    if (portero.yaDicha("toca_para_oirme")) return;
+    avisar1vez("toca_para_oirme", FRASES.tocaParaOirme);
+    const uno = () => {
+      window.removeEventListener("pointerdown", uno);
+      window.removeEventListener("keydown", uno);
+      try {
+        salida.callar("reintento");
+        salida.decirSuelto(CONFIGURACION.avisoDeIA);
+        quitarAviso("toca_para_oirme");
+      } catch (e) {}
+    };
+    window.addEventListener("pointerdown", uno, { once: true });
+    window.addEventListener("keydown", uno, { once: true });
+  };
+  setTimeout(mirar, 200);
+}
+
+/* ---------- LA DECISION DE AL ABRIR ---------- */
+async function abrirLaPuerta() {
+  const hayMicrofono = await mirarMicrofono(navigator);
+  const permiso = await mirarPermiso(navigator);
+  const plan = decidirArranque({ permiso, hayMicrofono });
+
+  /* permiso ya dado: CERO TOQUES, ni el botón */
+  if (plan.accion === "arrancar") { arrancarSola(); return; }
+
+  /* primera vez: UN botón, uno solo */
+  if (plan.accion === "pedir_permiso") { abrirPuertaConUnToque(plan.frase); return; }
+
+  /* por escrito: no hay microfono o el permiso está negado */
+  hayAvisoDelOido = true;
+  avisar1vez("por_escrito", plan.frase);
+  mostrarEscritura();
+  pintar();
+}
+
+function enviarEscrito() {
+  const v = $("texto").value.trim();
+  if (!v || !asistente) return;
+  $("texto").value = "";
+  asistente.escribir(v);
+}
+
+/* ---------- arranque de la pagina ---------- */
+cinta = crearCinta({ documento: document, contenedor: $("charla"), bajar: abajo });
+crear();
+pintar();
+montarMemoria();
+abrirLaPuerta();
+
+$("empezar").addEventListener("click", arrancarSola);
+
+/* No hay boton de enviar: lo escrito se manda con la tecla Intro. */
+$("texto").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); enviarEscrito(); } });
+
+$("silencio").addEventListener("click", () => {
+  if (!asistente) return;
+  const estabaSilenciada = $("silencio").dataset.off === "si";
+  asistente.ponerVoz(estabaSilenciada);
+  $("silencio").dataset.off = estabaSilenciada ? "no" : "si";
+  $("silencio").textContent = estabaSilenciada ? "Silenciar la voz" : "Volver a hablarme";
+});
+
+let seguroBorrar = false, relojSeguro = null;
+$("borrar").addEventListener("click", async () => {
+  if (!memoria || !memoria.activa()) return;
+  const b = $("borrar"), aviso = $("memoria-aviso");
+  if (!seguroBorrar) {
+    seguroBorrar = true;
+    b.textContent = "¿Seguro? Pulsa otra vez y lo borro";
+    relojSeguro = setTimeout(() => { seguroBorrar = false; b.textContent = "Borrar lo que hemos hablado"; }, 8000);
+    return;
+  }
+  clearTimeout(relojSeguro);
+  seguroBorrar = false;
+  b.disabled = true; b.textContent = "Borrando…";
+  const d = await memoria.borrar();
+  b.disabled = false; b.textContent = "Borrar lo que hemos hablado";
+  aviso.textContent = (d && d.ok && d.borrado)
+    ? "Borrado. En tu cuenta ya no queda nada de lo que hemos hablado."
+    : "No he podido borrarlo. Vuelve a intentarlo en un momento.";
+  if (d && d.ok && d.borrado) { try { asistente.piezas.hablador.reiniciar(); } catch (e) {} }
+});
+
+/* al cerrar la ventana, lo hablado se resume y se guarda */
+window.addEventListener("pagehide", () => { try { memoria && memoria.cerrar({ alIrse: true }); } catch (e) {} });
+
+/* si se despide sola, la luz y el pie tienen que enterarse */
+setInterval(pintar, 600);
+
+/* para que se pueda instalar en el ordenador de la oficina y abra sola */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((e) => {
+      try { console.warn("[instalacion]", e && e.message); } catch (e2) {}
+    });
+  });
+}
+</script>
+</body>
+</html>

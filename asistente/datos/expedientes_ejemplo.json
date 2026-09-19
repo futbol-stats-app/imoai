@@ -1,0 +1,544 @@
+{
+ "_leeme": "Los diez expedientes de ejemplo de OT-25, en el formato de datos del molde de EXPANSION\\01_PROYECTO\\MOLDE_EXPEDIENTE_PROPUESTA_IN.md (vivienda + expediente + documentos con estado_documento: falta / pedido / recibido / verificado / caducado). TODO INVENTADO Y ROTULADO EJEMPLO. Ni un dato que no este en OT25_EXPEDIENTES_DE_EJEMPLO.md: donde el documento no dice nada, aqui hay null o no hay campo. El campo 'literal_en_OT25' guarda la frase original, para que se pueda comprobar linea a linea que no se ha completado ningun hueco.",
+ "hoy": "2026-09-18",
+ "expedientes": [
+  {
+   "expediente_id": "EXP-EJ-01",
+   "es_test": true,
+   "ejemplo_ot25": 1,
+   "caso_que_prueba": "Completo",
+   "vivienda": {
+    "via": "calle Júpiter 4",
+    "piso": "3ºB",
+    "municipio": "Santa Cruz de Tenerife",
+    "direccion_literal": "calle Júpiter 4, 3ºB, Santa Cruz de Tenerife (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Lunero Estrellado",
+    "documento": "NIE Y0000001-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-01",
+     "literal_en_OT25": "Nota simple informativa — pedida 01/09/2026"
+    },
+    {
+     "cual": "certificado de eficiencia energética (letra D)",
+     "estado_documento": "recibido",
+     "fecha": "2023-03-12",
+     "literal_en_OT25": "Certificado de eficiencia energética (letra D) — emitido 12/03/2023"
+    },
+    {
+     "cual": "certificado de estar al día en la comunidad",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-05",
+     "literal_en_OT25": "Certificado de estar al día en la comunidad — recibido 05/09/2026"
+    },
+    {
+     "cual": "últimos recibos del IBI",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Últimos recibos del IBI — al día, recibo de 2026"
+    },
+    {
+     "cual": "certificado de deuda cero de la hipoteca",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-10",
+     "literal_en_OT25": "Certificado de deuda cero de la hipoteca — recibido 10/09/2026"
+    },
+    {
+     "cual": "DNI/NIE del propietario",
+     "estado_documento": "verificado",
+     "fecha": "2026-09-01",
+     "literal_en_OT25": "DNI/NIE del propietario — verificado 01/09/2026"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-08",
+     "literal_en_OT25": "Contrato de arras — firmado 08/09/2026"
+    },
+    {
+     "cual": "cita de notaría",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-30",
+     "literal_en_OT25": "Cita de notaría — confirmada para el 30/09/2026"
+    }
+   ],
+   "papeles_que_faltan_literal": "ninguno",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-10",
+    "que": "recibida la cancelación económica de la hipoteca"
+   },
+   "plazo_que_se_acerca": "notaría el 30/09/2026 (12 días)",
+   "que_deberia_detectar_la_secretaria": "que el expediente está completo y lo único pendiente es la fecha ya fijada de notaría; no debe pedir ningún papel de más ni inventar huecos que no existen."
+  },
+  {
+   "expediente_id": "EXP-EJ-02",
+   "es_test": true,
+   "ejemplo_ot25": 2,
+   "caso_que_prueba": "Un papel que falta, plazo legal ya vencido",
+   "vivienda": {
+    "via": "avenida de Marte 12",
+    "piso": null,
+    "municipio": "Los Cristianos, Arona",
+    "direccion_literal": "avenida de Marte 12, Los Cristianos, Arona (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Marciano del Cráter",
+    "documento": "DNI 00000002-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-03",
+     "literal_en_OT25": "Nota simple informativa — pedida 03/09/2026"
+    },
+    {
+     "cual": "certificado de eficiencia energética (letra C)",
+     "estado_documento": "recibido",
+     "fecha": "2024-01-20",
+     "literal_en_OT25": "Certificado de eficiencia energética (letra C) — emitido 20/01/2024"
+    },
+    {
+     "cual": "últimos recibos del IBI",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Últimos recibos del IBI — al día"
+    },
+    {
+     "cual": "DNI del propietario",
+     "estado_documento": "verificado",
+     "fecha": "2026-09-03",
+     "literal_en_OT25": "DNI del propietario — verificado 03/09/2026"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-05",
+     "literal_en_OT25": "Contrato de arras — firmado 05/09/2026"
+    },
+    {
+     "cual": "certificado de estar al día en la comunidad de propietarios",
+     "estado_documento": "pedido",
+     "fecha": "2026-09-04",
+     "literal_en_OT25": "certificado de estar al día en la comunidad de propietarios — pedido al administrador el 04/09/2026"
+    }
+   ],
+   "papeles_que_faltan_literal": "certificado de estar al día en la comunidad de propietarios — pedido al administrador el 04/09/2026",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-04",
+    "que": "petición al administrador"
+   },
+   "plazo_que_se_acerca": "el plazo legal de 7 días del art. 9.1.e LPH venció el 11/09/2026; hoy, 18/09/2026, van 14 días sin respuesta",
+   "que_deberia_detectar_la_secretaria": "que el plazo de 7 días ya pasó hace una semana y toca reclamar por escrito al administrador citando el art. 9.1.e, no seguir esperando en silencio."
+  },
+  {
+   "expediente_id": "EXP-EJ-03",
+   "es_test": true,
+   "ejemplo_ot25": 3,
+   "caso_que_prueba": "Dos papeles que faltan",
+   "vivienda": {
+    "via": "calle Saturno 7",
+    "piso": "1ºA",
+    "municipio": "Adeje",
+    "direccion_literal": "calle Saturno 7, 1ºA, Adeje (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Saturnino de los Anillos",
+    "documento": "NIE Y0000003-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-12",
+     "literal_en_OT25": "Nota simple informativa — pedida 12/09/2026"
+    },
+    {
+     "cual": "DNI/NIE del propietario",
+     "estado_documento": "verificado",
+     "fecha": "2026-09-12",
+     "literal_en_OT25": "DNI/NIE del propietario — verificado 12/09/2026"
+    },
+    {
+     "cual": "últimos recibos del IBI",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Últimos recibos del IBI — al día"
+    },
+    {
+     "cual": "certificado de eficiencia energética",
+     "estado_documento": "falta",
+     "literal_en_OT25": "Certificado de eficiencia energética — sin encargar"
+    },
+    {
+     "cual": "certificado de estar al día en la comunidad",
+     "estado_documento": "falta",
+     "literal_en_OT25": "Certificado de estar al día en la comunidad — sin pedir todavía"
+    }
+   ],
+   "papeles_que_faltan_literal": "certificado de eficiencia energética (sin encargar) y certificado de estar al día en la comunidad (sin pedir todavía)",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-12",
+    "que": "alta del expediente"
+   },
+   "plazo_que_se_acerca": "ninguno fijado aún; no se puede ni anunciar la vivienda sin el certificado energético",
+   "que_deberia_detectar_la_secretaria": "que faltan dos papeles distintos y cuál pedir primero: el energético es más urgente porque, sin él, la vivienda no se puede ni anunciar; el de la comunidad tiene un plazo legal de 7 días una vez pedido, así que conviene lanzar los dos el mismo día."
+  },
+  {
+   "expediente_id": "EXP-EJ-04",
+   "es_test": true,
+   "ejemplo_ot25": 4,
+   "caso_que_prueba": "Sin movimiento desde hace semanas",
+   "vivienda": {
+    "via": "calle Urano 3",
+    "piso": null,
+    "municipio": "San Miguel de Abona",
+    "direccion_literal": "calle Urano 3, San Miguel de Abona (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Silencioso del Anillo Frío",
+    "documento": "DNI 00000004-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-08-09",
+     "literal_en_OT25": "Nota simple informativa — pedida 09/08/2026"
+    },
+    {
+     "cual": "DNI del propietario",
+     "estado_documento": "verificado",
+     "fecha": "2026-08-09",
+     "literal_en_OT25": "DNI del propietario — verificado 09/08/2026"
+    },
+    {
+     "cual": "certificado energético",
+     "estado_documento": "falta",
+     "literal_en_OT25": "certificado energético — ninguno pedido"
+    },
+    {
+     "cual": "certificado de la comunidad",
+     "estado_documento": "falta",
+     "literal_en_OT25": "certificado de la comunidad — ninguno pedido"
+    },
+    {
+     "cual": "últimos recibos del IBI",
+     "estado_documento": "falta",
+     "literal_en_OT25": "últimos recibos del IBI — ninguno pedido"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "falta",
+     "literal_en_OT25": "contrato de arras — ninguno pedido"
+    }
+   ],
+   "papeles_que_faltan_literal": "certificado energético, certificado de la comunidad, últimos recibos del IBI, contrato de arras — ninguno pedido",
+   "ultimo_movimiento": {
+    "fecha": "2026-08-09",
+    "que": "alta del expediente y nota simple"
+   },
+   "plazo_que_se_acerca": "ninguno; ese es justamente el problema",
+   "que_deberia_detectar_la_secretaria": "que hoy hace 40 días sin ningún movimiento registrado, y que un expediente parado tanto tiempo sin causa conocida debe salir marcado como alerta de inactividad, no como «sin datos»."
+  },
+  {
+   "expediente_id": "EXP-EJ-05",
+   "es_test": true,
+   "ejemplo_ot25": 5,
+   "caso_que_prueba": "Parado por causa externa (poder desde el extranjero)",
+   "vivienda": {
+    "via": "avenida Neptuno 1",
+    "piso": null,
+    "municipio": "Arona (zona Lapilli)",
+    "direccion_literal": "avenida Neptuno 1, Arona (zona Lapilli) (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Alemán de Fráncfort",
+    "documento": "pasaporte P0000005 (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-08-20",
+     "literal_en_OT25": "Nota simple informativa — pedida 20/08/2026"
+    },
+    {
+     "cual": "certificado de eficiencia energética",
+     "estado_documento": "recibido",
+     "fecha": "2026-08-22",
+     "literal_en_OT25": "Certificado de eficiencia energética — recibido 22/08/2026"
+    },
+    {
+     "cual": "certificado de la comunidad",
+     "estado_documento": "recibido",
+     "fecha": "2026-08-25",
+     "literal_en_OT25": "Certificado de la comunidad — recibido 25/08/2026"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "recibido",
+     "fecha": "2026-08-26",
+     "literal_en_OT25": "Contrato de arras — firmado 26/08/2026"
+    },
+    {
+     "cual": "poder notarial del propietario, apostillado",
+     "estado_documento": "pedido",
+     "fecha": "2026-08-27",
+     "literal_en_OT25": "poder notarial del propietario, apostillado, porque vive en Alemania y no puede firmar en persona; trámite iniciado el 27/08/2026 en el consulado"
+    }
+   ],
+   "papeles_que_faltan_literal": "poder notarial del propietario, apostillado, porque vive en Alemania y no puede firmar en persona; trámite iniciado el 27/08/2026 en el consulado",
+   "ultimo_movimiento": {
+    "fecha": "2026-08-27",
+    "que": "inicio del trámite del poder"
+   },
+   "plazo_que_se_acerca": "el poder desde el extranjero tarda de 2 a 4 semanas; hoy, 18/09/2026, van 22 días esperando, ya en el límite superior del plazo práctico",
+   "que_deberia_detectar_la_secretaria": "que este expediente no está abandonado, está bloqueado por una causa externa y conocida (el poder desde Alemania), y que ya toca preguntar al consulado por el estado, porque se ha llegado al borde del plazo habitual."
+  },
+  {
+   "expediente_id": "EXP-EJ-06",
+   "es_test": true,
+   "ejemplo_ot25": 6,
+   "caso_que_prueba": "Certificado energético a punto de caducar",
+   "vivienda": {
+    "via": "calle del Cometa 5",
+    "piso": "bajo",
+    "municipio": "Puerto de la Cruz",
+    "direccion_literal": "calle del Cometa 5, bajo, Puerto de la Cruz (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "María Cometa Halley",
+    "documento": "DNI 00000006-M (EJEMPLO)"
+   },
+   "tipo_operacion": "alquiler de larga duración",
+   "documentos": [
+    {
+     "cual": "contrato de arrendamiento vigente",
+     "estado_documento": "recibido",
+     "fecha": "2021-10-01",
+     "literal_en_OT25": "Contrato de arrendamiento vigente — firmado 01/10/2021"
+    },
+    {
+     "cual": "certificado de eficiencia energética (letra E)",
+     "estado_documento": "recibido",
+     "fecha": "2016-09-25",
+     "literal_en_OT25": "Certificado de eficiencia energética (letra E) — emitido el 25/09/2016"
+    },
+    {
+     "cual": "fianza legal depositada en el ICV",
+     "estado_documento": "recibido",
+     "fecha": "2021-10-01",
+     "literal_en_OT25": "Fianza legal depositada en el ICV — 01/10/2021"
+    },
+    {
+     "cual": "últimos recibos del IBI",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Últimos recibos del IBI — al día"
+    }
+   ],
+   "papeles_que_faltan_literal": "ninguno operativo; el problema es la vigencia del energético",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-01",
+    "que": "revisión anual del expediente"
+   },
+   "plazo_que_se_acerca": "el certificado energético caduca a los 10 años desde su emisión, es decir, el 25/09/2026 — dentro de 7 días",
+   "que_deberia_detectar_la_secretaria": "que el certificado energético de un contrato ya firmado está a una semana de caducar, y que hay que encargar la renovación ya, antes de que el piso se quede sin etiqueta vigente para un nuevo anuncio o una renovación de contrato."
+  },
+  {
+   "expediente_id": "EXP-EJ-07",
+   "es_test": true,
+   "ejemplo_ot25": 7,
+   "caso_que_prueba": "Nota simple vieja, notaría cerca",
+   "vivienda": {
+    "via": "avenida Vía Láctea 9",
+    "piso": "2ºC",
+    "municipio": "La Laguna",
+    "direccion_literal": "avenida Vía Láctea 9, 2ºC, La Laguna (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Cuásar Andrómeda",
+    "documento": "DNI 00000007-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-04-15",
+     "literal_en_OT25": "Nota simple informativa — pedida el 15/04/2026"
+    },
+    {
+     "cual": "certificado de eficiencia energética",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Certificado de eficiencia energética — vigente"
+    },
+    {
+     "cual": "certificado de la comunidad",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-10",
+     "literal_en_OT25": "Certificado de la comunidad — recibido 10/09/2026"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-12",
+     "literal_en_OT25": "Contrato de arras — firmado 12/09/2026"
+    },
+    {
+     "cual": "cita de notaría",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-24",
+     "literal_en_OT25": "Cita de notaría — confirmada para el 24/09/2026"
+    },
+    {
+     "cual": "nota simple nueva",
+     "estado_documento": "falta",
+     "literal_en_OT25": "una nota simple nueva; la que hay tiene más de 5 meses"
+    }
+   ],
+   "papeles_que_faltan_literal": "una nota simple nueva; la que hay tiene más de 5 meses",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-12",
+    "que": "firma de arras"
+   },
+   "plazo_que_se_acerca": "la notaría es el 24/09/2026 (6 días), y la práctica de la oficina exige una nota simple de no más de 48 horas antes de la firma",
+   "que_deberia_detectar_la_secretaria": "que la nota simple en el expediente es demasiado vieja para presentarla en notaría —puede no reflejar cargas nuevas— y que hay que pedir una actualizada antes del 24/09, no fiarse de la de abril."
+  },
+  {
+   "expediente_id": "EXP-EJ-08",
+   "es_test": true,
+   "ejemplo_ot25": 8,
+   "caso_que_prueba": "Contrato de arras con fecha de firma cerca",
+   "vivienda": {
+    "via": "calle Nebulosa 21",
+    "piso": null,
+    "municipio": "Granadilla de Abona",
+    "direccion_literal": "calle Nebulosa 21, Granadilla de Abona (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": "José Eclipse Solar",
+    "documento": "DNI 00000008-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-14",
+     "literal_en_OT25": "Nota simple informativa — pedida 14/09/2026 (vigente)"
+    },
+    {
+     "cual": "certificado de eficiencia energética",
+     "estado_documento": "recibido",
+     "literal_en_OT25": "Certificado de eficiencia energética — vigente"
+    },
+    {
+     "cual": "contrato de arras",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-15",
+     "literal_en_OT25": "Contrato de arras — firmado 15/09/2026, con notaría fijada para el 22/09/2026"
+    },
+    {
+     "cual": "DNI del propietario y del comprador",
+     "estado_documento": "verificado",
+     "literal_en_OT25": "DNI del propietario y del comprador — verificados"
+    },
+    {
+     "cual": "certificado de estar al día en la comunidad",
+     "estado_documento": "pedido",
+     "fecha": "2026-09-15",
+     "literal_en_OT25": "certificado de estar al día en la comunidad — pedido el 15/09/2026, todavía dentro del plazo de 7 días"
+    }
+   ],
+   "papeles_que_faltan_literal": "certificado de estar al día en la comunidad — pedido el 15/09/2026, todavía dentro del plazo de 7 días",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-15",
+    "que": "firma de arras y petición del certificado"
+   },
+   "plazo_que_se_acerca": "la notaría es el 22/09/2026 — dentro de 4 días, y el certificado de la comunidad tiene que llegar antes; el plazo de 7 días de ese certificado vence el 22/09/2026, el mismo día de la firma",
+   "que_deberia_detectar_la_secretaria": "que hay dos cuentas atrás que coinciden en la misma fecha —la notaría y el límite legal del certificado de la comunidad— y que si el certificado no llega un día antes, la firma corre riesgo de moverse."
+  },
+  {
+   "expediente_id": "EXP-EJ-09",
+   "es_test": true,
+   "ejemplo_ot25": 9,
+   "caso_que_prueba": "Duplicado del expediente 1",
+   "vivienda": {
+    "via": "calle Júpiter 4",
+    "piso": "3ºB",
+    "municipio": "Santa Cruz de Tenerife",
+    "direccion_literal": "calle Júpiter 4, 3ºB, Santa Cruz de Tenerife (EJEMPLO) — la misma dirección y el mismo piso que el EJEMPLO 1"
+   },
+   "propietario": {
+    "nombre": "Josefina Duplicada Lunar",
+    "documento": "NIE Y0000009-M (EJEMPLO)"
+   },
+   "tipo_operacion": "venta",
+   "documentos": [
+    {
+     "cual": "nota simple informativa",
+     "estado_documento": "recibido",
+     "fecha": "2026-09-02",
+     "literal_en_OT25": "Nota simple informativa — pedida 02/09/2026"
+    },
+    {
+     "cual": "DNI/NIE de la propietaria",
+     "estado_documento": "verificado",
+     "fecha": "2026-09-02",
+     "literal_en_OT25": "DNI/NIE de la propietaria — verificado 02/09/2026"
+    },
+    {
+     "cual": "el resto del expediente",
+     "estado_documento": "falta",
+     "literal_en_OT25": "el resto del expediente, apenas empezado"
+    }
+   ],
+   "papeles_que_faltan_literal": "el resto del expediente, apenas empezado",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-02",
+    "que": null
+   },
+   "plazo_que_se_acerca": "ninguno",
+   "que_deberia_detectar_la_secretaria": "que esta dirección ya existe como expediente (el EJEMPLO 1, a nombre de José Lunero) y que dos fichas para el mismo piso, con propietarios distintos, es justo el caso de duplicado que hay que avisar antes de seguir trabajando en ninguna de las dos, no fusionarlas sola ni ignorarlo."
+  },
+  {
+   "expediente_id": "EXP-EJ-10",
+   "es_test": true,
+   "ejemplo_ot25": 10,
+   "caso_que_prueba": "Casi vacío",
+   "vivienda": {
+    "via": null,
+    "piso": null,
+    "municipio": null,
+    "direccion_literal": "sin confirmar todavía — el propietario solo ha dicho «un apartamento en el sur» (EJEMPLO)"
+   },
+   "propietario": {
+    "nombre": null,
+    "documento": null
+   },
+   "tipo_operacion": "alquiler vacacional (supuesto, sin confirmar)",
+   "documentos": [
+    {
+     "cual": "todos",
+     "estado_documento": "falta",
+     "literal_en_OT25": "todos — ni siquiera hay memoria técnica, ni certificado energético, ni identificación del propietario"
+    }
+   ],
+   "papeles_que_faltan_literal": "todos — ni siquiera hay memoria técnica, ni certificado energético, ni identificación del propietario",
+   "ultimo_movimiento": {
+    "fecha": "2026-09-16",
+    "que": "se abrió la carpeta tras una llamada, sin más datos"
+   },
+   "plazo_que_se_acerca": "no se puede calcular ningún plazo porque no hay ni dirección ni fecha de inicio de actividad",
+   "que_deberia_detectar_la_secretaria": "que este expediente está prácticamente vacío y que, antes de poder avisar de ningún plazo o papel que falta, lo primero que hace falta es la dirección exacta y el nombre del propietario; debe decir «sin datos» y no rellenar nada con lo que «parece probable»."
+  }
+ ]
+}

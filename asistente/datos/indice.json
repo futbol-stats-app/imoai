@@ -1,0 +1,32 @@
+{
+  "nota": "Lista de archivos que puede leer el cerebro de datos. Para anadir uno: copiarlo a esta carpeta y ponerlo aqui.",
+  "archivos": [
+    {
+      "archivo": "como_funciona_el_asistente.md",
+      "titulo": "Como funciona el asistente de voz",
+      "fecha": "2026-09-17"
+    },
+    {
+      "archivo": "expediente_ejemplo_adeje.json",
+      "titulo": "Expediente de EJEMPLO (ficticio) - Adeje",
+      "fecha": "2026-09-17"
+    },
+    {
+      "archivo": "notas_oficina_ejemplo.md",
+      "titulo": "Notas de oficina de EJEMPLO (ficticias)",
+      "fecha": "2026-09-17"
+    },
+    {
+      "archivo": "expedientes_ejemplo.json",
+      "titulo": "Los diez expedientes de EJEMPLO (ficticios) del banco de pruebas",
+      "fecha": "2026-09-18",
+      "tipo": "expedientes"
+    },
+    {
+      "archivo": "cifras_legales.json",
+      "titulo": "Tabla de cifras legales COMPROBADAS (la unica fuente para dar un plazo, un porcentaje o una norma)",
+      "fecha": "2026-09-18",
+      "tipo": "cifras_legales"
+    }
+  ]
+}
