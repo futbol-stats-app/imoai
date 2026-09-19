@@ -13,6 +13,22 @@
    correcto, y el bueno es este. No lo "arregles" hacia atras.
    Lo demas sigue igual, linea por linea.
 
+   EL 19 DE SEPTIEMBRE DE 2026 SE LE ABRE LA PUERTA A OTRAS RAMAS.
+   Este fichero llevaba sus tablas dentro y no habia manera de
+   calcular con otras: la rama de ALQUILER estaba escrita, probada y
+   parada por eso -por una firma de funcion, no por un fallo-.
+   Ahora estado, resumen, siguiente_paso, adelantarse y las demas
+   admiten UN ARGUMENTO MAS AL FINAL con las tablas a usar.
+   SIN ESE ARGUMENTO SE COMPORTAN EXACTAMENTE IGUAL QUE ANTES:
+   las tablas de compraventa que estan aqui abajo. Por eso no hay que
+   tocar ni una linea de bandeja.js ni de manana.js.
+   Las tablas de alquiler viven en tareas_alquiler.js (window.
+   IMMOIA_ALQUILER) y se le pasan asi:
+       MOTOR.resumen(llaves, datos, window.IMMOIA_ALQUILER)
+   NO se cambian las tablas de este fichero desde fuera para calcular
+   otra rama: eso es lo que se descarto, porque manana.js recorre
+   VARIOS expedientes seguidos y dos de distinto tipo se pisarian.
+
    Las cinco reglas, tal cual estaban:
      1. Cada tarea declara QUE LE FALTA, no de que color es.
      2. El color se calcula. Al aparecer un permiso, todo se
@@ -133,6 +149,20 @@
   /* ---------- utiles ---------- */
   function conjunto(x) { return (x instanceof Set) ? x : new Set(x || []); }
 
+  /* DE QUE TABLAS SE CALCULA.
+     Todas las funciones de abajo aceptan un ultimo argumento opcional
+     con las tablas. Si no viene, se usan las de este fichero, que son
+     las de compraventa: quien llamaba antes sigue llamando igual y
+     obtiene lo mismo. Si viene a medias -solo TAREAS, por ejemplo-,
+     lo que falte se completa con las de aqui.
+     Estos cuatro ayudantes existen para no repetir el "si viene,
+     usalo; si no, el de casa" en veinte sitios. */
+  function lasLlaves(T)     { return (T && T.LLAVES)     || LLAVES; }
+  function losDatos(T)      { return (T && T.DATOS)      || DATOS; }
+  function losComoDatos(T)  { return (T && T.COMO_DATOS) || COMO_DATOS; }
+  function lasTareas(T)     { return (T && T.TAREAS)     || TAREAS; }
+  function elGuion(T)       { return (T && T.GUION)      || GUION; }
+
   /* LAS DEPENDENCIAS NO PUEDEN DAR VUELTAS SOBRE SI MISMAS.
      Esta funcion baja por "necesita" recursivamente. Si algun dia
      alguien escribe que A necesita B y B necesita A -un renglon, en la
@@ -142,20 +172,21 @@
      delante de quien sea. Con el "visto" es imposible: cada llave se
      visita una vez y el ciclo se corta solo. Hoy la tabla no tiene
      ciclos; esto es para el dia en que alguien anada uno. */
-  function llaves_utiles(llave, visto) {
-    if (llave === IMPOSIBLE || !LLAVES[llave]) return new Set([llave]);
+  function llaves_utiles(llave, visto, T) {
+    var L = lasLlaves(T);
+    if (llave === IMPOSIBLE || !L[llave]) return new Set([llave]);
     visto = visto || new Set();
     if (visto.has(llave)) return new Set();
     visto.add(llave);
     var fuera = new Set([llave]);
-    LLAVES[llave].necesita.forEach(function (d) {
-      llaves_utiles(d, visto).forEach(function (x) { fuera.add(x); });
+    L[llave].necesita.forEach(function (d) {
+      llaves_utiles(d, visto, T).forEach(function (x) { fuera.add(x); });
     });
     return fuera;
   }
 
   /* ---------- EL MOTOR ---------- */
-  function estado(tarea, tengo, datos_que_hay) {
+  function estado(tarea, tengo, datos_que_hay, T) {
     tengo = conjunto(tengo); datos_que_hay = conjunto(datos_que_hay);
     var llaves = tarea[2], datos = tarea[3];
 
@@ -164,7 +195,7 @@
 
     var necesita = new Set();
     llaves.forEach(function (k) {
-      llaves_utiles(k).forEach(function (x) { necesita.add(x); });
+      llaves_utiles(k, null, T).forEach(function (x) { necesita.add(x); });
     });
 
     var faltan_llaves = Array.from(necesita).filter(function (k) { return !tengo.has(k); }).sort();
@@ -182,28 +213,28 @@
     return ["VERDE", { tipo: "listo", falta: [] }];
   }
 
-  function resumen(tengo, datos_que_hay) {
+  function resumen(tengo, datos_que_hay, T) {
     var r = { VERDE: 0, AMBAR: 0, ROJO: 0 };
-    TAREAS.forEach(function (t) { r[estado(t, tengo, datos_que_hay)[0]] += 1; });
+    lasTareas(T).forEach(function (t) { r[estado(t, tengo, datos_que_hay, T)[0]] += 1; });
     return r;
   }
 
   /* Cuantas tareas pasarian a VERDE con SOLO esta llave.
      Regla de oro: si da 0, no se pide. */
-  function cuanto_desbloquea(llave, tengo, datos_que_hay) {
+  function cuanto_desbloquea(llave, tengo, datos_que_hay, T) {
     tengo = conjunto(tengo);
-    var antes = resumen(tengo, datos_que_hay).VERDE;
+    var antes = resumen(tengo, datos_que_hay, T).VERDE;
     var mas = new Set(tengo); mas.add(llave);
-    return resumen(mas, datos_que_hay).VERDE - antes;
+    return resumen(mas, datos_que_hay, T).VERDE - antes;
   }
 
   /* Cuantas tareas pasarian a VERDE con SOLO este dato.
      El gemelo de cuanto_desbloquea, pero para los datos. */
-  function cuanto_desbloquea_dato(dato, tengo, datos_que_hay) {
+  function cuanto_desbloquea_dato(dato, tengo, datos_que_hay, T) {
     datos_que_hay = conjunto(datos_que_hay);
-    var antes = resumen(tengo, datos_que_hay).VERDE;
+    var antes = resumen(tengo, datos_que_hay, T).VERDE;
     var mas = new Set(datos_que_hay); mas.add(dato);
-    return resumen(tengo, mas).VERDE - antes;
+    return resumen(tengo, mas, T).VERDE - antes;
   }
 
   /* UN SOLO SIGUIENTE PASO, EL MAS RENTABLE.
@@ -227,25 +258,26 @@
 
      Ahora compiten los dos, con el mismo criterio de siempre: lo que
      mas desbloquea primero, y a igualdad, lo que menos cuesta. */
-  function siguiente_paso(tengo, datos_que_hay) {
+  function siguiente_paso(tengo, datos_que_hay, T) {
     tengo = conjunto(tengo);
     datos_que_hay = conjunto(datos_que_hay);
+    var L = lasLlaves(T), D = losDatos(T), CD = losComoDatos(T);
     var opciones = [];
 
-    Object.keys(LLAVES).forEach(function (k) {
+    Object.keys(L).forEach(function (k) {
       if (tengo.has(k)) return;
-      var pendientes = LLAVES[k].necesita.filter(function (d) { return !tengo.has(d); });
+      var pendientes = L[k].necesita.filter(function (d) { return !tengo.has(d); });
       if (pendientes.length) return;
-      var gana = cuanto_desbloquea(k, tengo, datos_que_hay);
+      var gana = cuanto_desbloquea(k, tengo, datos_que_hay, T);
       if (gana <= 0) return;
-      opciones.push([gana, -LLAVES[k].esfuerzo, k, "llave"]);
+      opciones.push([gana, -L[k].esfuerzo, k, "llave"]);
     });
 
-    Object.keys(DATOS).forEach(function (d) {
+    Object.keys(D).forEach(function (d) {
       if (datos_que_hay.has(d)) return;
-      var gana = cuanto_desbloquea_dato(d, tengo, datos_que_hay);
+      var gana = cuanto_desbloquea_dato(d, tengo, datos_que_hay, T);
       if (gana <= 0) return;
-      var c = COMO_DATOS[d] || { esfuerzo: 0 };
+      var c = CD[d] || { esfuerzo: 0 };
       opciones.push([gana, -c.esfuerzo, d, "dato"]);
     });
 
@@ -261,21 +293,23 @@
 
     var g = opciones[0];
     if (g[3] === "dato") {
-      var cd = COMO_DATOS[g[2]] || { como: "Me lo dices y seguimos.", pide_a: "agencia", esfuerzo: 0 };
+      var cd = CD[g[2]] || { como: "Me lo dices y seguimos.", pide_a: "agencia", esfuerzo: 0 };
       return { tipo: "dato", dato: g[2], llave: null, desbloquea: g[0],
-               que: DATOS[g[2]], como: cd.como,
+               que: D[g[2]], como: cd.como,
                necesita: [], pide_a: cd.pide_a, esfuerzo: cd.esfuerzo };
     }
-    var info = LLAVES[g[2]];
+    var info = L[g[2]];
     return { tipo: "llave", llave: g[2], dato: null, desbloquea: g[0],
              que: info.que, como: info.como,
              necesita: info.necesita, pide_a: info.pide_a, esfuerzo: info.esfuerzo };
   }
 
-  function bloqueado_por(llave, tengo) {
+  function bloqueado_por(llave, tengo, T) {
     tengo = conjunto(tengo);
     if (tengo.has(llave)) return null;
-    var faltan = LLAVES[llave].necesita.filter(function (d) { return !tengo.has(d); });
+    var L = lasLlaves(T);
+    if (!L[llave]) return null;
+    var faltan = L[llave].necesita.filter(function (d) { return !tengo.has(d); });
     return faltan.length ? faltan : null;
   }
   /* ================= ANTICIPACION ================= */
@@ -325,21 +359,23 @@
     return true;
   }
 
-  function buscar_tarea(nombre) {
-    for (var i = 0; i < TAREAS.length; i++) if (TAREAS[i][0] === nombre) return TAREAS[i];
+  function buscar_tarea(nombre, T) {
+    var TT = lasTareas(T);
+    for (var i = 0; i < TT.length; i++) if (TT[i][0] === nombre) return TT[i];
     return null;
   }
 
-  function adelantarse(exp, tengo_llaves) {
+  function adelantarse(exp, tengo_llaves, T) {
+    var G = elGuion(T);
     var hecho_ahora = [], para_pedir = [];
-    for (var vuelta = 0; vuelta < GUION.length; vuelta++) {
+    for (var vuelta = 0; vuelta < G.length; vuelta++) {
       var avance = false;
-      for (var i = 0; i < GUION.length; i++) {
-        var paso = GUION[i];
+      for (var i = 0; i < G.length; i++) {
+        var paso = G[i];
         if (!toca(paso, exp)) continue;
-        var tarea = buscar_tarea(paso.tarea);
+        var tarea = buscar_tarea(paso.tarea, T);
         if (!tarea) continue;
-        var e = estado(tarea, tengo_llaves, exp.datos), anillo = e[0], info = e[1];
+        var e = estado(tarea, tengo_llaves, exp.datos, T), anillo = e[0], info = e[1];
         if (anillo === "VERDE") {
           exp.hechos.add(paso.paso);
           exp.diario.push(paso.tarea);
@@ -355,7 +391,7 @@
     }
     var aviso = null;
     if (para_pedir.length && exp.avisos_hoy < TOPE_AVISOS_DIA) {
-      aviso = montar_aviso(para_pedir, exp);
+      aviso = montar_aviso(para_pedir, exp, T);
       para_pedir.forEach(function (x) { exp.avisados.add(x[0].paso); });
       exp.avisos_hoy += 1;
     }
@@ -363,7 +399,8 @@
   }
   /* Se agrupa por LO QUE FALTA, no por tarea: si tres cosas esperan
      lo mismo, es UNA frase y no tres. */
-  function montar_aviso(para_pedir, exp) {
+  function montar_aviso(para_pedir, exp, T) {
+    var L = lasLlaves(T), D = losDatos(T);
     var grupos = [];
     function busca(clave) {
       for (var i = 0; i < grupos.length; i++) if (grupos[i].clave === clave) return grupos[i];
@@ -372,7 +409,7 @@
     para_pedir.forEach(function (x) {
       var paso = x[0], info = x[1], clave;
       if (info.tipo === "dato") clave = "dato|" + info.falta.join(",");
-      else clave = "llave|" + info.falta.filter(function (k) { return !!LLAVES[k]; }).join(",");
+      else clave = "llave|" + info.falta.filter(function (k) { return !!L[k]; }).join(",");
       busca(clave).tareas.push(paso.tarea);
     });
     var orden = grupos.slice().sort(function (a, b) { return b.tareas.length - a.tareas.length; });
@@ -389,10 +426,10 @@
       var trozos = g.clave.split("|"), tipo = trozos[0];
       var falta = trozos[1] ? trozos[1].split(",") : [];
       if (tipo === "dato") {
-        var que = falta.map(function (d) { return DATOS[d].toLowerCase(); }).join(" y ");
+        var que = falta.map(function (d) { return D[d].toLowerCase(); }).join(" y ");
         frases.push("Para " + enumera(g.tareas) + " me falta " + que + ".");
       } else {
-        var q = falta.map(function (k) { return LLAVES[k].que.toLowerCase(); }).join(" y ");
+        var q = falta.map(function (k) { return L[k].que.toLowerCase(); }).join(" y ");
         frases.push("Tengo listo " + enumera(g.tareas) + ". Para mandarlo necesito " + q + ".");
       }
     });
@@ -407,8 +444,19 @@
     return "En " + exp.nombre + " he hecho esto yo sola: " + exp.diario.join("; ") + ".";
   }
 
+  /* Las tablas de casa, empaquetadas, por si alguien quiere pasarlas
+     explicitamente o compararlas con las de otra rama. Son LOS MISMOS
+     objetos de arriba, no una copia. */
+  var COMPRAVENTA = {
+    rama: "compraventa", IMPOSIBLE: IMPOSIBLE,
+    LLAVES: LLAVES, DATOS: DATOS, COMO_DATOS: COMO_DATOS,
+    TAREAS: TAREAS, GUION: GUION
+  };
+
   var API = {
-    version: "1.0",
+    version: "1.1",
+    rama: "compraventa",
+    COMPRAVENTA: COMPRAVENTA,
     IMPOSIBLE: IMPOSIBLE, LLAVES: LLAVES, DATOS: DATOS, COMO_DATOS: COMO_DATOS,
     TAREAS: TAREAS, GUION: GUION,
     TOPE_AVISOS_DIA: TOPE_AVISOS_DIA,

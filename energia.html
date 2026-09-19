@@ -371,7 +371,14 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
        ventilación. Si el agua caliente es de bombona y no hay aire acondicionado,
        las placas no tienen consumo eléctrico que compensar y no hay 40 %.
        Mientras no lo sepamos, se cuenta a CERO: mejor prometer de menos. */
-    var aptoDeduccion = (R.agua === "electrico") || (R.aire === "si");
+    /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): faltaba mirar el TIPO de vivienda.
+       Un apartamento de alquiler turístico NO tiene esta deducción: la norma la da a
+       la vivienda habitual o a la que esté «arrendada para su uso como vivienda», y
+       un turístico no es ninguna de las dos. Esta página se la enseñaba igual en
+       cuanto el agua era eléctrica o había aire. renovables_vacacional.html ya lo
+       decía bien; esta no. Ahora dicen lo mismo. */
+    var esTuristico  = (R.tipo === "vac");
+    var aptoDeduccion = !esTuristico && ((R.agua === "electrico") || (R.aire === "si"));
     var gastoCert = (CC && CC.deduccion && CC.deduccion.sinCertificados) ? 0 : COSTE_CERT;
 
     /* El descuento que le negociamos al instalador se lo pasamos a él. */
@@ -443,7 +450,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       ahorroPropio:ahorroPropio, ahorroAno:ahorroAno, ahorroCede:ahorroCede,
       ahorroMes:ahorroMes, factura:factura, luzNueva:luzNueva,
       irpf:irpf, irpfEstado:irpfEstado, irpfTipo:irpfTipo, irpfCcaa:irpfCcaa, esForal:esForal,
-      aptoDeduccion:aptoDeduccion,
+      aptoDeduccion:aptoDeduccion, esTuristico:esTuristico,
       descuento:descuento, gasto:gasto,
       subv:subv, subvNota:subvNota,
       ccaaNom: CC ? CC.nombre : "—", ccaaDed: (CC && CC.deduccion) ? CC.deduccion : null,
@@ -1035,9 +1042,27 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     ia("<p>¿Y qué tipo de vivienda es?</p>");
     opciones([
       { texto:"Casa con tejado propio", hacer:function(){ yo("Casa con tejado propio"); R.tipo = "casa"; guardar(); tras(paso4); } },
-      { texto:"Apartamento de alquiler vacacional", hacer:function(){ yo("Apartamento vacacional"); R.tipo = "vac"; guardar(); tras(paso4); } },
+      { texto:"Apartamento de alquiler vacacional", hacer:function(){ yo("Apartamento vacacional"); R.tipo = "vac"; guardar(); avisoTuristico(); tras(paso4); } },
       { texto:"Piso en un edificio", pie:"Tejado compartido", hacer:function(){ yo("Piso en un edificio"); R.tipo = "piso"; guardar(); esPiso(); } }
     ], true);
+  }
+
+  /* 🔴 AÑADIDO (19/09/2026 · LOS_ENCHUFES): el tipo de vivienda se pregunta DESPUÉS
+     del agua y del aire, así que en el paso del aire esta página ya le ha dicho
+     «la deducción del 40 % te puede salir» —o «si cambias la bombona, entonces sí»—
+     sin saber todavía que es un turístico. Las dos frases se quedan escritas arriba
+     en la conversación. Aquí se corrige en voz alta, que es lo que haría una persona,
+     en vez de dejarlas vivas. */
+  function avisoTuristico(){
+    ia("<p><b>Entonces me corrijo antes de seguir.</b> Lo que te he dicho arriba de la "
+     + "deducción del 40 % vale para una vivienda: la norma la da a la <b>vivienda "
+     + "habitual</b> o a la que tengas <b>«arrendada para su uso como vivienda»</b>, y un "
+     + "alquiler turístico no es ninguna de las dos. <b>En tu cuenta va a cero</b>, tengas "
+     + "termo eléctrico o no.</p>"
+     + "<p><b>Y esto no te lo doy por cerrado:</b> pregúntalo en la Agencia Tributaria o a "
+     + "tu gestor antes de contar con ese dinero. Lo que sí puedes mirar con él es "
+     + "<b>amortizar la instalación</b> contra los ingresos del alquiler, y solo por los "
+     + "días alquilados — eso no está metido en esta cuenta.</p>");
   }
 
   function esPiso(){
@@ -1228,11 +1253,22 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
           ? fila("Deducción estatal del IRPF", "no aplica · " + esc(d.ccaaNom) + " tiene IRPF propio")
           : d.irpfEstado > 0
             ? fila("Deducción estatal del IRPF (" + (d.irpfTipo || "40 %") + ")", "− " + eur(d.irpfEstado), "resta")
-            : fila("Deducción estatal del IRPF", "0 € · no llegas a la cuota"))
+            : fila("Deducción estatal del IRPF",
+                   d.esTuristico ? "0 € · no aplica al alquiler turístico"
+                   : (R.irpf !== "si") ? "0 € · no llegas a la cuota"
+                   : "0 € · sin consumo eléctrico que compensar"))
       + (d.irpfCcaa > 0
           ? fila("Deducción de " + d.ccaaNom + " (" + Math.round(d.ccaaDed.pct*100) + " %)", "− " + eur(d.irpfCcaa), "resta")
           : d.ccaaDed
-            ? fila("Deducción de " + d.ccaaNom, "0 € · no llegas a la cuota")
+            /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): esta fila daba SIEMPRE el mismo
+               motivo —«no llegas a la cuota»— aunque el cero viniera de otra cosa. A un
+               turístico que paga IRPF de sobra le estaba diciendo algo falso. Aquí se dice
+               lo que hace esta página, no lo que dice la norma de cada comunidad: la nota
+               de debajo de la tabla ya trae la condición que pone cada una. */
+            ? fila("Deducción de " + d.ccaaNom,
+                   d.esTuristico ? "0 € · no la contamos en un alquiler turístico"
+                   : (R.irpf !== "si") ? "0 € · no llegas a la cuota"
+                   : "0 € · sin consumo eléctrico que compensar")
             : fila("Deducción autonómica", "no existe en " + d.ccaaNom))
       + (d.subv > 0
           ? fila("Subvención de " + d.ccaaNom, "− " + eur(d.subv), "resta")
@@ -1268,7 +1304,22 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     if(!d.aptoDeduccion && R.irpf === "si"){
       var avD = document.createElement("div");
       avD.className = "ojo";
-      avD.innerHTML = "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
+      /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): este texto daba UNA sola explicación
+         —la del agua y el aire— y ofrecía una salida —«pon un termo y sí sale»— que a un
+         apartamento turístico NO le vale. Ahora cada caso lee su motivo. */
+      avD.innerHTML = d.esTuristico
+        ? "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
+        + "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. "
+        + "El motivo es el uso del apartamento: la deducción del 40 % es para la "
+        + "<b>vivienda habitual</b> o para la que tengas <b>«arrendada para su uso como "
+        + "vivienda»</b>, y un alquiler turístico no es ninguna de las dos. Un termo "
+        + "eléctrico o un aire acondicionado <b>no lo cambian</b>.<br><br>"
+        + "<b>Sin confirmar:</b> pregúntalo en la Agencia Tributaria o a tu gestor antes de "
+        + "contar con ese dinero. Aquí va a cero porque preferimos prometer de menos. "
+        + "Lo que sí puedes mirar con tu gestor es <b>amortizar la instalación</b> contra "
+        + "los ingresos del alquiler, y solo por los días alquilados; no está en esta "
+        + "cuenta. Y las placas te siguen ahorrando luz igual: lo que no habrá es devolución."
+        : "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
         + "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. "
         + "El motivo: Hacienda no paga por poner placas, paga porque tu casa gaste menos "
         + "energía de la sucia — y eso solo se mide en calefacción, aire, agua caliente y "
@@ -2068,7 +2119,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         faltan: ["irpf","agua","aire","factura","tipo"].filter(function(k){ return !R[k]; })
                  .concat(R.ccaaElegida ? [] : ["donde"]),
         completo: !!(R.irpf && R.agua && R.aire && R.factura && R.tipo && R.ccaaElegida),
-        aptoDeduccion: (R.agua === "electrico") || (R.aire === "si"),
+        aptoDeduccion: (R.tipo !== "vac") && ((R.agua === "electrico") || (R.aire === "si")),
+        esTuristico: (R.tipo === "vac"),
         iaViva: iaPuesta && !!document.getElementById("ia-txt")
       };
     },
