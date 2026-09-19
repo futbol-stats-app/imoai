@@ -139,9 +139,16 @@ window.IMMOIA_CHARLA = { version: "2026-09-11+modulos", microfono: "avisa" };  /
      saber.js       le pone delante las ayudas del sitio del que se hable
      papeles.js     botones para bajar lo que escribe en PDF o Word
      firma.js       el boton Firmar, con AutoFirma
+     secretaria_sabe.js  le pone delante el RESUMEN de la cartera de la
+                    oficina: cuantos expedientes, cual vence, cual esta
+                    parado y que papel falta en cual. Sin esto, cuando la
+                    directora pregunta «que tengo pendiente» no tiene con
+                    que contestar: en la peticion no iba un solo dato de
+                    su oficina. Solo hace algo si hay cartera en la
+                    pagina; en la portada no anade ni una letra.
    Si algun dia molestan, se borran estas lineas y todo vuelve a estar igual. */
 (function(){
-  ["secretaria.js?v=1", "saber.js?v=2", "papeles.js?v=2", "firma.js?v=1"].forEach(function(f){
+  ["secretaria.js?v=1", "saber.js?v=2", "papeles.js?v=2", "firma.js?v=1", "secretaria_sabe.js?v=1"].forEach(function(f){
     var s = document.createElement("script"); s.src = f;
     (document.body || document.documentElement).appendChild(s);
   });
