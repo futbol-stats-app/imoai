@@ -135,9 +135,12 @@ table.t td.resta{color:var(--verde)}
   <p class="sub">Pon tus datos y te sale el número: lo que pagas, lo que te devuelven y
   lo que te queda al mes. Con las ayudas que están abiertas hoy, no las del año pasado.</p>
 
-  <div class="reloj">
+  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+       Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
+       datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
+  <div class="reloj" id="reloj" hidden>
     <b id="reloj-dias">—</b>
-    <span id="reloj-txt">para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
+    <span id="reloj-txt"></span>
   </div>
 
   <!-- ============ LA CALCULADORA ============ -->
@@ -271,7 +274,10 @@ table.t td.resta{color:var(--verde)}
       <li><b>Hoy no hay ninguna subvención abierta en Tenerife.</b> Las dos convocatorias
       canarias cerraron el 22 de junio y el 31 de agosto de 2026. Es probable que salga otra,
       pero <b>no está anunciada</b>.</li>
-      <li><b>La deducción del IRPF se acaba el 31 de diciembre de 2026</b> para una vivienda.
+      <!-- 19/09/2026 · tanda 8: la fecha ya no está escrita a mano. La pone el script
+           desde datos.js. Si datos.js no la trae, la frase se queda sin fecha y sigue
+           teniendo sentido: nunca se inventa ninguna. -->
+      <li><b>La deducción del IRPF para una vivienda tiene fecha de caducidad<span id="fin-vivienda"></span>.</b>
       En 2027 solo sigue para edificios completos.</li>
       <li><b>Es una deducción, no un cheque.</b> Si no pagas IRPF, no hay de dónde
       descontarla.</li>
@@ -285,12 +291,21 @@ table.t td.resta{color:var(--verde)}
   <section class="caja">
     <h2>De dónde salen los números</h2>
     <div class="aviso"><span class="pun"></span><span>
-      <b>Deducción del IRPF: 40 %, o ninguna</b>
-      Real Decreto-ley 7/2026, convalidado por el Congreso el 27 de marzo de 2026. La del
-      40 % tiene base máxima de 7.500 € y necesita los dos certificados energéticos.
-      <b>No existe ninguna deducción del 10 %</b> por poner placas: lo que hay además es una
-      del 20 %, que exige bajar la demanda de calefacción y refrigeración, y eso las placas
-      no lo hacen. Sin certificados, aquí no contamos ni un euro.</span></div>
+      <b>Deducción del IRPF: hay dos, y no son la misma</b>
+      Real Decreto-ley 7/2026, de 20 de marzo, convalidado por el Congreso el 26 de marzo de
+      2026 (Resolución del Congreso de 26/03/2026, BOE-A-2026-7125, BOE de 28/03/2026).
+      La deducción del 40 % es por obras de eficiencia energética: tiene base máxima de
+      7.500 € y necesita los dos certificados energéticos. Es la que calcula esta página, y
+      sin esos certificados aquí no contamos ni un euro.
+      <b>Y sí existe otra deducción, la del 10 % por poner placas</b> (autoconsumo), creada
+      por ese mismo Real Decreto-ley, con un tope de 5.000 € de base. <b>Esa no pide los dos
+      certificados energéticos</b>: le basta el Certificado de Instalación Eléctrica que te
+      da el instalador, y exige que la instalación se termine y se pague dentro de 2026.
+      Esta calculadora no te la descuenta porque aquí no te preguntamos si pagas IRPF ni en
+      qué comunidad vives: el número con esa deducción te sale en
+      <a href="energia.html">IMMO IA Energía</a>. <b>Pregúntala antes de renunciar a ella.</b>
+      Fuente: BOLINFORM de la Agencia Tributaria sobre el RDL 7/2026, consultado el 16 de
+      septiembre de 2026.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Bonificación del IBI</b>
       Ordenanzas municipales, trece municipios de Tenerife. Güímar es el más largo (50 %
@@ -335,7 +350,13 @@ table.t td.resta{color:var(--verde)}
   var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
   var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
   var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
-  /* BASE_10 se ha quitado: no existe ninguna deducción del 10 % (datos.js, línea 140). */
+  /* 19/09/2026 · tanda 8. Aquí se negaba en redondo la deducción del 10 %, y era falso.
+     La del 10 % por AUTOCONSUMO sí existe (RDL 7/2026) y está en datos.js, en
+     irpfEstatal.autoconsumo. Lo que no existe es un 10 % dentro de la deducción por OBRAS,
+     que es de la que habla esta calculadora. Aquí se sigue sin calcular la del 10 % a
+     propósito: esta página no pregunta si el cliente paga IRPF ni en qué comunidad vive, y
+     prometer de más no se arregla. Quien la calcula es energia.html, y el texto de «De
+     dónde salen los números» se lo dice al cliente y le manda allí. */
   var BASE_40     = 7500;
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);   /* prestamo verde a plazo largo, dato publicado */
@@ -362,15 +383,41 @@ table.t td.resta{color:var(--verde)}
   function $(id){ return document.getElementById(id); }
   function eur(n){ return Math.round(n).toLocaleString("es-ES") + " €"; }
 
+  /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
+     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
+     "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
+     se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.
+     Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE ENSENA NADA:
+     nunca se inventa una fecha. */
+  var MESES_FIN = ["enero","febrero","marzo","abril","mayo","junio",
+                   "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  function finDeduccion(){
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(((D.fechas || {}).finDeduccionVivienda) || ""));
+    if(!m) return null;
+    var ano = Number(m[1]), mes = Number(m[2]), dia = Number(m[3]);
+    if(!(mes >= 1 && mes <= 12) || !(dia >= 1 && dia <= 31)) return null;
+    var f = new Date(ano, mes - 1, dia);
+    if(f.getFullYear() !== ano || f.getMonth() !== mes - 1 || f.getDate() !== dia) return null;
+    return { fecha: f, texto: dia + " de " + MESES_FIN[mes - 1] + " de " + ano };
+  }
+
   /* ---------- la cuenta atras ---------- */
   (function reloj(){
-    var fin = new Date(2026, 11, 31);
-    var dias = Math.ceil((fin - new Date()) / 86400000);
+    var caja = $("reloj");
+    var fin  = finDeduccion();
+    /* la misma fecha, en la lista de "Antes de decidir, esto" */
+    var cajaFin = $("fin-vivienda");
+    if(cajaFin) cajaFin.textContent = fin ? (": el " + fin.texto) : "";
+    if(!fin){ if(caja) caja.hidden = true; return; }
+    if(caja) caja.hidden = false;
+    var dias = Math.ceil((fin.fecha - new Date()) / 86400000);
     if(dias > 0){
       $("reloj-dias").textContent = dias + (dias === 1 ? " día" : " días");
+      $("reloj-txt").textContent  = "para que se acabe la deducción del IRPF (" + fin.texto + ")";
     } else {
       $("reloj-dias").textContent = "Se acabó";
-      $("reloj-txt").textContent = "el plazo de la deducción del IRPF para viviendas terminó el 31 de diciembre de 2026";
+      $("reloj-txt").textContent  = "el plazo de la deducción del IRPF para viviendas terminó el " + fin.texto;
     }
   })();
 
@@ -390,10 +437,13 @@ table.t td.resta{color:var(--verde)}
     var ahorroAno = propio * PRECIO_LUZ + sobrante * PRECIO_EXC;
 
     var gastoCert = cert ? COSTE_CERT : 0;
-    /* 🔴 ARREGLADO (C2): aquí se aplicaba un 10 % que NO EXISTE (datos.js, línea 140).
-       Las modalidades reales son 20 % (bajando la demanda, que las placas no bajan),
-       40 % (con los dos certificados) y 60 % (edificio entero). Sin certificados no se
-       promete nada: cero, y la pantalla lo dice. */
+    /* 🔴 ARREGLADO (C2): aquí se aplicaba un 10 % sobre la deducción por OBRAS, y dentro de
+       esa deducción el 10 % no existe: sus modalidades son 20 % (bajando la demanda, que las
+       placas no bajan), 40 % (con los dos certificados) y 60 % (edificio entero).
+       19/09/2026 · tanda 8: lo que SÍ existe, y es OTRA deducción distinta, es la del 10 %
+       por autoconsumo del RDL 7/2026 (datos.js, irpfEstatal.autoconsumo). Esta página sigue
+       sin calcularla —no pregunta si el cliente paga IRPF ni dónde vive— pero ya no le dice
+       al cliente que no existe. Sin certificados, el 40 % sigue siendo cero. */
     var irpf = cert
       ? 0.40 * Math.min(coste + gastoCert, BASE_40)
       : 0;
@@ -482,7 +532,7 @@ table.t td.resta{color:var(--verde)}
       cert ? ["Los dos certificados energéticos", eur(gastoCert), ""] : null,
       cert
         ? ["Deducción del IRPF (40 %)", "− " + eur(irpf), "resta"]
-        : ["Deducción del IRPF", "0 € · sin los dos certificados no hay deducción", ""],
+        : ["Deducción del IRPF", "0 € · sin los dos certificados aquí no contamos el 40 %. La del 10 % por autoconsumo va aparte: mírala en IMMO IA Energía", ""],
       (b[0] > 0 && ibiAn > 0)
         ? ["Bonificación del IBI (" + Math.round(b[0]*100) + " % durante " + b[1] + " años)", "− " + eur(ibiTotal), "resta"]
         : ["Bonificación del IBI", b[0] > 0 ? "nos falta tu recibo del IBI" : "sin publicar", ""],

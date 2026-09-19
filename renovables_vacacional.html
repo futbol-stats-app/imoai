@@ -140,9 +140,12 @@ table.t td.resta{color:var(--verde)}
   cobrar más luz de la que gastas</b>. Y como está vacío buena parte del año, gastas poco. Pon
   tus datos y verás cuánta luz produces que no puedes ni usar ni cobrar.</p>
 
-  <div class="reloj">
+  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+       Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
+       datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
+  <div class="reloj" id="reloj" hidden>
     <b id="reloj-dias">—</b>
-    <span id="reloj-txt">para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
+    <span id="reloj-txt"></span>
   </div>
 
   <!-- ============ LA CALCULADORA ============ -->
@@ -336,13 +339,23 @@ table.t td.resta{color:var(--verde)}
       Real Decreto 244/2019, artículo 14: el valor de la energía excedentaria no puede superar
       el de la energía consumida de la red en el periodo de facturación.</span></div>
     <div class="aviso"><span class="pun"></span><span>
-      <b>Deducción del IRPF: 40 % (y hay quien se queda sin ninguna)</b>
-      Real Decreto-ley 7/2026, convalidado el 27 de marzo de 2026. La del 40 % tiene base
-      máxima de 7.500 € y necesita los dos certificados energéticos. <b>No existe ninguna
-      deducción del 10 %</b> por poner placas: lo que hay además es una del 20 %, que exige
-      bajar la demanda de calefacción y refrigeración, cosa que las placas no hacen.
-      Sin los certificados, aquí no contamos ni un euro. Y solo vale para vivienda habitual
-      o arrendada para uso como vivienda.</span></div>
+      <b>Deducción del IRPF: hay dos, y al turístico no se le cuenta ninguna</b>
+      Real Decreto-ley 7/2026, de 20 de marzo, convalidado por el Congreso el 26 de marzo de
+      2026 (Resolución del Congreso de 26/03/2026, BOE-A-2026-7125, BOE de 28/03/2026).
+      La deducción del 40 % es por obras de eficiencia energética: tiene base máxima de
+      7.500 € y necesita los dos certificados energéticos. Es la que calcula esta página
+      cuando el piso es tu vivienda, y sin esos certificados aquí no contamos ni un euro.
+      <b>Y sí existe otra deducción, la del 10 % por poner placas</b> (autoconsumo), creada
+      por ese mismo Real Decreto-ley, con un tope de 5.000 € de base: a esa no le hacen falta
+      los dos certificados energéticos, le basta el Certificado de Instalación Eléctrica del
+      instalador. <b>Ojo con el turístico:</b> la del 40 % es solo para la vivienda habitual
+      o la arrendada «para su uso como vivienda», y un alquiler turístico no es ninguna de
+      las dos. Si en un turístico cabe o no la del 10 %, <b>no lo hemos podido confirmar</b>
+      con la Agencia Tributaria: mientras no se sepa, aquí se cuenta cero y hay que
+      preguntárselo al gestor. Si el piso lo usas como vivienda, el número con la del 10 %
+      te sale en <a href="energia.html">IMMO IA Energía</a>.
+      Fuente: BOLINFORM de la Agencia Tributaria sobre el RDL 7/2026, consultado el 16 de
+      septiembre de 2026.</span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Consumo del apartamento</b>
       Estimado en 10 kWh al día ocupado y 1,2 kWh al día vacío (nevera y espera).
@@ -380,7 +393,13 @@ table.t td.resta{color:var(--verde)}
   var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
   var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
   var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
-  /* BASE_10 se ha quitado: no existe ninguna deducción del 10 % (datos.js, línea 140). */
+  /* 19/09/2026 · tanda 8. Aquí se negaba en redondo la deducción del 10 %, y era falso.
+     La del 10 % por AUTOCONSUMO sí existe (RDL 7/2026) y está en datos.js, en
+     irpfEstatal.autoconsumo. Lo que no existe es un 10 % dentro de la deducción por OBRAS.
+     Aquí se sigue sin calcular la del 10 %: a un turístico no se le cuenta ninguna
+     deducción —y si le cabe la del 10 % está SIN CONFIRMAR con la AEAT—, y a la vivienda
+     esta página le calcula la del 40 %. El texto de «De dónde salen los números» se lo
+     explica al cliente. */
   var BASE_40     = 7500;
   var ICIO        = dato(DN.icio, 150);
   var TAE         = dato(DN.tae, 0.0625);
@@ -423,14 +442,37 @@ table.t td.resta{color:var(--verde)}
   function pct(n){ return Math.round(n * 100) + " %"; }
 
   /* ---------- la cuenta atras ---------- */
+  /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
+     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
+     "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
+     se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.
+     Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE ENSENA NADA:
+     nunca se inventa una fecha. */
+  var MESES_FIN = ["enero","febrero","marzo","abril","mayo","junio",
+                   "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  function finDeduccion(){
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(((D.fechas || {}).finDeduccionVivienda) || ""));
+    if(!m) return null;
+    var ano = Number(m[1]), mes = Number(m[2]), dia = Number(m[3]);
+    if(!(mes >= 1 && mes <= 12) || !(dia >= 1 && dia <= 31)) return null;
+    var f = new Date(ano, mes - 1, dia);
+    if(f.getFullYear() !== ano || f.getMonth() !== mes - 1 || f.getDate() !== dia) return null;
+    return { fecha: f, texto: dia + " de " + MESES_FIN[mes - 1] + " de " + ano };
+  }
+
   (function reloj(){
-    var fin = new Date(2026, 11, 31);
-    var dias = Math.ceil((fin - new Date()) / 86400000);
+    var caja = $("reloj");
+    var fin  = finDeduccion();
+    if(!fin){ if(caja) caja.hidden = true; return; }
+    if(caja) caja.hidden = false;
+    var dias = Math.ceil((fin.fecha - new Date()) / 86400000);
     if(dias > 0){
       $("reloj-dias").textContent = dias + (dias === 1 ? " día" : " días");
+      $("reloj-txt").textContent  = "para que se acabe la deducción del IRPF (" + fin.texto + ")";
     } else {
       $("reloj-dias").textContent = "Se acabó";
-      $("reloj-txt").textContent = "el plazo de la deducción del IRPF para viviendas terminó el 31 de diciembre de 2026";
+      $("reloj-txt").textContent  = "el plazo de la deducción del IRPF para viviendas terminó el " + fin.texto;
     }
   })();
 

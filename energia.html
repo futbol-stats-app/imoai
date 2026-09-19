@@ -161,9 +161,12 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     <i></i><i></i><i></i><i></i><i></i>
   </div>
 
-  <div class="reloj">
+  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+       Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
+       datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
+  <div class="reloj" id="reloj" hidden>
     <b id="reloj-dias">—</b>
-    <span>para que se acabe la deducción del IRPF (31 de diciembre de 2026)</span>
+    <span id="reloj-txt"></span>
   </div>
 
   <!-- 🔴 AÑADIDO (C2, 18/09/2026): faltaba el aviso de que quien contesta es una máquina.
@@ -910,12 +913,38 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     }
   }
 
+  /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
+     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
+     "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
+     se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.
+     Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE ENSENA NADA:
+     nunca se inventa una fecha. */
+  var MESES_FIN = ["enero","febrero","marzo","abril","mayo","junio",
+                   "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  function finDeduccion(){
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(((D.fechas || {}).finDeduccionVivienda) || ""));
+    if(!m) return null;
+    var ano = Number(m[1]), mes = Number(m[2]), dia = Number(m[3]);
+    if(!(mes >= 1 && mes <= 12) || !(dia >= 1 && dia <= 31)) return null;
+    var f = new Date(ano, mes - 1, dia);
+    if(f.getFullYear() !== ano || f.getMonth() !== mes - 1 || f.getDate() !== dia) return null;
+    return { fecha: f, texto: dia + " de " + MESES_FIN[mes - 1] + " de " + ano };
+  }
+
   /* ---------- la cuenta atrás ---------- */
   (function(){
-    var dias = Math.ceil((new Date(2026, 11, 31) - new Date()) / 86400000);
+    var caja = $("reloj");
+    var fin  = finDeduccion();
+    if(!fin){ if(caja) caja.hidden = true; return; }
+    if(caja) caja.hidden = false;
+    var dias = Math.ceil((fin.fecha - new Date()) / 86400000);
     $("reloj-dias").textContent = dias > 0
       ? dias + (dias === 1 ? " día" : " días")
       : "Se acabó el plazo";
+    $("reloj-txt").textContent = dias > 0
+      ? "para que se acabe la deducción del IRPF (" + fin.texto + ")"
+      : "de la deducción del IRPF, que terminó el " + fin.texto;
   })();
 
   /* ==========================================================
@@ -2190,7 +2219,11 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       return { eurPorPanel:EUR_PANEL, kwpPorPanel:KWP_PANEL, kwhPorKwp:KWH_POR_KWP,
                autoconsumo:AUTOCONSUMO, precioLuz:PRECIO_LUZ, costeCertificados:COSTE_CERT,
                baseDeduccion40:BASE_40, icio:ICIO, tae:TAE,
-               finDeduccionVivienda:"2026-12-31", finDeduccionEdificio:"2027-12-31" };
+               /* 19/09/2026 · tanda 8: estas dos fechas estaban escritas a mano aquí.
+                  Ahora salen de datos.js. Si no están, se devuelve null, y quien lea
+                  esto sabe que no hay fecha en vez de recibir una inventada. */
+               finDeduccionVivienda: ((D.fechas || {}).finDeduccionVivienda || null),
+               finDeduccionEdificio: ((D.fechas || {}).finDeduccionEdificio || null) };
     },
 
     /* ---- escribir ---- */
