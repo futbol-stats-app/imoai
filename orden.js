@@ -128,6 +128,41 @@
     },
 
     {
+      id: "plazo_ibi_no_es_igual",
+      tipo: "urgencia",
+      aplica: function (c) { return c.municipio !== null; },
+      titulo: "El plazo del IBI no es el 31 de diciembre en todas partes",
+      porque: "«Antes del 31 de diciembre» vale de regla general, pero hay ciudades grandes " +
+              "donde el plazo se cierra MUCHO antes y quien llega tarde pierde el año entero: " +
+              "Malaga cierra el 31 de enero (lo presentado despues cuenta ya para el ano " +
+              "siguiente), Sevilla exige pedirlo antes del 1 de marzo del ejercicio en que " +
+              "deba surtir efecto, Madrid solo da los cinco anos completos si se pide en el " +
+              "MISMO ano en que la instalacion se inscribe en el registro, y Barcelona da tres " +
+              "anos si se pide en los 6 primeros meses desde la legalizacion, dos si se pide " +
+              "entre 6 y 12 meses, y NADA pasados 12 meses.",
+      salida: "Antes de decirle una fecha al cliente se mira la ficha de SU municipio en " +
+              "publicar/municipios/. Si su municipio no esta en la ficha, se le dice que hay " +
+              "que mirar su ordenanza, no se le da el 31 de diciembre por bueno.",
+      fuente: "Ordenanzas fiscales y sedes de Madrid, Barcelona, Valencia, Sevilla y Malaga, consultadas el 18/09/2026"
+    },
+
+    {
+      id: "icio_antes_de_empezar",
+      tipo: "bloqueo",
+      aplica: function (c) { return c.municipio !== null && c.obraEmpezada === true; },
+      titulo: "La obra ya ha empezado: la bonificacion del ICIO puede estar perdida",
+      porque: "El ICIO se devenga al empezar la obra, aunque no se haya pedido licencia. " +
+              "Y la bonificacion tiene plazo propio: Barcelona exige pedirla ANTES DEL INICIO " +
+              "DE LAS OBRAS y despues la rechaza; Valencia da un mes desde la licencia; " +
+              "Madrid da dos meses desde la licencia, la declaracion responsable o la orden " +
+              "de ejecucion.",
+      salida: "Se comprueba la fecha de la licencia o de la declaracion responsable y se mira " +
+              "la ficha del municipio antes de contarle al cliente ese ahorro. Si el plazo ha " +
+              "pasado, se le dice: es dinero que ya no esta.",
+      fuente: "Ordenanzas fiscales del ICIO de Barcelona (art. 7e.4), Madrid (cap. VI, cod. 9114) y Valencia (HA.CO.30), consultadas el 18/09/2026"
+    },
+
+    {
       id: "amortizar_acortando",
       tipo: "consejo",
       aplica: function (c) { return c.conPrestamo === true; },
@@ -147,14 +182,14 @@
     { paso: 2, que: "Decidir a nombre de quién va la factura",
       ojo: "Si son dos titulares, se duplica el techo de 7.500 €." },
     { paso: 3, que: "Pedir la licencia o comunicación previa y liquidar el ICIO",
-      ojo: "La bonificación del ICIO se pide con la licencia, no después." },
+      ojo: "La bonificación del ICIO se pide con la licencia, no después. En Barcelona, ANTES de empezar la obra. En Madrid hay 2 meses desde la licencia o la declaración responsable; en València, 1 mes." },
     { paso: 4, que: "Firmar el préstamo, exigiendo poder acortar plazo al amortizar",
       ojo: "Y con la comisión de amortización anticipada por escrito." },
     { paso: 5, que: "Hacer la instalación" },
     { paso: 6, que: "Certificado energético FINAL",
       ojo: "La FECHA de este certificado es la que manda para la deducción." },
     { paso: 7, que: "Solicitar la bonificación del IBI",
-      ojo: "Antes del 31 de diciembre. No es retroactiva." },
+      ojo: "Antes del 31 de diciembre COMO REGLA GENERAL, pero mira la ficha de su municipio: Málaga cierra el 31 de enero, Sevilla el 1 de marzo, Barcelona cuenta 6 y 12 meses desde la legalización. No es retroactiva." },
     { paso: 8, que: "Declarar la deducción en la renta del ejercicio correspondiente" }
   ];
 
@@ -170,6 +205,8 @@
       vacacional:           c.vacacional === true ? true : (c.vacacional === false ? false : null),
       plazoAnos:            typeof c.plazoAnos === "number" ? c.plazoAnos : 0,
       conPrestamo:          c.conPrestamo === true,
+      municipio:            (typeof c.municipio === "string" && c.municipio) ? c.municipio : null,
+      obraEmpezada:         c.obraEmpezada === true,
       mes:                  typeof c.mes === "number" ? c.mes : (new Date().getMonth() + 1),
       diasHastaFinDeduccion: typeof c.diasHastaFinDeduccion === "number" ? c.diasHastaFinDeduccion : null
     };
@@ -193,7 +230,7 @@
     return out;
   }
 
-  global.IMMOIA_ORDEN = { version: "1.0", revisado: "2026-09-11", revisar: revisar, reglas: REGLAS, orden: ORDEN_TRAMITES };
+  global.IMMOIA_ORDEN = { version: "1.1", revisado: "2026-09-18", revisar: revisar, reglas: REGLAS, orden: ORDEN_TRAMITES };
 
 })(typeof window !== "undefined" ? window : globalThis);
 
