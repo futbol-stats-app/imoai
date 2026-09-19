@@ -184,7 +184,10 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     respuestas de la calculadora — nunca tu nombre, tu teléfono ni tu correo.
     Lo que escribas o dictes a la IA se envía a Anthropic (EE. UU.) para redactar la respuesta:
     al escribirle lo aceptas. No le pongas datos personales reales.
-    Datos revisados el <b>10 de septiembre de 2026</b>.
+    <!-- 19/09/2026: esta fecha ya no se escribe a mano. La pone el script de abajo
+         leyendo datos.js (DATOS_IMMOIA.revisado). Si datos.js no trae fecha, aquí
+         no aparece nada: no nos inventamos ninguna. -->
+    <span id="fecha-datos"></span>
     <a href="privacidad.html">Política de privacidad</a> ·
     <button class="reiniciar" id="reiniciar" type="button">Empezar de nuevo</button>
   </p>
@@ -210,6 +213,33 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var D = window.DATOS_IMMOIA || {};
   var DN = D.numeros || {};
   function dato(v, porDefecto){ return (v === undefined || v === null) ? porDefecto : v; }
+
+  /* ==========================================================
+     0 · LA FECHA DE LOS DATOS
+     ----------------------------------------------------------
+     19/09/2026. Antes esta fecha estaba escrita a mano en el pie,
+     con el día y el mes a pelo, y se quedaba vieja cada vez que
+     entraban datos nuevos. Ahora sale de datos.js y solo de ahí.
+     Si datos.js no cargó, o no trae fecha, o la trae mal escrita,
+     NO SE ESCRIBE NADA. Nunca se inventa una fecha.
+     ========================================================== */
+  (function fechaDeLosDatos(){
+    var caja = document.getElementById("fecha-datos");
+    if(!caja) return;
+    caja.textContent = "";
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(D.revisado || ""));
+    if(!m) return;
+    var ano = Number(m[1]), mes = Number(m[2]), dia = Number(m[3]);
+    var MESES = ["enero","febrero","marzo","abril","mayo","junio",
+                 "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    if(!(mes >= 1 && mes <= 12) || !(dia >= 1 && dia <= 31)) return;
+    /* el <b> se monta a mano con números ya validados por el regex de arriba */
+    var b = document.createElement("b");
+    b.textContent = dia + " de " + MESES[mes - 1] + " de " + ano;
+    caja.appendChild(document.createTextNode("Datos revisados el "));
+    caja.appendChild(b);
+    caja.appendChild(document.createTextNode(". "));
+  })();
 
   /* ==========================================================
      1 · LOS NÚMEROS
@@ -403,10 +433,29 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var irpfEstado = 0, irpfTipo = "";
     if(R.irpf === "si" && !esForal && aptoDeduccion){
       irpfEstado = 0.40 * Math.min(baseIrpf, BASE_40); irpfTipo = "40 %, eficiencia energética";
-    } else if(R.irpf === "si" && !esForal){
+    } else if(R.irpf === "si" && !esForal && !esTuristico){
       /* 18/09 · AUDITORIA (D-13): sin el 40 % queda la deduccion nueva por
          AUTOCONSUMO del RDL 7/2026: 10 %, base 5.000 €, solo instalaciones de
-         2026 con su certificado de instalacion electrica. No se suma al 40 %. */
+         2026 con su certificado de instalacion electrica. No se suma al 40 %.
+
+         🔴 EL !esTuristico ES DEL 19/09/2026 (tanda 7), Y NO VENIA EN NINGUNA
+         DE LAS DOS VERSIONES QUE SE HAN JUNTADO. Se encontro probando el
+         juntado, y estaba pasando YA EN LA WEB PUBLICADA, no lo trae el
+         juntado. Lo que pasaba: la tanda 4 cerro el 40 % al alquiler
+         turistico, pero la tanda 5 metio en datos.js esta segunda deduccion
+         estatal, y esta rama NO mira el tipo de vivienda. Resultado, medido
+         en la pagina publicada hoy: a un apartamento turistico le salia la
+         fila "Deduccion estatal del IRPF (10 %, autoconsumo 2026)  - 500 €"
+         Y JUSTO DEBAJO la frase "no he metido ni un euro de deduccion".
+         Las dos cosas en la misma pantalla.
+         Por que va a cero y no se deja: porque datos.js dice, para TODO el
+         bloque irpfEstatal, soloVivienda: "habitual o arrendada para su uso
+         como vivienda", y un turistico no es ninguna de las dos; y porque
+         renovables_vacacional.html, que es la pagina que la direccion dio
+         por buena, le da CERO de IRPF a un turistico, sin excepciones.
+         NO COMPROBADO: si la AEAT admite o no esta deduccion del 10 % en un
+         turistico. No se ha encontrado quien lo diga. Mientras no se sepa,
+         se cuenta a cero: prometer de menos se arregla, prometer de mas no. */
       var AC = (D.irpfEstatal || {}).autoconsumo;
       if(AC && new Date() <= new Date(AC.hasta + "T23:59:59")) { irpfEstado = AC.pct * Math.min(Math.max(0, coste - descuento - subv), AC.base); irpfTipo = "10 %, autoconsumo 2026"; }
     }
