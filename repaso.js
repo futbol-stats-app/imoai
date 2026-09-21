@@ -137,9 +137,9 @@
   /* La fianza no «caduca»: lo que corre es el mes que hay para depositarla
      desde la firma del contrato. Por eso va aparte, y solo salta cuando el
      contrato está firmado y el depósito NO consta. */
-  var FIANZA = { dias: 30,
-    dice: "la fianza hay que depositarla en el mes siguiente a la firma del contrato, y no hacerlo es infracción grave",
-    fuente: "Ley 2/2014 de Canarias, art. 2 · comprobado 18/09/2026" };
+  var FIANZA = { meses: 1,
+    dice: "la fianza hay que depositarla en el plazo de un mes contado desde la firma del contrato, y no hacerlo es infracción grave (multa del 35 % al 100 % de la fianza no depositada)",
+    fuente: "Ley 2/2014 de Canarias, art. 2.3 y art. 16 · el mes se cuenta de fecha a fecha (Código Civil, art. 5.1) · comprobado 20/09/2026" };
 
   /* La nota simple NO caduca por ley (Reglamento Hipotecario, art. 354.a,
      citado en la Resolución de la DGSJFP de 06/02/2023). Lo de refrescarla
@@ -170,6 +170,22 @@
   function masDias(iso, n) {
     if (!esFecha(iso)) return null;
     var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return aISO(d);
+  }
+  /* 20/09/2026 · tanda 13. UN MES NO SON 30 DÍAS.
+     El art. 2.3 de la Ley 2/2014 de Canarias da «el plazo de un mes contado
+     desde» la firma, y el art. 5.1 del Código Civil dice cómo se cuenta un
+     plazo por meses: «se computarán de fecha a fecha» y «cuando en el mes del
+     vencimiento no hubiera día equivalente al inicial del cómputo, se
+     entenderá que el plazo expira el último del mes».
+     Antes se sumaban 30 días: con un contrato firmado el 31 de enero daba el
+     2 de marzo, cuando el último día es el 28 de febrero. Dos días tarde. */
+  function masMeses(iso, n) {
+    if (!esFecha(iso)) return null;
+    var a = +iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
+    var total = (m - 1) + n, anio = a + Math.floor(total / 12), mes = ((total % 12) + 12) % 12;
+    var ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();   /* último día de ESE mes */
+    var dia = Math.min(d, ultimo);
+    return anio + "-" + (mes + 1 < 10 ? "0" : "") + (mes + 1) + "-" + (dia < 10 ? "0" : "") + dia;
   }
   function masAnios(iso, n) {
     if (!esFecha(iso)) return null;
@@ -499,7 +515,7 @@
       var df = eFianza && buscaDoc(docs, eFianza);
       if (!dc || !esFecha(dc.fecha) || !estaEnLaCarpeta(dc)) return;
       if (df && estaEnLaCarpeta(df)) return;            /* ya está depositada */
-      var tope = masDias(dc.fecha, FIANZA.dias);
+      var tope = masMeses(dc.fecha, FIANZA.meses);
       var q = entre(tope, hoy);
       if (q === null || q > 60) return;
       yo.plazos.push({ fecha: tope, que: "el depósito de la fianza", dias: q });

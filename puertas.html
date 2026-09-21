@@ -564,8 +564,8 @@ section.caja > h3{
 
   function panelVacacional(){
     var pisos = [
-      {s:"r", nom:"Apto. 214 · Edif. Los Geranios, Arona",  det:"Sin título municipal de actividad clasificada", plazo:"Plazo", sub:"31 jul 2027"},
-      {s:"a", nom:"Apto. 118 · Edif. Los Geranios, Arona",  det:"Memoria técnica entregada, falta presentar",     plazo:"Plazo", sub:"31 jul 2027"},
+      {s:"r", nom:"Apto. 214 · Edif. Los Geranios, Arona",  det:"Sin título municipal de actividad clasificada", plazo:"Sin fecha", sub:"confirmada"},
+      {s:"a", nom:"Apto. 118 · Edif. Los Geranios, Arona",  det:"Memoria técnica entregada, falta presentar",     plazo:"Sin fecha", sub:"confirmada"},
       {s:"v", nom:"Villa El Duque 7 · Adeje",               det:"Comunicación previa presentada y comprobada",    plazo:"En regla", sub:""},
       {s:"a", nom:"Apto. 3B · Playa Honda, Adeje",          det:"Energético clase F, hay que revisar el agua caliente", plazo:"Revisar", sub:"antes de presentar"}
     ];
@@ -578,11 +578,18 @@ section.caja > h3{
       + tile("2", "les falta algo")
       + tile("1", "sin el papel del ayuntamiento")
     + '</div>'
-    + caja("El plazo que manda",
-        aviso("31 de julio de 2027 · comunicación previa de actividad clasificada",
-              "Quien no la presente tiene que cesar la actividad turística. Los 88 ayuntamientos de Canarias aprobaron su plan de control el 13 de agosto de 2026 y han empezado cuatro años de inspecciones.")
-      + aviso("Lo que se pierde si no llega",
-              "El número de registro caduca y el piso deja de poder comercializarse en las plataformas."))
+    /* 20/09/2026 · tanda 13. AQUÍ HABÍA UNA FECHA QUE NO EXISTE.
+       Aquí se daba como plazo firme una fecha que no consta en el Boletín
+       Oficial de Canarias: se buscó y no aparece (la ley que se citaba es del
+       año anterior, con el año cambiado). No se sustituye por otra fecha: se
+       dice lo que sabemos y lo que no. Se quitan también las tres cifras que
+       la acompañaban -el número de ayuntamientos, la fecha de su plan de
+       control y los años de inspecciones-, que tampoco tienen boletín. */
+    + caja("El plazo: lo que sabemos y lo que no",
+        aviso("La fecha límite NO está publicada en ningún boletín",
+              "Se maneja una fecha, pero se ha buscado en el Boletín Oficial de Canarias y no aparece. Así que aquí no se da ninguna: antes de decidir nada, confírmalo en tu ayuntamiento y en el BOC. Si alguien te da una fecha, pídele el boletín y el artículo.")
+      + aviso("Lo que sí se sabe",
+              "Quien no presente la comunicación previa de actividad clasificada tiene que cesar la actividad turística, y el número de registro caduca: el piso deja de poder comercializarse en las plataformas."))
     + caja("Tus apartamentos", listaPisos(pisos) + leyenda())
     + caja("Lo que le falta a cada uno", '<div class="envoltorio-tabla">' + tabla([
         ["Comunicación previa actividad clasificada", "Apto. 214 Los Geranios", "espera", "Sin empezar"],

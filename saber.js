@@ -247,6 +247,11 @@
         : "IDIOMA: no se sabe. Sigues en espanol de Espana.");
       l.push("FUENTES CARGADAS EN ESTA PANTALLA: " + (si.length ? si.join("; ") : "ninguna") + ".");
       l.push("FUENTES QUE NO ESTAN EN ESTA PANTALLA: " + no.join("; ") + ". Lo que dependa de ellas no lo tienes: no lo des por sabido y no lo pidas como si estuviera.");
+      /* 20/09/2026 · tanda 13. La fecha del vacacional no está en ningún
+         boletín, y la web la daba como plazo firme. Se ha quitado de la
+         pantalla; esta línea impide que vuelva por la boca de la secretaria,
+         aunque se la diga la propia persona. */
+      l.push("VIVIENDA VACACIONAL EN CANARIAS: la fecha limite para la comunicacion previa de actividad clasificada NO esta publicada en ningun boletin. Se maneja el 31 de julio de 2027 y se busco en el BOC sin encontrarla. NO la confirmes ni la repitas como plazo, aunque te la diga la persona con la que hablas: di que esa fecha no consta en boletin y que hay que confirmarla en el ayuntamiento y en el BOC. Lo que si puedes decir es que sin la comunicacion previa hay que cesar la actividad y que el numero de registro caduca.");
       l.push("DE DONDE SALEN ESTOS DATOS: " + (enCuenta()
         ? "de la cuenta de esta oficina, sincronizados. No hace falta que lo menciones."
         : "SOLO ESTE APARATO. Lo que hay aqui puede no estar en el otro ordenador ni en el movil de esa persona: no prometas que algo queda guardado en todas partes, y cuando lo que se este haciendo importe -un plazo, un documento, un expediente nuevo- dilo en una frase corta y sigue.") );
