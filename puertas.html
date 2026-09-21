@@ -551,6 +551,7 @@ section.caja > h3{
     + caja("Lo que te puede desatascar una venta",
         aviso("3 compradores tuyos podrían llevar aval del Estado",
               "Menores de 36 o con hijos a cargo. El aval cubre hasta el 20 % del préstamo, y el 25 % si el piso es clase D o mejor. La hipoteca hay que firmarla antes del 31/12/2027.")
+      + enlaceAval()
       + aviso("2 de tus propietarios tienen vivienda vacacional sin el papel del ayuntamiento",
               "Se les puede caducar el número de registro. Es una llamada en la que tú eres el que avisa."))
     + caja("Este mes", tabla([
@@ -603,6 +604,13 @@ section.caja > h3{
   function tile(c,p){ return '<div class="dato"><div class="cifra">'+esc(c)+'</div><div class="pie">'+esc(p)+'</div></div>'; }
   function caja(t,c){ return '<section class="caja"><h3>'+esc(t)+'</h3>'+c+'</section>'; }
   function aviso(t,c){ return '<div class="aviso"><span class="pun"></span><span><b>'+esc(t)+'</b>'+esc(c)+'</span></div>'; }
+  /* 20/09/2026 · Pestaña 3 (el comprador). El panel presumía de «compradores con
+     aval posible» y no llevaba a ningún sitio. Ahora lleva a la calculadora. */
+  function enlaceAval(){
+    return '<a id="enlace-aval" href="calculadora.html?de=inmobiliaria" '
+      + 'style="display:inline-block;margin:4px 0 6px 21px;background:var(--marca);color:var(--sobre);text-decoration:none;'
+      + 'font-weight:800;font-size:15px;padding:11px 17px;border-radius:12px">Comprobar si un comprador encaja</a>';
+  }
 
   function listaPisos(ps){
     return '<div class="lista">' + ps.map(function(p){

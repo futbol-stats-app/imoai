@@ -122,7 +122,7 @@
     font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
     color:var(--muted);
   }
-  input[type=number], select{
+  input[type=number], input[type=text], select{
     font:inherit; font-size:1rem; color:var(--ink);
     background:var(--paper); border:1px solid var(--line);
     border-radius:8px; padding:10px 12px; width:100%;
@@ -225,19 +225,30 @@
     font-size:.86rem; color:var(--muted); line-height:1.55;
   }
   .disclaimer strong{color:var(--ink-soft);}
+
+  /* 20/09/2026 · Pestaña 3 (el comprador): volver, errores y notas */
+  .volver{display:inline-block; margin:0 0 18px; font-size:.92rem; color:var(--brand); text-decoration:none; font-weight:600;}
+  .volver:hover{text-decoration:underline;}
+  .errores{border-radius:var(--r); padding:18px 22px; border:1px solid var(--no); background:var(--no-wash); color:var(--ink);}
+  .errores b{color:var(--no);}
+  .errores ul{margin:8px 0 0; padding-left:20px;}
+  .nota-extra{margin-top:14px; padding:14px 16px; border-radius:8px; background:var(--brand-wash); border:1px solid var(--line); font-size:.93rem; color:var(--ink-soft);}
+  .nota-extra strong{color:var(--ink);}
+  input[aria-invalid="true"]{border-color:var(--no); outline:1px solid var(--no);}
 </style>
 </head>
 <body>
 
 <div class="wrap">
 
+  <a class="volver" id="volver" href="index.html">← IMMO IA · todas tus ayudas</a>
   <p class="eyebrow">Aval ICO · primera vivienda</p>
   <h1>¿Encajo en el aval?</h1>
   <p class="lede">Cuatro datos y te decimos si entras, y si no entras, exactamente por qué. Cada condición viene con la norma que la dice.</p>
 
   <div class="thesis">
     <span class="big">2.244 M€</span>
-    <span class="txt">Es lo que queda sin pedir de los 2.500 millones del aval. A cierre de 2025 se habían concedido 10.453 avales sobre un objetivo de más de 50.000. El plazo acaba el 31 de diciembre de 2027.</span>
+    <span class="txt">Es lo que quedaba sin usar de los 2.500 millones del aval a 31 de diciembre de 2025: hasta esa fecha se habían concedido 10.453 avales, cuando el Gobierno contaba con unas 50.000 compras. El plazo para firmar la hipoteca acaba el 31 de diciembre de 2027.</span>
   </div>
 
   <div class="card">
@@ -247,12 +258,12 @@
     <div class="grid">
       <div class="field">
         <label for="edad">Edad al firmar</label>
-        <input type="number" id="edad" min="18" max="99" value="31" inputmode="numeric">
+        <input type="text" id="edad" placeholder="por ejemplo, 31" inputmode="numeric" autocomplete="off">
       </div>
       <div class="field">
         <label for="ingresos">Ingresos brutos al año (€)</label>
-        <input type="number" id="ingresos" min="0" step="1000" value="32000" inputmode="numeric">
-        <span class="hint">De cada comprador por separado</span>
+        <input type="text" id="ingresos" placeholder="por ejemplo, 32000" inputmode="decimal" autocomplete="off">
+        <span class="hint">Brutos y al año, de cada comprador por separado. No es lo que te queda limpio al mes.</span>
       </div>
       <div class="field full">
         <label for="prov">Provincia donde está la vivienda</label>
@@ -260,21 +271,22 @@
       </div>
       <div class="field">
         <label for="precio">Precio de la vivienda (€)</label>
-        <input type="number" id="precio" min="0" step="5000" value="210000" inputmode="numeric">
+        <input type="text" id="precio" placeholder="por ejemplo, 210000" inputmode="decimal" autocomplete="off">
       </div>
       <div class="field">
         <label for="patrimonio">Tu patrimonio neto (€)</label>
-        <input type="number" id="patrimonio" min="0" step="5000" value="20000" inputmode="numeric">
+        <input type="text" id="patrimonio" placeholder="por ejemplo, 20000" inputmode="decimal" autocomplete="off">
+        <span class="hint">Lo que tienes menos lo que debes. Sin contar la casa que vas a comprar.</span>
       </div>
       <div class="field">
         <label for="menores">Menores a cargo</label>
-        <input type="number" id="menores" min="0" max="10" value="0" inputmode="numeric">
+        <input type="text" id="menores" value="0" inputmode="numeric" autocomplete="off">
       </div>
       <div class="field">
         <label for="energia">Calificación energética</label>
         <select id="energia">
           <option value="no">E, F, G o no la sé</option>
-          <option value="si">A, B, C o D</option>
+          <option value="si">A, B, C o D (el aval sube al 25 %)</option>
         </select>
       </div>
       <div class="field full">
@@ -288,15 +300,18 @@
     <button class="go" id="calc">Ver si encajo</button>
   </div>
 
-  <div id="out" hidden></div>
+  <div id="out" hidden role="status" aria-live="polite"></div>
 
   <div class="sources">
     <h5>De dónde sale cada número</h5>
     <ul>
-      <li><a href="https://www.ico.es/en/linea-avales-hipoteca-primera-vivienda" target="_blank" rel="noopener">ICO · Línea de avales para la adquisición de primera vivienda</a> — condiciones, porcentaje avalado, patrimonio máximo y tabla de precios máximos por comunidad autónoma.</li>
-      <li><a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-14404" target="_blank" rel="noopener">BOE de 2 de julio de 2026</a> — adenda al convenio Ministerio de Vivienda–ICO que prorroga la línea hasta el 31 de diciembre de 2027.</li>
-      <li>Límites de renta por provincia y comunidad: tablas oficiales del ICO vigentes desde el 19 de junio de 2026 (4,5 veces el IPREM en el tramo general, con tramos superiores en las provincias de más demanda).</li>
-      <li>Ejecución del programa a 31 de diciembre de 2025: 10.453 avales y 255,8 M€ sobre una dotación de 2.500 M€.</li>
+      <li><a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-14404" target="_blank" rel="noopener">BOE núm. 160, de 2 de julio de 2026 (BOE-A-2026-14404)</a> — adenda al convenio Ministerio de Vivienda–ICO: prórroga hasta el 31 de diciembre de 2027, patrimonio neto máximo de 150.000 €, máximo 35 años al firmar, techo de ingresos de 7,5 veces el IPREM y +70 % para familias monoparentales.</li>
+      <li><a href="https://www.ico.es/linea-avales-hipoteca-primera-vivienda" target="_blank" rel="noopener">ICO · Línea de avales para la adquisición de primera vivienda</a> (consultada el 20/09/2026) — el aval cubre hasta el 20 % del préstamo y hasta el 25 % si la vivienda tiene calificación energética D o mejor; dura los 10 primeros años; +0,3 veces el IPREM por cada menor a cargo.</li>
+      <li><a href="https://www.ico.es/documents/20124/777320/Precios+maximos+CCAA-+avales-jovenes-familias.pdf/ecedf846-95a6-66d4-99f4-4941e5bec442?t=1715080874074" target="_blank" rel="noopener">ICO · tabla de precios máximos por comunidad autónoma</a> — Canarias, 250.000 €.</li>
+      <li><a href="https://www.ico.es/documents/20124/777320/tabla+limites+IPREM+por+provincias.pdf/d530959d-2c15-e10f-6639-4a5d0b9016a2?t=1782284748836" target="_blank" rel="noopener">ICO · tabla de límites de ingresos por provincia</a>, vigente desde el 19 de junio de 2026: 7,5 · 6,5 · 5,5 o 4,5 veces el IPREM según la provincia. <a href="https://www.ico.es/el-gobierno-amplia-el-alcance-de-la-linea-de-avales-para-la-adquisicion-de-primera-vivienda-de-jovenes-y-familias-con-menores-a-cargo" target="_blank" rel="noopener">Nota del ICO de 24 de junio de 2026</a>: 4,5 veces son 37.800 € brutos al año por comprador.</li>
+      <li>IPREM: 600 € al mes, 8.400 € al año en 14 pagas. Fijado por la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128" target="_blank" rel="noopener">Ley 31/2022, de 23 de diciembre</a> (BOE de 24/12/2022) y prorrogado desde entonces. Es la cifra que usa el ICO: 4,5 × 8.400 = 37.800 €.</li>
+      <li>Ejecución a 31 de diciembre de 2025: 10.453 avales y 255,8 M€ sobre 2.500 M€. Lo dice el ICO en sus cuentas de 2025, según <a href="https://www.elespanol.com/invertia/observatorios/vivienda/20260216/aval-ico-jovenes-compren-primera-vivienda-moviliza-solo-millones-previstos/1003744129050_0.html" target="_blank" rel="noopener">El Español, 16/02/2026</a> (dato de un tercero, no de un boletín).</li>
+      <li><a href="https://www.ico.es/es/web/guest/entidades-linea-avales-hipoteca-primera-vivienda" target="_blank" rel="noopener">ICO · entidades adheridas</a> (consultada el 20/09/2026): más de 60 bancos y cajas.</li>
     </ul>
 
     <div class="disclaimer">
@@ -308,10 +323,32 @@
 </div>
 
 <script>
-(function(){
+/* ═══════════════════════════════════════════════════════════════════════════
+   ¿ENCAJO EN EL AVAL? — revisado el 20/09/2026 (Pestaña 3 · el comprador)
+
+   Lo que cambió respecto a la versión de agosto:
+     · Con la edad vacía, el precio a 0 o números imposibles decía «Encajas».
+       Ahora cada dato se comprueba y, si falta o es absurdo, lo dice y NO da
+       veredicto.
+     · Los límites de ingresos salen de la tabla del ICO por provincia en
+       «veces el IPREM» y del IPREM (8.400 € al año), no de euros escritos a mano.
+     · Ya no se inventa un 10 % de gastos de compra: no hay boletín detrás.
+     · «Compramos dos personas» hacía nada. Ahora explica qué cambia.
+     · Se puede llegar con la edad y la provincia ya puestas desde la portada.
+
+   La cuenta vive entera en evaluarAval(): no toca la página, para que la
+   prueba (prueba_el_comprador.mjs) la pueda ejecutar sin navegador.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/*<<CALCULO*/
+var AVAL = (function(){
   "use strict";
 
-  // Precio máximo de la vivienda, por comunidad autónoma (€)
+  /* IPREM anual en 14 pagas. Ley 31/2022 (BOE 24/12/2022), prorrogado.
+     El ICO lo usa así: nota de 24/06/2026, «37.800 euros» = 4,5 veces. */
+  var IPREM = 8400;
+
+  /* Precio máximo de la vivienda, por comunidad autónoma (€).
+     Tabla del ICO «Precios máximos CCAA». Canarias: 250.000 €. */
   var CCAA = {
     "Madrid":325000, "Cataluña":300000, "País Vasco":300000, "Navarra":300000,
     "Illes Balears":275000, "Aragón":275000, "Asturias":250000, "Cantabria":250000,
@@ -321,150 +358,241 @@
     "Extremadura":200000
   };
 
-  // provincia -> [comunidad, límite de renta por comprador]
+  /* provincia -> [comunidad, veces el IPREM]. Tabla del ICO vigente desde el
+     19/06/2026 («tabla límites IPREM por provincias»). */
   var PROV = {
-    "A Coruña":["Galicia",37800], "Álava":["País Vasco",54600], "Albacete":["Castilla-La Mancha",37800],
-    "Alicante":["Comunitat Valenciana",46200], "Almería":["Andalucía",37800], "Asturias":["Asturias",37800],
-    "Ávila":["Castilla y León",37800], "Badajoz":["Extremadura",37800], "Barcelona":["Cataluña",63000],
-    "Bizkaia":["País Vasco",63000], "Burgos":["Castilla y León",37800], "Cáceres":["Extremadura",37800],
-    "Cádiz":["Andalucía",46200], "Cantabria":["Cantabria",46200], "Castellón":["Comunitat Valenciana",37800],
-    "Ceuta":["Ceuta",46200], "Ciudad Real":["Castilla-La Mancha",37800], "Córdoba":["Andalucía",37800],
-    "Cuenca":["Castilla-La Mancha",37800], "Girona":["Cataluña",63000], "Gipuzkoa":["País Vasco",63000],
-    "Granada":["Andalucía",37800], "Guadalajara":["Castilla-La Mancha",37800], "Huelva":["Andalucía",37800],
-    "Huesca":["Aragón",37800], "Illes Balears":["Illes Balears",63000], "Jaén":["Andalucía",37800],
-    "La Rioja":["La Rioja",37800], "Las Palmas":["Canarias",46200], "León":["Castilla y León",37800],
-    "Lleida":["Cataluña",37800], "Lugo":["Galicia",37800], "Madrid":["Madrid",63000],
-    "Málaga":["Andalucía",63000], "Melilla":["Melilla",46200], "Murcia":["Murcia",37800],
-    "Navarra":["Navarra",46200], "Ourense":["Galicia",37800], "Palencia":["Castilla y León",37800],
-    "Pontevedra":["Galicia",46200], "Salamanca":["Castilla y León",37800],
-    "Santa Cruz de Tenerife":["Canarias",63000], "Segovia":["Castilla y León",37800],
-    "Sevilla":["Andalucía",37800], "Soria":["Castilla y León",37800], "Tarragona":["Cataluña",37800],
-    "Teruel":["Aragón",37800], "Toledo":["Castilla-La Mancha",37800],
-    "Valencia":["Comunitat Valenciana",46200], "Valladolid":["Castilla y León",37800],
-    "Zamora":["Castilla y León",37800], "Zaragoza":["Aragón",46200]
+    "A Coruña":["Galicia",4.5], "Álava":["País Vasco",6.5], "Albacete":["Castilla-La Mancha",4.5],
+    "Alicante":["Comunitat Valenciana",5.5], "Almería":["Andalucía",4.5], "Asturias":["Asturias",4.5],
+    "Ávila":["Castilla y León",4.5], "Badajoz":["Extremadura",4.5], "Barcelona":["Cataluña",7.5],
+    "Bizkaia":["País Vasco",7.5], "Burgos":["Castilla y León",4.5], "Cáceres":["Extremadura",4.5],
+    "Cádiz":["Andalucía",5.5], "Cantabria":["Cantabria",5.5], "Castellón":["Comunitat Valenciana",4.5],
+    "Ceuta":["Ceuta",5.5], "Ciudad Real":["Castilla-La Mancha",4.5], "Córdoba":["Andalucía",4.5],
+    "Cuenca":["Castilla-La Mancha",4.5], "Girona":["Cataluña",7.5], "Gipuzkoa":["País Vasco",7.5],
+    "Granada":["Andalucía",4.5], "Guadalajara":["Castilla-La Mancha",4.5], "Huelva":["Andalucía",4.5],
+    "Huesca":["Aragón",4.5], "Illes Balears":["Illes Balears",7.5], "Jaén":["Andalucía",4.5],
+    "La Rioja":["La Rioja",4.5], "Las Palmas":["Canarias",5.5], "León":["Castilla y León",4.5],
+    "Lleida":["Cataluña",4.5], "Lugo":["Galicia",4.5], "Madrid":["Madrid",7.5],
+    "Málaga":["Andalucía",7.5], "Melilla":["Melilla",5.5], "Murcia":["Murcia",4.5],
+    "Navarra":["Navarra",5.5], "Ourense":["Galicia",4.5], "Palencia":["Castilla y León",4.5],
+    "Pontevedra":["Galicia",5.5], "Salamanca":["Castilla y León",4.5],
+    "Santa Cruz de Tenerife":["Canarias",7.5], "Segovia":["Castilla y León",4.5],
+    "Sevilla":["Andalucía",4.5], "Soria":["Castilla y León",4.5], "Tarragona":["Cataluña",4.5],
+    "Teruel":["Aragón",4.5], "Toledo":["Castilla-La Mancha",4.5],
+    "Valencia":["Comunitat Valenciana",5.5], "Valladolid":["Castilla y León",4.5],
+    "Zamora":["Castilla y León",4.5], "Zaragoza":["Aragón",5.5]
   };
 
-  var sel = document.getElementById("prov");
-  Object.keys(PROV).sort(function(a,b){return a.localeCompare(b,"es");}).forEach(function(p){
-    var o = document.createElement("option");
-    o.value = p; o.textContent = p + " · " + PROV[p][0];
-    sel.appendChild(o);
-  });
-  sel.value = "Valencia";
+  /* Los dos primeros números del código postal -> provincia (códigos INE). */
+  var CP_PROV = {
+    "01":"Álava","02":"Albacete","03":"Alicante","04":"Almería","05":"Ávila","06":"Badajoz",
+    "07":"Illes Balears","08":"Barcelona","09":"Burgos","10":"Cáceres","11":"Cádiz","12":"Castellón",
+    "13":"Ciudad Real","14":"Córdoba","15":"A Coruña","16":"Cuenca","17":"Girona","18":"Granada",
+    "19":"Guadalajara","20":"Gipuzkoa","21":"Huelva","22":"Huesca","23":"Jaén","24":"León",
+    "25":"Lleida","26":"La Rioja","27":"Lugo","28":"Madrid","29":"Málaga","30":"Murcia",
+    "31":"Navarra","32":"Ourense","33":"Asturias","34":"Palencia","35":"Las Palmas","36":"Pontevedra",
+    "37":"Salamanca","38":"Santa Cruz de Tenerife","39":"Cantabria","40":"Segovia","41":"Sevilla",
+    "42":"Soria","43":"Tarragona","44":"Teruel","45":"Toledo","46":"Valencia","47":"Valladolid",
+    "48":"Bizkaia","49":"Zamora","50":"Zaragoza","51":"Ceuta","52":"Melilla"
+  };
 
-  var eur = function(n){
+  var PATRIMONIO_MAX = 150000;   /* BOE-A-2026-14404 */
+  var EDAD_MAX = 35;             /* BOE-A-2026-14404: «no más de treinta y cinco años» */
+  var POR_MENOR = 0.3;           /* ICO: +0,3 veces el IPREM por menor a cargo */
+  var MONOPARENTAL = 0.70;       /* BOE-A-2026-14404: +70 % */
+
+  /* Lee un número escrito por una persona: vacío -> null; «32.000» -> 32000. */
+  /* A la española: «32.000» son treinta y dos mil; «37.800,50» lleva
+     céntimos; «1.234.567» es más de un millón. Lo que no se entiende
+     («50k», «treinta», «1,2,3») NO se adivina: sale NaN y se marca error. */
+  function numero(v){
+    if (v === null || v === undefined) return null;
+    var t = String(v).trim().replace(/[\s\u00a0€]/g, "");
+    if (t === "") return null;
+    var m;
+    if ((m = /^(-?)(\d{1,3}(?:\.\d{3})+|\d+),(\d+)$/.exec(t))) t = m[1] + m[2].replace(/\./g, "") + "." + m[3];
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+    else if (!/^-?\d+(\.\d{1,2})?$/.test(t)) return NaN;
+    var n = Number(t);
+    return isFinite(n) ? n : NaN;
+  }
+
+  /* d = {edad, ingresos, prov, precio, patrimonio, menores, eficiente, mono, dos}
+     Devuelve {errores:[...]} si algún dato no vale, o el veredicto entero. */
+  function evaluarAval(d){
+    var edad = numero(d.edad), ing = numero(d.ingresos), precio = numero(d.precio);
+    var patr = numero(d.patrimonio), men = numero(d.menores);
+    if (men === null) men = 0;
+    var errores = [];
+    if (edad === null) errores.push({campo:"edad", txt:"Falta tu edad."});
+    else if (!(edad >= 18 && edad <= 99) || Math.floor(edad) !== edad) errores.push({campo:"edad", txt:"La edad tiene que ser un número entero entre 18 y 99."});
+    if (ing === null) errores.push({campo:"ingresos", txt:"Faltan tus ingresos brutos del año (pon 0 si no tienes)."});
+    else if (!(ing >= 0 && ing <= 5000000)) errores.push({campo:"ingresos", txt:"Los ingresos tienen que ser un número entre 0 y 5.000.000 €."});
+    if (!PROV[d.prov]) errores.push({campo:"prov", txt:"Elige la provincia de la vivienda."});
+    if (precio === null) errores.push({campo:"precio", txt:"Falta el precio de la vivienda."});
+    else if (!(precio >= 1000 && precio <= 50000000)) errores.push({campo:"precio", txt:"El precio tiene que estar entre 1.000 € y 50.000.000 €."});
+    if (patr === null) errores.push({campo:"patrimonio", txt:"Falta tu patrimonio neto (pon 0 si no tienes)."});
+    else if (!(patr >= -10000000 && patr <= 1000000000)) errores.push({campo:"patrimonio", txt:"El patrimonio no es un número que se pueda usar."});
+    if (!(men >= 0 && men <= 15) || Math.floor(men) !== men) errores.push({campo:"menores", txt:"Los menores a cargo tienen que ser un número entero entre 0 y 15."});
+    if (errores.length) return {errores: errores};
+
+    var ccaa = PROV[d.prov][0], veces = PROV[d.prov][1];
+    var topePrecio = CCAA[ccaa];
+    var base = veces * IPREM;
+    /* Monoparental: el BOE (BOE-A-2026-14404, estipulación tercera) dice que
+       «el límite de ingresos anterior se podrá incrementar en un 70 %», justo
+       detrás de la frase de los menores. «Anterior» es el tope con los menores
+       ya sumados: (provincia + menores) × 1,7. Es la misma cuenta que hacía la
+       versión publicada. 20/09: una versión intermedia de esta tanda aplicaba
+       el 70 % solo a la provincia y le bajaba el tope a una madre sola; el CEO
+       lo cazó y se deshizo. La prueba lo vigila (68.544 €). */
+    var topeRenta = (base + men * POR_MENOR * IPREM) * (d.mono ? 1 + MONOPARENTAL : 1);
+    topeRenta = Math.round(topeRenta);
+
+    var rules = [];
+    rules.push({ id:"edad", ok: edad <= EDAD_MAX || men > 0, name:"Edad",
+      detail: men > 0 ? "Con menores a cargo no hay límite de edad."
+                      : "Máximo 35 años el día de firmar la hipoteca. Con menores a cargo, sin límite.",
+      val: edad + " años" });
+    var d2 = "Tope en " + d.prov + ": " + String(veces).replace(".", ",") + " veces el IPREM, " + eur(base) + " brutos al año por comprador";
+    if (men > 0) d2 += " · +" + eur(men * POR_MENOR * IPREM) + " por " + men + " menor" + (men > 1 ? "es" : "");
+    if (d.mono) d2 += " · todo ello +70 % por familia monoparental";
+    rules.push({ id:"ingresos", ok: ing <= topeRenta, name:"Ingresos", detail: d2 + ".", val: eur(ing) + " / " + eur(topeRenta) });
+    rules.push({ id:"patrimonio", ok: patr <= PATRIMONIO_MAX, name:"Patrimonio neto", detail:"Máximo 150.000 € por comprador.", val: eur(patr) + " / " + eur(PATRIMONIO_MAX) });
+    rules.push({ id:"precio", ok: precio <= topePrecio, name:"Precio de la vivienda", detail:"Tope en " + ccaa + ".", val: eur(precio) + " / " + eur(topePrecio) });
+    rules.push({ id:"plazo", ok:true, name:"Plazo del programa", detail:"Prorrogado por el BOE de 2 de julio de 2026.", val:"hasta 31/12/2027" });
+
+    var fallos = rules.filter(function(r){ return !r.ok; });
+    return {
+      errores: [], rules: rules, fallos: fallos,
+      encaja: fallos.length === 0,
+      pct: d.eficiente ? 25 : 20,
+      ccaa: ccaa, topePrecio: topePrecio, topeRenta: topeRenta,
+      entradaSin: Math.round(precio * 0.20), dos: !!d.dos, eficiente: !!d.eficiente
+    };
+  }
+
+  function eur(n){
     return new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Math.round(n));
-  };
+  }
+
+  return { evaluarAval: evaluarAval, PROV: PROV, CCAA: CCAA, CP_PROV: CP_PROV, IPREM: IPREM, eur: eur, numero: numero };
+})();
+/*CALCULO>>*/
+
+(function(){
+  "use strict";
+  var PROV = AVAL.PROV, eur = AVAL.eur;
+  var $ = function(id){ return document.getElementById(id); };
   var esc = function(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   };
 
+  var sel = $("prov");
+  var vacia = document.createElement("option");
+  vacia.value = ""; vacia.textContent = "Elige la provincia";
+  sel.appendChild(vacia);
+  Object.keys(PROV).sort(function(a,b){return a.localeCompare(b,"es");}).forEach(function(p){
+    var o = document.createElement("option");
+    o.value = p; o.textContent = p + " · " + PROV[p][0];
+    sel.appendChild(o);
+  });
+
+  /* Lo que llega desde la portada o desde el panel:
+       ?edad=31&cp=38&de=portada   (cp: los dos primeros números del código postal)
+       ?de=inmobiliaria
+     Los ingresos NO se traen: en la portada son netos al mes y aquí son
+     brutos al año. Convertir uno en otro sería inventar. */
+  var q = new URLSearchParams(location.search);
+  var qEdad = AVAL.numero(q.get("edad"));
+  if (qEdad && qEdad >= 18 && qEdad <= 99) $("edad").value = Math.floor(qEdad);
+  var qCp = String(q.get("cp") || "").replace(/\D/g, "").slice(0, 2);
+  if (AVAL.CP_PROV[qCp]) sel.value = AVAL.CP_PROV[qCp];
+  var de = q.get("de");
+  if (de === "inmobiliaria") {
+    $("volver").href = "puertas.html";
+    $("volver").textContent = "← Volver a tu oficina";
+  }
+
+  function leer(){
+    return {
+      edad: $("edad").value, ingresos: $("ingresos").value, prov: sel.value,
+      precio: $("precio").value, patrimonio: $("patrimonio").value, menores: $("menores").value,
+      eficiente: $("energia").value === "si", mono: $("mono").checked, dos: $("dos").checked
+    };
+  }
+
   function run(){
-    var edad = +document.getElementById("edad").value || 0;
-    var ing = +document.getElementById("ingresos").value || 0;
-    var prov = sel.value;
-    var precio = +document.getElementById("precio").value || 0;
-    var patr = +document.getElementById("patrimonio").value || 0;
-    var menores = +document.getElementById("menores").value || 0;
-    var eficiente = document.getElementById("energia").value === "si";
-    var mono = document.getElementById("mono").checked;
-    var dos = document.getElementById("dos").checked;
+    var r = AVAL.evaluarAval(leer());
+    ["edad","ingresos","prov","precio","patrimonio","menores"].forEach(function(c){ $(c).removeAttribute("aria-invalid"); });
+    var out = $("out"), html;
 
-    var ccaa = PROV[prov][0];
-    var topePrecio = CCAA[ccaa];
-    var topeRenta = PROV[prov][1] + (menores * 2520);
-    if (mono) topeRenta = topeRenta * 1.7;
-
-    var rules = [];
-
-    // 1 · edad
-    var edadOK = edad <= 35 || menores > 0;
-    rules.push({
-      ok: edadOK,
-      name: "Edad",
-      detail: menores > 0
-        ? "Con menores a cargo no hay límite de edad."
-        : "Máximo 35 años en el momento de firmar. Con menores a cargo, sin límite.",
-      val: edad + " años"
-    });
-
-    // 2 · renta
-    var rentaOK = ing <= topeRenta;
-    var d2 = "Tope en " + prov + ": " + eur(PROV[prov][1]) + " por comprador";
-    if (menores > 0) d2 += " · +" + eur(menores*2520) + " por " + menores + " menor" + (menores>1?"es":"");
-    if (mono) d2 += " · +70 % por familia monoparental";
-    rules.push({ ok: rentaOK, name:"Ingresos", detail: d2 + ".", val: eur(ing) + " / " + eur(topeRenta) });
-
-    // 3 · patrimonio
-    var patrOK = patr <= 150000;
-    rules.push({ ok:patrOK, name:"Patrimonio neto", detail:"Máximo 150.000 € por comprador.", val: eur(patr) + " / " + eur(150000) });
-
-    // 4 · precio
-    var precioOK = precio <= topePrecio;
-    rules.push({ ok:precioOK, name:"Precio de la vivienda", detail:"Tope en " + ccaa + ".", val: eur(precio) + " / " + eur(topePrecio) });
-
-    // 5 · plazo
-    rules.push({ ok:true, name:"Plazo del programa", detail:"Prorrogado por el BOE de 2 de julio de 2026.", val:"hasta 31/12/2027" });
-
-    var fallos = rules.filter(function(r){ return !r.ok; });
-    var pct = eficiente ? 0.25 : 0.20;
-
-    // dinero
-    var entradaSin = precio * 0.20;
-    var entradaCon = 0;
-    var gastos = precio * 0.10;
+    if (r.errores.length){
+      r.errores.forEach(function(e){ $(e.campo).setAttribute("aria-invalid", "true"); });
+      html = '<div class="errores" role="alert"><b>Antes de decirte nada, revisa esto:</b><ul>' +
+        r.errores.map(function(e){ return "<li>" + esc(e.txt) + "</li>"; }).join("") + "</ul></div>";
+      out.innerHTML = html; out.hidden = false;
+      $(r.errores[0].campo).focus();
+      return;
+    }
 
     var v, mark, title, msg;
-    if (fallos.length === 0){
+    if (r.encaja){
       v="v-yes"; mark="✓"; title="Encajas.";
-      msg = "Cumples las cinco condiciones publicadas. El aval cubriría hasta el " +
-            (pct*100) + " % del préstamo durante los diez primeros años" +
-            (eficiente ? ", por la calificación energética." : ".") +
-            " Ahora te toca llevarlo a una de las 67 entidades adheridas, que es quien decide.";
-    } else if (fallos.length === 1){
+      msg = "Cumples las condiciones que se pueden comprobar con estos datos. El aval cubriría hasta el " + r.pct +
+            " % del préstamo durante los diez primeros años" +
+            (r.eficiente ? ", por la calificación energética." : ".") +
+            " Que sea tu primera vivienda y el resto de papeles lo comprueba el banco adherido, que es quien decide.";
+    } else if (r.fallos.length === 1){
       v="v-almost"; mark="~"; title="Por poco.";
-      msg = "Cumples todo menos una cosa: " + esc(fallos[0].name.toLowerCase()) +
+      msg = "Cumples todo menos una cosa: " + esc(r.fallos[0].name.toLowerCase()) +
             ". Mira abajo cuánto te falta — a veces se arregla cambiando de vivienda o de provincia, y a veces no.";
     } else {
       v="v-no"; mark="×"; title="Hoy no encajas.";
-      msg = "Hay " + fallos.length + " condiciones que no se cumplen. Están marcadas abajo, con el número exacto que falla.";
+      msg = "Hay " + r.fallos.length + " condiciones que no se cumplen. Están marcadas abajo, con el número exacto que falla.";
     }
 
-    var html = '<div class="verdict ' + v + '">' +
+    html = '<div class="verdict ' + v + '" id="veredicto" tabindex="-1" data-encaja="' + (r.encaja ? "si" : "no") + '">' +
       '<span class="mark">' + mark + '</span>' +
       '<div><h3>' + title + '</h3><p>' + msg + '</p></div></div>';
 
     html += '<div class="rules">';
-    rules.forEach(function(r){
-      html += '<div class="rule ' + (r.ok?"ok":"bad") + '">' +
-        '<span class="st">' + (r.ok?"✓":"×") + '</span>' +
-        '<div><div class="name">' + esc(r.name) + '</div><div class="detail">' + esc(r.detail) + '</div></div>' +
-        '<div class="val">' + esc(r.val) + '</div></div>';
+    r.rules.forEach(function(x){
+      html += '<div class="rule ' + (x.ok?"ok":"bad") + '" data-regla="' + x.id + '">' +
+        '<span class="st">' + (x.ok?"✓":"×") + '</span>' +
+        '<div><div class="name">' + esc(x.name) + '</div><div class="detail">' + esc(x.detail) + '</div></div>' +
+        '<div class="val">' + esc(x.val) + '</div></div>';
     });
     html += '</div>';
 
-    if (fallos.length === 0 && precio > 0){
+    if (r.encaja){
       html += '<div class="money"><h4>Lo que te cambia</h4>' +
-        '<p class="sub">Sin aval, un banco financia como mucho el 80 % y el resto lo pones tú. Con el aval puedes financiar hasta el 100 % del menor valor entre tasación y precio.</p>' +
+        '<p class="sub">Lo habitual es que el banco financie como mucho el 80 % y el resto lo pongas tú. Con el aval puedes financiar hasta el 100 % del menor valor entre tasación y precio.</p>' +
         '<div class="cmp">' +
-          '<div class="box"><div class="k">Ahorro necesario sin aval</div><div class="n">' + eur(entradaSin) + '</div></div>' +
-          '<div class="box hi"><div class="k">Ahorro necesario con aval</div><div class="n">' + eur(entradaCon) + '</div></div>' +
+          '<div class="box"><div class="k">Ahorro para la entrada, sin aval</div><div class="n">' + eur(r.entradaSin) + '</div></div>' +
+          '<div class="box hi"><div class="k">Ahorro para la entrada, con aval</div><div class="n">' + eur(0) + '</div></div>' +
         '</div>' +
-        '<div class="saving">Son <strong>' + eur(entradaSin) + '</strong> que dejas de tener que tener ahorrados. ' +
-        'Pero ojo con una cosa que casi ningún sitio dice: <strong>los impuestos y los gastos de la compra siguen pagándose en efectivo</strong> — ' +
-        'unos <strong>' + eur(gastos) + '</strong> en este caso, contando alrededor de un 10 % entre impuesto, notaría, registro y gestoría. ' +
+        '<div class="saving">Son <strong>' + eur(r.entradaSin) + '</strong> que dejas de necesitar ahorrados para la entrada. ' +
+        'Pero ojo con una cosa que casi ningún sitio dice: <strong>los impuestos y los gastos de la compra se siguen pagando aparte</strong> ' +
+        '(impuesto de la compra, notaría, registro, gestoría). Dependen de tu comunidad y de si la casa es nueva o usada, y aquí no te damos una cifra que no esté en un boletín. ' +
         'El aval cubre el préstamo, no la operación.</div></div>';
     }
 
-    var out = document.getElementById("out");
+    if (!r.eficiente){
+      html += '<div class="nota-extra" id="nota-energia"><strong>Si la vivienda tiene certificado energético D o mejor, el aval sube del 20 % al 25 % del préstamo.</strong> Pregunta la letra antes de decidir: puede ser lo que haga que el banco diga que sí.</div>';
+    }
+    if (r.dos){
+      html += '<div class="nota-extra" id="nota-dos"><strong>Si compráis dos, cada uno tiene que cumplir por separado</strong> la edad (o tener menores a cargo), los ingresos y el patrimonio. Lo que has puesto es de una persona: repite la cuenta con los datos de la otra.</div>';
+    }
+
     out.innerHTML = html;
     out.hidden = false;
     out.scrollIntoView({behavior:"smooth", block:"start"});
+    $("veredicto").focus({preventScroll:true});
   }
 
-  document.getElementById("calc").addEventListener("click", run);
+  $("calc").addEventListener("click", run);
   document.querySelectorAll("input, select").forEach(function(el){
     el.addEventListener("keydown", function(e){ if(e.key === "Enter") run(); });
   });

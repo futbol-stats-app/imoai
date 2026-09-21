@@ -408,6 +408,12 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
 .tambien a:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
 .tambien a b{display:block;font-size:16px;color:var(--marca);margin:0 0 3px}
 .tambien a span{display:block;font-size:14.5px;color:var(--tinta-2);line-height:1.5}
+/* 20/09/2026 · Pestaña 3: quien ha dicho «comprar» ve el aval ARRIBA del resultado, no al fondo */
+.salto-aval{display:block;margin:0 0 16px;padding:14px 16px;border:2px solid var(--marca);border-radius:12px;text-decoration:none;color:inherit;background:transparent}
+.salto-aval:hover{background:rgba(0,0,0,.03)}
+.salto-aval:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.salto-aval b{display:block;font-size:16px;color:var(--marca);margin:0 0 3px}
+.salto-aval span{display:block;font-size:14.5px;color:var(--tinta-2);line-height:1.5}
 
 /* ---- Capa 2: los extras, detrás del resultado ---- */
 .extras{
@@ -1151,6 +1157,13 @@ const COMPROBADO_DATO = (typeof window !== "undefined" && window.IMMOIA_AYUDAS_C
 /* Las frases que hay que decir cuando NO hay dato. No rellenan un hueco:
    dicen que el hueco existe, que es lo honesto. */
 const AVISO_SIN_INGRESOS = "Esta ayuda no publica límite de ingresos: compruébalo en su convocatoria.";
+/* 20/09/2026 · Pestaña 3. El aval del ICO SÍ publica tope de ingresos, pero va
+   por provincia (tabla del ICO de 19/06/2026) y en brutos al año, así que aquí
+   no se puede cruzar con lo que la persona pone (netos al mes). Decir «no
+   publica límite» era falso. Se dice lo que hay y se manda a la calculadora. */
+const REQUISITOS_EN_LA_CALCULADORA = {
+  "es-aval-ico": "Sí tiene tope de ingresos, y va por provincia: de 37.800 € a 63.000 € brutos al año por comprador (tabla del ICO de 19/06/2026). Aquí solo hemos mirado tu edad. Los ingresos, el patrimonio y el precio te los mira la calculadora del aval."
+};
 const AVISO_SIN_EDAD = "Es un programa para jóvenes, pero su convocatoria no publica límite de edad: compruébalo en ella antes de pedirla.";
 const AVISO_SOLO_TERRITORIO = "Esta convocatoria no publica ni límite de edad ni tope de ingresos, así que con tus datos solo hemos podido cruzar dónde vives y qué quieres hacer. Los requisitos, compruébalos tú en la convocatoria.";
 
@@ -1244,6 +1257,8 @@ function evaluar(a, perfil, mirarObjetivo = true){
     if(perfil.ingresos*12 > a.imax) return null;
     cumplidos++;
     porques.push("Estás por debajo del tope de ingresos publicado");
+  } else if(REQUISITOS_EN_LA_CALCULADORA[a.id]){
+    avisos.push(REQUISITOS_EN_LA_CALCULADORA[a.id]);
   } else {
     avisos.push(AVISO_SIN_INGRESOS);
   }
@@ -1413,7 +1428,7 @@ function pintarAyuda(a){
       : a.da ? `<p class="dinero">${esc(a.da)}</p>`
              : `<p class="dinero"><em>Cuantía no publicada.</em></p>`}
     ${a.publicados >= 1
-      ? `<p class="cumple">${a.publicados === 1 ? "Cumples el único requisito que publica la convocatoria" : `Cumples ${a.cumplidos} de los ${a.publicados} requisitos que publica la convocatoria`}</p>
+      ? `<p class="cumple">${REQUISITOS_EN_LA_CALCULADORA[a.id] ? "Con tus datos de aquí solo se puede mirar la edad, y la cumples" : a.publicados === 1 ? "Cumples el único requisito que publica la convocatoria" : `Cumples ${a.cumplidos} de los ${a.publicados} requisitos que publica la convocatoria`}</p>
          <div class="barra"><span style="width:${pct}%"></span></div>`
       : `<p class="cumple">Esta convocatoria no publica requisitos de edad ni de ingresos</p>`}
     <ul class="porques">
@@ -1470,6 +1485,20 @@ function htmlCaptura(){
   </div>`;
 }
 
+/* 20/09/2026 · Pestaña 3 (el comprador). Quien dice que quiere COMPRAR (o la
+   inmobiliaria que mira lo de su comprador) tiene el aval del Estado a un clic,
+   encima de todo. Se le lleva la edad y la provincia; los ingresos NO, porque
+   aquí son netos al mes y la calculadora del aval pide brutos al año. */
+function htmlSaltoAval(perfil){
+  if(!perfil || (perfil.objetivo !== "comprar" && perfil.objetivo !== "vender")) return "";
+  const q = new URLSearchParams({edad:String(perfil.edad), cp:String(perfil.cp||"").slice(0,2), de:"portada"});
+  const quien = perfil.objetivo === "vender" ? "tu comprador" : "tú";
+  return `<a class="salto-aval" id="salto-aval" href="calculadora.html?${q.toString()}">
+    <b>¿Encaja ${quien} en el aval del Estado para la hipoteca?</b>
+    <span>Si es primera vivienda, el Estado avala hasta el 20 % del préstamo (el 25 % si la casa tiene certificado energético D o mejor) y se puede comprar sin ahorros para la entrada (los impuestos y gastos de la compra se pagan aparte). Te lo decimos en un minuto, con la norma al lado.</span>
+  </a>`;
+}
+
 function pintar({directas, fiscales, municipales = [], descartes, total, extras = {}}, perfil){
   const caja = $("#resultados");
   caja.classList.remove("oculto");
@@ -1482,6 +1511,7 @@ function pintar({directas, fiscales, municipales = [], descartes, total, extras 
             : `Esto es lo que encaja contigo en ${esc(ccaa)}`}</h2>
     <p class="volver"><button type="button" class="enlace-plano" id="cambiar">← Cambiar mis datos</button></p>`;
   html += htmlNotaVender(perfil);
+  html += htmlSaltoAval(perfil);
 
   if(!directas.length){
     html += `<div class="sin-nada"><strong>Con estos datos no encontramos ninguna ayuda directa que encaje.</strong>
