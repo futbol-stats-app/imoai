@@ -2,7 +2,7 @@
    ------------------------------------------------------------------
    Hasta el 18/09/2026 las mismas 293 fichas estaban guardadas TRES
    veces: aquí, dentro de index.html y dentro de asistente.html. Ya se
-   habían separado en dos fichas (ver LAS_DOS_QUE_NO_CUADRAN.md). Dos
+   habían separado en dos fichas. Dos
    verdades no son ninguna verdad, así que ahora viven solo aquí y las
    páginas las leen de este fichero.
 
@@ -17,7 +17,7 @@
    ESA CONVOCATORIA NO PUBLICA ESE LÍMITE. No es un "no lo sabemos"
    que se pueda rellenar a ojo, y la pantalla lo dice tal cual.
 
-   24/09/2026 · bloque B. Dos arreglos de forma, ninguna cifra tocada:
+   24/09/2026. Dos arreglos de forma, ninguna cifra tocada:
      · los textos llevaban trozos de HTML escritos a mano (&sup2; &times;
        &ordm; &ordf; &ge;) y la página, que escapa el texto, los enseñaba
        tal cual («1.000 €/m&sup2;»). Ahora van con su letra: ² × º ª ≥;
@@ -50,5 +50,39 @@
     .filter(Boolean)
     .sort()
     .pop() || "";
+
+  /* LO QUE NO ES UNA AYUDA QUE SE PIDA. La regla vive aquí, junto a las
+     fichas, y la usan las dos que las leen: la calculadora de la portada
+     (index.html) y lo que se le pasa a la IA del chat (ayudas.js). Así no
+     hay dos reglas que se puedan separar.
+     No se reescribe ninguna ficha: se lee lo que la PROPIA ficha dice de
+     sí misma.
+       1. En su nombre: «(no la pide el ciudadano)», «(no vigente)»,
+          «(no hay prestación …)».
+       2. En su texto: «No es una ayuda que se pida», «NO ES UNA AYUDA: …»,
+          «No es una ayuda, sino un precio …». Ojo: «No es una ayuda
+          aparte, sino cupos dentro del programa general» SÍ es una ayuda,
+          y la regla no la toca.
+       3. Quién la pide: si la primera frase de «quién puede» son
+          municipios, entidades locales, ayuntamientos o promotores, la
+          pide una administración o una empresa, no un particular. (Ojo:
+          «Municipios o núcleos de población … con 10.000 habitantes o
+          menos» es DÓNDE vive el particular que la pide, y esa sí es suya.)
+     Vale con la ficha tal cual está aquí (nombre, cuanto_da,
+     incompatibilidades) y con los nombres cortos de la portada (n, da,
+     incomp). */
+  var RE_NO_ES_AYUDA_NOMBRE = /\((no la pide el ciudadano|no vigente|no hay prestaci[óo]n[^)]*)\)/i;
+  var RE_NO_ES_AYUDA_TEXTO = /\bno es una ayuda(?: que se pida|\s*[:,])/i;
+  var RE_LA_PIDE_UNA_ENTIDAD = /^(Municipios|Entidades locales|Ayuntamientos|Promotores)\b/i;
+  function campo(a, largo, corto) { return a[largo] != null ? a[largo] : a[corto]; }
+  function noEsUnaAyuda(a) {
+    if (!a) return false;
+    if (RE_NO_ES_AYUDA_NOMBRE.test(campo(a, "nombre", "n") || "")) return true;
+    var quien = String(a.quien_puede || "").trim().split(/[.;]/)[0];
+    if (RE_LA_PIDE_UNA_ENTIDAD.test(quien) && !/habitantes o menos|n[úu]cleos de poblaci[óo]n/i.test(quien)) return true;
+    return RE_NO_ES_AYUDA_TEXTO.test(campo(a, "cuanto_da", "da") || "") ||
+           RE_NO_ES_AYUDA_TEXTO.test(campo(a, "incompatibilidades", "incomp") || "");
+  }
+  global.IMMOIA_NO_ES_AYUDA = noEsUnaAyuda;
 
 })(typeof window !== "undefined" ? window : globalThis);

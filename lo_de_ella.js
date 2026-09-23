@@ -27,8 +27,7 @@
 
    LOS DATOS DE VERDAD DE SU OFICINA no están aquí ni pueden estar:
    hacen falta su nombre de oficina, su clave y el código de alta del
-   servidor, y eso solo lo tiene la dirección. Está escrito en
-   LO_QUE_FALTA_PREGUNTARLE.md.
+   servidor, y eso solo lo tiene la dirección.
    ================================================================== */
 (function () {
   "use strict";

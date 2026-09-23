@@ -40,7 +40,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .bolita{width:26px;height:26px;border-radius:50%;background:var(--marca);flex:0 0 auto}
 .logo small{display:block;font-size:12px;font-weight:600;letter-spacing:.09em;
  text-transform:uppercase;color:var(--tinta2)}
-/* 19/09/2026 · LOS_ENCHUFES: copiadas tal cual de renovables_vacacional.html,
+/* 19/09/2026: copiadas tal cual de renovables_vacacional.html,
    que ya tenía el enlace de vuelta. Aquí faltaba el de ida. */
 .otra{font-size:13.5px;color:var(--tinta2);text-decoration:none;border-bottom:1px solid var(--linea)}
 .otra:hover{color:var(--marca);border-color:var(--marca)}
@@ -125,7 +125,7 @@ table.t td.resta{color:var(--verde)}
       <span class="bolita"></span>
       <span>IMMO IA<small>Renovables</small></span>
     </div>
-    <!-- 19/09/2026 · LOS_ENCHUFES: renovables_vacacional.html no tenía NI UN enlace
+    <!-- 19/09/2026: renovables_vacacional.html no tenía NI UN enlace
          entrante en todo el repositorio, y desde ella sí se venía aquí. Este es el
          par que faltaba, el mismo enlace y el mismo sitio, al revés. -->
     <a class="otra" href="renovables_vacacional.html">¿Es un apartamento vacacional? Usa la otra →</a>
@@ -135,14 +135,14 @@ table.t td.resta{color:var(--verde)}
   <p class="sub">Pon tus datos y te sale el número: lo que pagas, lo que te devuelven y
   lo que te queda al mes. Con las ayudas que están abiertas hoy, no las del año pasado.</p>
 
-  <!-- 24/09/2026 · bloque C (fallo 25): esta calculadora solo vale para Tenerife, y
+  <!-- 24/09/2026 (fallo 25): esta calculadora solo vale para Tenerife, y
        no lo decía en ningún sitio. -->
   <p class="ojo" style="padding:10px 12px;font-size:14px"><b>Esta calculadora es solo para
   Tenerife.</b> Los municipios, el teléfono del Consorcio de Tributos y la producción de las
   placas están sacados de Tenerife. Si tu casa está en otro sitio, haz la cuenta en
   <a href="energia.html?de=general">IMMO IA Energía</a>, que pregunta tu comunidad.</p>
 
-  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+  <!-- 19/09/2026: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
        Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
        datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
   <div class="reloj" id="reloj" hidden>
@@ -195,7 +195,7 @@ table.t td.resta{color:var(--verde)}
     <label for="factura">¿Cuánto pagas de luz al mes? <small style="font-weight:400">(si no lo pones, lo estimamos para una casa ocupada todo el año)</small></label>
     <input type="number" id="factura" min="0" max="900" step="5" value="" placeholder="Opcional: lo que pone tu factura" inputmode="decimal">
 
-    <!-- 24/09/2026 · bloque C: las mismas dos preguntas que hace IMMO IA Energía. Sin ellas
+    <!-- 24/09/2026: las mismas dos preguntas que hace IMMO IA Energía. Sin ellas
          esta página le restaba el 40 % a cualquiera, y la otra decía que no salía. -->
     <div class="dos">
       <div>
@@ -307,7 +307,7 @@ table.t td.resta{color:var(--verde)}
       <li><b>Hoy no hay ninguna subvención abierta en Tenerife.</b> Las dos convocatorias
       canarias cerraron el 22 de junio y el 31 de agosto de 2026. Es probable que salga otra,
       pero <b>no está anunciada</b>.</li>
-      <!-- 19/09/2026 · tanda 8: la fecha ya no está escrita a mano. La pone el script
+      <!-- 19/09/2026: la fecha ya no está escrita a mano. La pone el script
            desde datos.js. Si datos.js no la trae, la frase se queda sin fecha y sigue
            teniendo sentido: nunca se inventa ninguna. -->
       <li><b>La deducción del IRPF para una vivienda tiene fecha de caducidad<span id="fin-vivienda"></span>.</b>
@@ -377,7 +377,7 @@ table.t td.resta{color:var(--verde)}
 </div>
 
 <script src="datos.js?v=24a"></script>
-<!-- 24/09/2026 · bloque C: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
+<!-- 24/09/2026: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
      usan las tres páginas de placas, para que el mismo caso dé la misma cifra. -->
 <script src="energia_cuenta.js?v=24a"></script>
 <script>
@@ -393,7 +393,7 @@ table.t td.resta{color:var(--verde)}
   var eur = C ? C.fmt.eur : function(n){ return Math.round(n).toLocaleString("es-ES") + " €"; };
 
   /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
-     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     19/09/2026. Antes esta fecha estaba escrita a mano aqui, con el dia y el
      mes a pelo, y otra vez en el texto de arriba. Ahora sale de datos.js
      (fechas.finDeduccionVivienda) y solo de ahi.
      Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE ENSENA NADA:

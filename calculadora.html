@@ -226,7 +226,7 @@
   }
   .disclaimer strong{color:var(--ink-soft);}
 
-  /* 20/09/2026 · Pestaña 3 (el comprador): volver, errores y notas */
+  /* 20/09/2026: volver, errores y notas */
   .volver{display:inline-block; margin:0 0 18px; font-size:.92rem; color:var(--brand); text-decoration:none; font-weight:600;}
   .volver:hover{text-decoration:underline;}
   .errores{border-radius:var(--r); padding:18px 22px; border:1px solid var(--no); background:var(--no-wash); color:var(--ink);}
@@ -324,7 +324,7 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
-   ¿ENCAJO EN EL AVAL? — revisado el 20/09/2026 (Pestaña 3 · el comprador)
+   ¿ENCAJO EN EL AVAL? — revisado el 20/09/2026
 
    Lo que cambió respecto a la versión de agosto:
      · Con la edad vacía, el precio a 0 o números imposibles decía «Encajas».
@@ -442,9 +442,9 @@ var AVAL = (function(){
        «el límite de ingresos anterior se podrá incrementar en un 70 %», justo
        detrás de la frase de los menores. «Anterior» es el tope con los menores
        ya sumados: (provincia + menores) × 1,7. Es la misma cuenta que hacía la
-       versión publicada. 20/09: una versión intermedia de esta tanda aplicaba
-       el 70 % solo a la provincia y le bajaba el tope a una madre sola; el CEO
-       lo cazó y se deshizo. La prueba lo vigila (68.544 €). */
+       versión publicada. 20/09: una versión intermedia aplicaba
+       el 70 % solo a la provincia y le bajaba el tope a una madre sola; se vio al
+       revisarla y se deshizo. La prueba lo vigila (68.544 €). */
     var topeRenta = (base + men * POR_MENOR * IPREM) * (d.mono ? 1 + MONOPARENTAL : 1);
     topeRenta = Math.round(topeRenta);
 
@@ -474,7 +474,7 @@ var AVAL = (function(){
     };
   }
 
-  /* ---- EL VEREDICTO (24/09/2026, bloque D) ----------------------------
+  /* ---- EL VEREDICTO (24/09/2026) ----------------------------
      Antes: con una sola condición fallida salía siempre «Por poco» y
      «a veces se arregla cambiando de vivienda o de provincia», aunque la
      persona triplicara el tope o el fallo fuera la edad.

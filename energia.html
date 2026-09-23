@@ -161,7 +161,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     <i></i><i></i><i></i><i></i><i></i>
   </div>
 
-  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+  <!-- 19/09/2026: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
        Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
        datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
   <div class="reloj" id="reloj" hidden>
@@ -169,7 +169,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     <span id="reloj-txt"></span>
   </div>
 
-  <!-- 🔴 AÑADIDO (C2, 18/09/2026): faltaba el aviso de que quien contesta es una máquina.
+  <!-- 🔴 AÑADIDO (18/09/2026): faltaba el aviso de que quien contesta es una máquina.
        Es obligatorio desde el 2 de agosto de 2026 y aquí no estaba, aunque toda la página
        sea una conversación con burbujas que ponen «IA». Mismo texto que entrada.html. -->
   <p class="avisoia"><b>Aquí contesta una inteligencia artificial, no una persona.</b>
@@ -199,17 +199,17 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
 <script src="datos.js?v=24a"></script>
 <script src="orden.js?v=18c"></script>
-<!-- 24/09/2026 · bloque C: la cuenta de las placas, la misma para las tres páginas. -->
+<!-- 24/09/2026: la cuenta de las placas, la misma para las tres páginas. -->
 <script src="energia_cuenta.js?v=24a"></script>
-<!-- 🔴 ARREGLADO (C2, 18/09/2026): faltaba ayudas_todas.js. ayudas.js solo sabe mirar en
+<!-- 🔴 ARREGLADO (18/09/2026): faltaba ayudas_todas.js. ayudas.js solo sabe mirar en
      window.IMMOIA_AYUDAS_TODAS o, si no está, en la carpeta ayudas/, que NO existe en el
      repositorio. Resultado: la IA de esta página no veía ni una sola ayuda, nunca.
      Van los dos con «defer» para no frenar la pantalla: ayudas.js no se usa hasta que el
      cliente dice dónde vive, mucho después de que la página haya pintado.
-     (18/09 · JUNTADO X2: la versión de caché ?v=18c es la de la auditoría; el «defer» y
-     el propio ayudas_todas.js son de C2. Las dos cosas van juntas.) -->
-<script src="ayudas_todas.js?v=24a" defer></script>
-<script src="ayudas.js?v=18c" defer></script>
+     (El «defer» y
+     el propio ayudas_todas.js van juntos.) -->
+<script src="ayudas_todas.js?v=24b" defer></script>
+<script src="ayudas.js?v=24b" defer></script>
 <script>
 (function(){
   "use strict";
@@ -287,7 +287,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   }
   WHATSAPP = limpiarMovil(WHATSAPP);
 
-  /* Los municipios salen de datos.js y de ningún otro sitio. 24/09/2026 · bloque C: aquí
+  /* Los municipios salen de datos.js y de ningún otro sitio. 24/09/2026: aquí
      había una copia de respaldo con textos que contradecían a datos.js (Arona, Adeje, San
      Miguel). Si datos.js no cargara, no se inventa nada: todo municipio va a cero. */
   var IBI = D.municipios || {
@@ -330,7 +330,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   /* ==========================================================
      3 · LA CUENTA
      ----------------------------------------------------------
-     24/09/2026 · bloque C. La cuenta ya NO se hace aquí: la hace
+     24/09/2026. La cuenta ya NO se hace aquí: la hace
      energia_cuenta.js, la misma que usan renovables.html y
      renovables_vacacional.html. Antes cada página contaba a su
      manera y para el mismo caso daban cifras distintas (646 €
@@ -388,7 +388,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      4 · PINTAR
      ========================================================== */
   function $(id){ return document.getElementById(id); }
-  /* 24/09/2026 · bloque C: los euros se escriben como en las otras dos páginas
+  /* 24/09/2026: los euros se escriben como en las otras dos páginas
      (punto de miles, y el menos delante si es negativo) */
   function eur(x){ return CUENTA ? CUENTA.fmt.eur(x) : Math.round(x).toLocaleString("es-ES") + " €"; }
   function kwh(x){ return CUENTA ? CUENTA.fmt.kwh(x) : Math.round(x).toLocaleString("es-ES") + " kWh"; }
@@ -789,7 +789,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   }
 
   /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
-     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     19/09/2026. Antes esta fecha estaba escrita a mano aqui, con el dia y el
      mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
      "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
      se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.
@@ -1001,7 +1001,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     ], true);
   }
 
-  /* 🔴 AÑADIDO (19/09/2026 · LOS_ENCHUFES): el tipo de vivienda se pregunta DESPUÉS
+  /* 🔴 AÑADIDO (19/09/2026): el tipo de vivienda se pregunta DESPUÉS
      del agua y del aire, así que en el paso del aire esta página ya le ha dicho
      «la deducción del 40 % te puede salir» —o «si cambias la bombona, entonces sí»—
      sin saber todavía que es un turístico. Las dos frases se quedan escritas arriba
@@ -1019,7 +1019,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      + "días alquilados — eso no está metido en esta cuenta.</p>");
   }
 
-  /* 24/09/2026 · bloque C: en un vacacional la cuenta depende de los días que está
+  /* 24/09/2026: en un vacacional la cuenta depende de los días que está
      ocupado (la calculadora del vacacional ya lo preguntaba; esta página no, y le daba
      el ahorro de una vivienda: 646 € donde la otra decía 384 €). */
   function pasoDias(){
@@ -1057,7 +1057,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     PASO = "municipio"; avance(4);
 
     var COM = D.comunidades || {};
-    /* 24/09/2026 · bloque C: el número se cuenta de datos.js; antes ponía «seis» a mano
+    /* 24/09/2026: el número se cuenta de datos.js; antes ponía «seis» a mano
        y la lista de debajo enseñaba siete. */
     var nDeduccion = CUENTA ? CUENTA.comunidadesConDeduccion().length
                    : Object.keys(COM).filter(function(k){ return !!COM[k].deduccion; }).length;
@@ -1101,7 +1101,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       + '<div id="fila-muni">'
       + '<label class="eti" for="m-sel" style="margin-top:12px">Municipio de Tenerife</label>'
       + '<select class="op" id="m-sel">' + opsM + '</select>'
-      /* 🔴 AÑADIDO (C2): antes la página se inventaba un IBI de 350 € al año. Ahora se
+      /* 🔴 AÑADIDO: antes la página se inventaba un IBI de 350 € al año. Ahora se
          pregunta. Si lo deja en blanco, la bonificación va a cero y se le dice. */
       + '<label class="eti" for="m-ibi" style="margin-top:12px">¿Cuánto pagas de IBI al año? '
       + '<span style="font-weight:400;color:var(--tinta2)">(mira tu recibo; si no lo tienes '
@@ -1186,7 +1186,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
          : "")
      + "<p>Mira el mes, que es lo que se nota:</p>");
 
-    /* El plan por defecto es el que pidió Leidy: que siga pagando lo mismo que ahora. */
+    /* El plan por defecto: que siga pagando lo mismo que ahora. */
     var plan = null;
     formasDePago().forEach(function(o){ if(o.id === "igual") plan = o; });
 
@@ -1382,11 +1382,10 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   /* ==========================================================
      LAS FORMAS DE PAGARLO
      ----------------------------------------------------------
-     Salen de CLOUD_ESTUDIO_PANELES/calculos_financieros.md y de
-     engranaje_completo.md. Todas se calculan con SUS números, no
+     Todas se calculan con SUS números, no
      con un ejemplo. El cliente elige; no se le empuja a ninguna.
      ========================================================== */
-  /* 24/09/2026 · bloque C: estos 500 € no tienen fuente (datos.js los tiene pendientes de
+  /* 24/09/2026: estos 500 € no tienen fuente (datos.js los tiene pendientes de
      cerrar por escrito con el instalador). Ya no se restan en la cuenta principal; aquí
      solo se nombran en la fórmula de ceder el sobrante, y marcados como supuesto. */
   var DESCUENTO_CESION = (window.IMMOIA_ENERGIA_CUENTA ? window.IMMOIA_ENERGIA_CUENTA.parametros().descuentoInstalador : 0);
@@ -1879,7 +1878,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var API = (typeof CONFIG === "object" && CONFIG && CONFIG.api)
     ? String(CONFIG.api).replace(/\/$/, "")
     : "https://immoia.ley1998ortizz.workers.dev";
-  /* 🔴 ARREGLADO (C2, 18/09/2026): aquí había una clave del servidor escrita en claro
+  /* 🔴 ARREGLADO (18/09/2026): aquí había una clave del servidor escrita en claro
      en una página pública que ve cualquiera con el botón derecho. Una clave
      escrita en el código no es una clave: es un cartel. Se ha quitado y esta página ya no
      manda ninguna.
@@ -2167,7 +2166,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
                /* 24/09/2026: «tae» se queda por si alguien ya lo leía, pero es el
                   interés NOMINAL que usa la cuenta, y es un supuesto */
                tipoNominal:TAE, tipoEsSupuesto:true,
-               /* 19/09/2026 · tanda 8: estas dos fechas estaban escritas a mano aquí.
+               /* 19/09/2026: estas dos fechas estaban escritas a mano aquí.
                   Ahora salen de datos.js. Si no están, se devuelve null, y quien lea
                   esto sabe que no hay fecha en vez de recibir una inventada. */
                finDeduccionVivienda: ((D.fechas || {}).finDeduccionVivienda || null),

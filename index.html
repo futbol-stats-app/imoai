@@ -23,7 +23,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2313342A'/><path d='M6 18 16 9l10 9v7a1 1 0 0 1-1 1h-6v-6h-6v6H7a1 1 0 0 1-1-1z' fill='%23D4A017'/></svg>">
 <script>
 /* ══════════════════════════════════════════════════════════════════════
-   UN SOLO ENLACE PARA LAS CUATRO CARAS  (encargo de Jarvis)
+   UN SOLO ENLACE PARA LAS CUATRO CARAS
 
        …/ayudas/              → la de por defecto
        …/ayudas/?v=clasica    → el documento: crema, serifa, se imprime
@@ -103,7 +103,7 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
 }
 
 /* ── data-marca="noche" ─────────────────────────────────────────────────
-   La propuesta de Jarvis, con la idea intacta (oscuro, foco, nada decorativo)
+   La propuesta original, con la idea intacta (oscuro, foco, nada decorativo)
    y los colores rehechos para que se lean. Su #1a1f2e con teal #0D6E6E daba
    2,71:1 — por debajo incluso del mínimo de un elemento de interfaz, que es 3.
    El fondo no es un slate azul de plantilla: es el mismo verde pino de la
@@ -168,7 +168,7 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
    Eso es el producto, no la decoración. */
 
 /* ── data-marca="nitido" ────────────────────────────────────────────────
-   La paleta que ha elegido Iván: fondo claro #F5F7FA y acento teal #0D6E6E.
+   La paleta elegida: fondo claro #F5F7FA y acento teal #0D6E6E.
    Medido: el teal da 5,63:1 sobre el fondo y 6,05:1 con texto blanco encima.
    Pasa de sobra.
 
@@ -232,7 +232,6 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
 
 /* ══════════════════════════════════════════════════════════════════════
    DEMO «INMOBILIARIA» — LAS DOS CAPAS
-   Encargo de Leidy e Iván, y el archivo PARA_CLAUDE_DEMO_2_CAPAS de Jarvis.
 
    CAPA 1, delante: lo que hace una inmobiliaria — ALQUILAR, COMPRAR, VENDER.
    Tres puertas grandes, los cuatro datos, y nada más.
@@ -387,7 +386,7 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
 :root[data-demo="rapida"] .comofunciona{display:none}
 
 /* ---- Las otras cuentas de la casa ----
-   19/09/2026 · LOS_ENCHUFES. Nada nuevo: solo los enlaces. Estas tres páginas
+   19/09/2026. Nada nuevo: solo los enlaces. Estas tres páginas
    estaban hechas y NINGÚN fichero del repositorio las enlazaba, así que quien
    entraba a mirar ayudas se iba sin saber que existían.
    NO se esconde en ninguna de las tres demos: el sentido de esto es que se
@@ -408,7 +407,7 @@ if(document.documentElement.dataset.marca!=="boletin"){var tg=document.getElemen
 .tambien a:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
 .tambien a b{display:block;font-size:16px;color:var(--marca);margin:0 0 3px}
 .tambien a span{display:block;font-size:14.5px;color:var(--tinta-2);line-height:1.5}
-/* 20/09/2026 · Pestaña 3: quien ha dicho «comprar» ve el aval ARRIBA del resultado, no al fondo */
+/* 20/09/2026: quien ha dicho «comprar» ve el aval ARRIBA del resultado, no al fondo */
 .salto-aval{display:block;margin:0 0 16px;padding:14px 16px;border:2px solid var(--marca);border-radius:12px;text-decoration:none;color:inherit;background:transparent}
 .salto-aval:hover{background:rgba(0,0,0,.03)}
 .salto-aval:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
@@ -537,7 +536,7 @@ h1{
 .enlace-plano:hover{background:none;color:var(--marca)}
 
 /* ---------- el logotipo: IMMO + redondel, y IA debajo ---------- */
-/* La forma la marcó Iván: «IMMO», el redondel pequeño al lado, y «IA» grande
+/* La forma del logotipo: «IMMO», el redondel pequeño al lado, y «IA» grande
    debajo. Se monta como una unidad para que no se descuadre nunca: la primera
    línea alinea el texto y el círculo por su centro, y la segunda cuelga
    pegada, sin hueco, que es lo que hace que parezca un logotipo y no dos
@@ -740,7 +739,7 @@ button:disabled{opacity:.55;cursor:default}
 }
 .aparte b{color:var(--tinta)}
 .aparte ul{margin:8px 0 0;padding-left:18px}
-/* 24/09 · bloque B: las que encajan pero no se pueden pedir hoy, plegadas (se dicen arriba) */
+/* 24/09: las que encajan pero no se pueden pedir hoy, plegadas (se dicen arriba) */
 .mas-ayudas{margin:14px 0}
 .mas-ayudas>summary{cursor:pointer;padding:10px 0;color:var(--tinta)}
 .sin-nada{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:18px;font-size:15px}
@@ -1038,7 +1037,7 @@ html.cerrado body>*:not(#cortina){display:none!important}
   <div id="resultados" class="oculto" aria-live="polite"></div>
 
   <!-- ══════════ Las otras cuentas de la casa ══════════
-       19/09/2026 · LOS_ENCHUFES. Van AQUÍ, debajo del formulario y del
+       19/09/2026. Van AQUÍ, debajo del formulario y del
        resultado, y no en el pie, por dos motivos:
          · es donde mira quien acaba de ver qué le toca y qué no, y es
            justo cuando se pregunta «¿y ahora qué?»;
@@ -1055,8 +1054,8 @@ html.cerrado body>*:not(#cortina){display:none!important}
         <span>Si compras tu primera vivienda. Cuatro datos y te dice si entras y, si no entras, exactamente por qué. Cada condición, con la norma que la dice.</span>
       </a></li>
       <li><a href="renovables.html">
-        <b>¿Cuánto me cuestan de verdad las placas?</b>
-        <span>Lo que pagas, lo que te devuelven y lo que te queda al mes. Con las ayudas que están abiertas hoy, no las del año pasado.</span>
+        <b>¿Cuánto me cuestan de verdad las placas? · solo Tenerife</b>
+        <span>Lo que pagas, lo que te devuelven y lo que te queda al mes. Con las ayudas que están abiertas hoy, no las del año pasado. <strong>Es solo para casas en Tenerife</strong>: sus municipios, su Consorcio de Tributos y su sol. Si tu casa está en otro sitio, usa la de abajo, IMMO IA Energía, que pregunta tu comunidad.</span>
       </a></li>
       <li><a href="energia.html">
         <b>Que te la hagamos nosotros, preguntando</b>
@@ -1113,10 +1112,10 @@ html.cerrado body>*:not(#cortina){display:none!important}
 
 <!-- Las 293 ayudas viven en ayudas_todas.js y SOLO ahí. Esta página no
      guarda ninguna copia: las lee de este fichero. -->
-<!-- 24/09 · bloque B (fallo 58): saber.js pide «ayudas_todas.js» con la misma marca si no encuentra un
+<!-- 24/09 (fallo 58): saber.js pide «ayudas_todas.js» con la misma marca si no encuentra un
      script con data-saber igual. Con esta marca lo encuentra y no lo carga otra vez:
      un solo fichero de ayudas en la portada, el de la marca de caché de arriba. -->
-<script src="ayudas_todas.js?v=24a" data-saber="ayudas_todas.js?v=24a"></script>
+<script src="ayudas_todas.js?v=24b" data-saber="ayudas_todas.js?v=24b"></script>
 <script src="frescura.js?v=18c"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -1141,8 +1140,7 @@ const RE_FISCAL = /^(IBI|ITP|AJD|IRPF|ICIO|IVA|IGIC|Plusval|Impuesto|Deducci|Bon
 const esFiscal = (a) => FISCALES.includes(a.c) || RE_FISCAL.test(a.n || "");
 /* ══ UNA SOLA COPIA DE LAS 293 ═══════════════════════════════════════
    Aquí dentro había una segunda copia entera de las 293 ayudas. Ya se
-   había separado de la de ayudas_todas.js en dos fichas (están contadas
-   en LAS_DOS_QUE_NO_CUADRAN.md), y dos verdades no son ninguna verdad.
+   había separado de la de ayudas_todas.js en dos fichas, y dos verdades no son ninguna verdad.
    Ahora las fichas viven SOLO en ayudas_todas.js y esta pantalla las lee
    de ahí, poniéndoles los nombres cortos que usa este código. Si ese
    fichero no llega a cargarse no se inventa nada: la lista queda vacía y
@@ -1164,7 +1162,7 @@ const COMPROBADO_DATO = (typeof window !== "undefined" && window.IMMOIA_AYUDAS_C
 /* Las frases que hay que decir cuando NO hay dato. No rellenan un hueco:
    dicen que el hueco existe, que es lo honesto. */
 const AVISO_SIN_INGRESOS = "Esta ayuda no publica límite de ingresos: compruébalo en su convocatoria.";
-/* 20/09/2026 · Pestaña 3. El aval del ICO SÍ publica tope de ingresos, pero va
+/* 20/09/2026. El aval del ICO SÍ publica tope de ingresos, pero va
    por provincia (tabla del ICO de 19/06/2026) y en brutos al año, así que aquí
    no se puede cruzar con lo que la persona pone (netos al mes). Decir «no
    publica límite» era falso. Se dice lo que hay y se manda a la calculadora. */
@@ -1196,7 +1194,7 @@ function avisarSiFaltanLasAyudas(){
     + "inventado: vuelve a cargar la página o escríbenos.";
   c.hidden = false;
 }
-/* 24/09 · bloque B (fallo 13). El mapa estaba escrito a mano y ya no cuadraba
+/* 24/09 (fallo 13). El mapa estaba escrito a mano y ya no cuadraba
    con las fichas (Galicia 5 cuando hay 4, La Rioja 9/0 cuando hay 8/1...).
    Ahora se cuenta de las MISMAS fichas que usa la calculadora, con la misma
    regla: lo que la propia ficha dice que no es una ayuda que se pida no cuenta. */
@@ -1263,7 +1261,7 @@ function evaluar(a, perfil, mirarObjetivo = true){
   } else if(a.jov){
     /* Aquí había un tope de 45 años que no salía de ninguna norma: nos lo
        habíamos puesto nosotros y dejaba fuera a gente sin que ninguna
-       convocatoria lo dijera. La dirección lo ha quitado. No se descarta a
+       convocatoria lo dijera. Se ha quitado. No se descarta a
        nadie por una edad que la convocatoria no publica: se dice lo que hay
        y que lo compruebe en su convocatoria. */
     avisos.push(AVISO_SIN_EDAD);
@@ -1301,31 +1299,17 @@ function orden(a){
   return ({abierta:0, permanente:1, derivacion:2, pendiente:3, cerrada:4})[a.e] ?? 5;
 }
 
-/* ══ LO QUE NO ES UNA AYUDA PARA ESTA PERSONA · 24/09/2026 · bloque B ══════
-   (fallos 4 a 8 y 10-11 de LO_QUE_FALLA_EN_LA_WEB.md)
+/* ══ LO QUE NO ES UNA AYUDA PARA ESTA PERSONA · 24/09/2026 ══════════════
    No se reescribe ninguna ficha: se lee lo que la PROPIA ficha dice de sí
    misma y, si ella dice que no es una ayuda que se pida, no se cuenta como
    «ayuda que encaja». Se cuenta aparte y se dice en «Por qué no salen».
-
-   1. Lo que la ficha dice en su nombre: «(no la pide el ciudadano)»,
-      «(no vigente)», «(no hay prestación …)».
-   2. Lo que dice en su texto: «No es una ayuda que se pida», «NO ES UNA
-      AYUDA: …», «No es una ayuda, sino un precio …». Ojo: «No es una ayuda
-      aparte, sino cupos dentro del programa general» SÍ es una ayuda, y la
-      regla no la toca.
-   3. Quién la pide, según su propia ficha: si la primera frase de «quién
-      puede» son municipios, entidades locales, ayuntamientos o promotores,
-      la pide una administración o una empresa, no un particular. (Ojo: «Municipios
-      o núcleos de población … con 10.000 habitantes o menos» es DÓNDE vive
-      el particular que la pide, y esa sí es suya.)                          */
-const RE_NO_ES_AYUDA_NOMBRE = /\((no la pide el ciudadano|no vigente|no hay prestaci[óo]n[^)]*)\)/i;
-const RE_NO_ES_AYUDA_TEXTO  = /\bno es una ayuda(?: que se pida|\s*[:,])/i;
-const RE_LA_PIDE_UNA_ENTIDAD = /^(Municipios|Entidades locales|Ayuntamientos|Promotores)\b/i;
+   La regla (nombre, texto y quién la pide) vive en ayudas_todas.js, junto
+   a las fichas, porque la usa también lo que se le pasa a la IA del chat
+   (ayudas.js): una sola regla para las dos. */
 function noEsUnaAyuda(a){
-  if(RE_NO_ES_AYUDA_NOMBRE.test(a.n || "")) return true;
-  const quien = String(a.quien_puede || "").trim().split(/[.;]/)[0];
-  if(RE_LA_PIDE_UNA_ENTIDAD.test(quien) && !/habitantes o menos|n[úu]cleos de poblaci[óo]n/i.test(quien)) return true;
-  return RE_NO_ES_AYUDA_TEXTO.test(a.da || "") || RE_NO_ES_AYUDA_TEXTO.test(a.incomp || "");
+  /* si ayudas_todas.js no ha llegado, tampoco hay fichas que mirar */
+  const regla = (typeof window !== "undefined") ? window.IMMOIA_NO_ES_AYUDA : null;
+  return typeof regla === "function" ? regla(a) : false;
 }
 
 /* 3. Programas del PROPIETARIO que alquila su piso. La puerta «Alquilar» es
@@ -1465,7 +1449,7 @@ function engancharExtras(){
     b.addEventListener("click", ()=>{
       const panel = document.getElementById("panel-" + b.dataset.k);
       const abierto = b.getAttribute("aria-expanded") === "true";
-      /* Uno cada vez: es lo que pedía Jarvis — sencillo, sencillo, sencillo. */
+      /* Uno cada vez: sencillo, sencillo, sencillo. */
       document.querySelectorAll(".extra-bot").forEach(o=>o.setAttribute("aria-expanded","false"));
       document.querySelectorAll(".extra-panel").forEach(p=>{p.hidden = true;});
       if(!abierto){ b.setAttribute("aria-expanded","true"); panel.hidden = false; }
@@ -1576,7 +1560,7 @@ function htmlCaptura(){
   </div>`;
 }
 
-/* 20/09/2026 · Pestaña 3 (el comprador). Quien dice que quiere COMPRAR (o la
+/* 20/09/2026. Quien dice que quiere COMPRAR (o la
    inmobiliaria que mira lo de su comprador) tiene el aval del Estado a un clic,
    encima de todo. Se le lleva la edad y la provincia; los ingresos NO, porque
    aquí son netos al mes y la calculadora del aval pide brutos al año. */
@@ -1603,7 +1587,7 @@ function sinNotasInternas(t){
 }
 
 /* Cuántas se enseñan abiertas antes de plegar el resto. Las que se pueden
-   pedir hoy se enseñan SIEMPRE, sean las que sean (fallo 2: DAVID). */
+   pedir hoy se enseñan SIEMPRE, sean las que sean (fallo 2). */
 const A_LA_VISTA = 4;
 
 function pintar({directas, fiscales = [], municipales = [], derivaciones = [], dudosas = [], descartes, total, extras = {}}, perfil){
@@ -2002,7 +1986,7 @@ function memGuardar(perfil, resultado){
       hoy: resultado.directas.filter(a=>a.e==="abierta"||a.e==="permanente").length,
       /* Solo los nombres: es lo que hace falta para comparar, y ocupa poco. */
       nombres: resultado.directas.map(a=>a.n).slice(0, 40),
-      /* 24/09 · bloque B: desde hoy se guarda la lista ENTERA (antes solo las
+      /* 24/09: desde hoy se guarda la lista ENTERA (antes solo las
          4 del corte). Esta marca evita comparar con consultas guardadas con
          el corte, que darían «nuevas» que no lo son. */
       lista: "entera",
@@ -2733,7 +2717,7 @@ montarAsistente();        /* el cuadro de texto, solo en la demo «asistente» *
 if(leerPerfilDeLaDireccion()){ marcarPuerta($("#objetivo").value); $("#calculadora").requestSubmit(); }
 pintarCaducidad();
 pintarMapa();
-pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=24a"; document.body.appendChild(s);})();
+pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=24b"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="botones_rapidos.js?v=1"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="casas_ia.js?v=18c"; document.body.appendChild(s);})();
 </script>

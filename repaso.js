@@ -35,7 +35,7 @@
   var VERSION = "1.0";
 
   /* ==================================================================
-     1. LA TABLA DE PAPELES  (OT25_TABLA_DE_PAPELES.md, 18/09/2026)
+     1. LA TABLA DE PAPELES  (18/09/2026)
      ------------------------------------------------------------------
      Solo las filas de frecuencia «todos los días» cuya propia tabla
      dice que sin ese papel no se puede seguir. Ni una más. El texto de
@@ -171,7 +171,7 @@
     if (!esFecha(iso)) return null;
     var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return aISO(d);
   }
-  /* 20/09/2026 · tanda 13. UN MES NO SON 30 DÍAS.
+  /* 20/09/2026. UN MES NO SON 30 DÍAS.
      El art. 2.3 de la Ley 2/2014 de Canarias da «el plazo de un mes contado
      desde» la firma, y el art. 5.1 del Código Civil dice cómo se cuenta un
      plazo por meses: «se computarán de fecha a fecha» y «cuando en el mes del

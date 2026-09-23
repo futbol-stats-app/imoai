@@ -67,8 +67,7 @@ window.DATOS_IMMOIA = {
        y en pantalla se dice así («interés nominal, supuesto»), nunca «TAE». */
     tae: 0.0625,
 
-    /* PLAZO. Cambiado de 10 a 15 anos el 11/09/2026 por CORREGIR_PLAZO.md
-       (Jarvis e Ivan). El motivo es bueno: a 15 anos la cuota del ano 1 sale
+    /* PLAZO. Cambiado de 10 a 15 anos el 11/09/2026. El motivo es bueno: a 15 anos la cuota del ano 1 sale
        ~47 €/mes en vez de ~62 €, y desde el ano 2 el cliente paga MENOS que su
        factura de hoy, que es justo la oferta.
        ⚠️ LO QUE CUESTA, y hay que decirlo: a 6,25 % y 5.500 €, 10 anos son
@@ -143,7 +142,7 @@ window.DATOS_IMMOIA = {
     parteEnergiaFactura: 0.70,
 
     /* Lo que se cobra por llevar los papeles, segun la opcion que elija el cliente
-       (TRES_OPCIONES_SERVICIO.md, Jarvis e Ivan, 10/09/2026).
+       (10/09/2026).
        Opcion 1 "hazmelo todo": gestion gratis y el excedente es de IMMO IA.
        Opcion 2 "buscame instalador y llevame los papeles": 200 € y el excedente es suyo.
        Opcion 3 "solo los papeles": 200 € y el excedente es suyo.
@@ -312,7 +311,7 @@ window.DATOS_IMMOIA = {
   /* -----------------------------------------------------------
      4 · LAS 17 COMUNIDADES Y LAS 2 CIUDADES AUTÓNOMAS
      -----------------------------------------------------------
-     Fuente: INVESTIGACION_CCAA/AYUDAS_POR_COMUNIDAD.md, 10/09/2026.
+     Recopilado el 10/09/2026.
      Todas las deducciones autonómicas están contrastadas con la AEAT.
 
      subvencion.estado: "abierta" | "cerrada" | "reabre" | "sinVerificar"
@@ -441,7 +440,7 @@ window.DATOS_IMMOIA = {
      sin inventarse un porcentaje.
 
      Leído palabra por palabra en el texto consolidado del BOE el 17/09/2026.
-     Esto cierra el pendiente nº 13 de TRAMITE_5_ICIO.md, que decía que el
+     Hasta entonces el
      art. 74.5 no se había verificado sobre el texto oficial. Ya está.
      ----------------------------------------------------------- */
   leyMunicipal: {

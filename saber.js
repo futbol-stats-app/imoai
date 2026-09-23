@@ -33,9 +33,9 @@
   }
 
   function cargarTodo() {
-    traer("ayudas_todas.js?v=24a", function () {
+    traer("ayudas_todas.js?v=24b", function () {
       traer("municipios_todos.js?v=1", function () {
-        traer("ayudas.js?v=2", function () {
+        traer("ayudas.js?v=24b", function () {
           if (window.IMMOIA_AYUDAS && window.IMMOIA_AYUDAS_TODAS) LISTO = true;
           mapaDePueblos();
           /* los impuestos de la comunidad: en la portada no los tenia nadie.
@@ -247,7 +247,7 @@
         : "IDIOMA: no se sabe. Sigues en espanol de Espana.");
       l.push("FUENTES CARGADAS EN ESTA PANTALLA: " + (si.length ? si.join("; ") : "ninguna") + ".");
       l.push("FUENTES QUE NO ESTAN EN ESTA PANTALLA: " + no.join("; ") + ". Lo que dependa de ellas no lo tienes: no lo des por sabido y no lo pidas como si estuviera.");
-      /* 20/09/2026 · tanda 13. La fecha del vacacional no está en ningún
+      /* 20/09/2026. La fecha del vacacional no está en ningún
          boletín, y la web la daba como plazo firme. Se ha quitado de la
          pantalla; esta línea impide que vuelva por la boca de la secretaria,
          aunque se la diga la propia persona. */
@@ -424,7 +424,7 @@
 
   function sinNumero(v) { return /^no verificad/i.test(String(v || "").trim()); }
 
-  /* ---- 24/09/2026 (bloque D) ------------------------------------------
+  /* ---- 24/09/2026 ------------------------------------------
      1. fiscal.js esta escrito sin enes («40 anios»). La IA contesta «40
         años», y el repaso del servidor, que compara lo que dice con lo que
         tiene delante, no encuentra «40 anos» en «40 anios» y le pega

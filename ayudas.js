@@ -73,10 +73,19 @@
     return lista;
   }
 
-  /* Solo las que puede pedir hoy o siempre. Las cerradas no se le ofrecen. */
+  /* Solo las que puede pedir hoy o siempre. Las cerradas no se le ofrecen.
+     Tampoco lo que la propia ficha dice que no es una ayuda que se pida
+     (un plan no vigente, lo que piden los ayuntamientos o los promotores,
+     un precio de vivienda protegida...): es la MISMA regla que usa la
+     calculadora de la portada, y vive en ayudas_todas.js. */
+  function noEsUnaAyuda(a) {
+    var regla = global.IMMOIA_NO_ES_AYUDA;
+    return typeof regla === "function" ? !!regla(a) : false;
+  }
   function vivas(ccaa) {
     return para(ccaa).filter(function (a) {
-      return a.estado === "abierta" || a.estado === "permanente" || a.estado === "pendiente";
+      return (a.estado === "abierta" || a.estado === "permanente" || a.estado === "pendiente") &&
+             !noEsUnaAyuda(a);
     });
   }
 

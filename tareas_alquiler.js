@@ -18,8 +18,7 @@
    LO QUE NO HACE, Y HAY QUE DECIRLO
    NO se engancha solo a la web. Quien decide cuando el expediente es
    de alquiler y le pone estas tablas al motor es un cargador que
-   todavia no existe, y motor.js no es mio: no lo toco. La propuesta,
-   en INFORME_INQUILINOS.md.
+   todavia no existe, y motor.js no es mio: no lo toco.
 
    LOS COMENTARIOS VAN SIN TILDES, como motor.js. LOS TEXTOS QUE SE
    VEN EN PANTALLA, NO: llevan sus tildes y sus enes. El motor mete el

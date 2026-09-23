@@ -1,12 +1,7 @@
-# IMMO IA · 18/09/2026
-# Las paginas internas (presentaciones, demos, oficina) no deben salir en buscadores.
+# IMMO IA
+# Las paginas que no deben salir en buscadores lo dicen ellas mismas con
+# <meta name="robots" content="noindex">. Aqui solo quedan las que todavia no lo llevan.
 User-agent: *
-Disallow: /carta.html
-Disallow: /pase.html
-Disallow: /proyecto.html
 Disallow: /demo.html
 Disallow: /puertas.html
 Disallow: /casas.html
-Disallow: /inmobiliaria.html
-Disallow: /manana.html
-Disallow: /asistente.html

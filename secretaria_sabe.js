@@ -167,7 +167,7 @@
      idea que usa saber.js con los impuestos -el aviso pegado a la
      cifra, no en una instruccion al final-, porque una instruccion
      aparte se la puede saltar y una que va en el mismo parrafo que el
-     dato, no. Cuando el trozo de EL_TROZO_DEL_SERVIDOR.md este puesto,
+     dato, no. Cuando el cambio del servidor este puesto,
      estas seis lineas se pueden acortar a una. */
   function comoSeLee() {
     return MARCA + " · leido de su pantalla; no se lo leas tal cual, usalo]\n"
@@ -386,10 +386,10 @@
      corchete y las pone DELANTE de la conversacion
      (worker.js: fichas.concat(dicho_antes)).
 
-     OJO, PARA LA DIRECCION: ese mismo recorte se sigue llevando hoy las
+     OJO: ese mismo recorte se sigue llevando hoy las
      fichas de saber.js -las ayudas y el contexto- en conversaciones
-     largas. Eso YA PASA, es de antes y NO se toca aqui: esta tanda
-     cambia lo minimo. Esta apuntado en el INFORME.md. */
+     largas. Eso YA PASA, es de antes y NO se toca aqui: aqui se
+     cambia lo minimo. */
   function metidaEnSuSitio(mensajes, ficha) {
     for (var i = mensajes.length - 1; i >= 0; i--) {
       var m = mensajes[i];

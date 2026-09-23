@@ -1027,7 +1027,16 @@ Si te piden un texto para mandar a alguien, escribelo ya escrito, listo para cop
     }
 
     l.push("COMO LO DICES: da la cifra, di que esta revisada a fecha de arriba, y di que el caso concreto se confirma en la agencia tributaria de esa comunidad. Lo que lleve AVISO PEGADO se dice CON el aviso en la MISMA frase, no en otra. Si el dato no esta aqui, no lo inventes y tampoco lo des por imposible: es PENDIENTE DE VERIFICACION, di que falta, donde se consigue y a quien se le pide.");
-    return cabe(l, recambio);
+    return conEnes(cabe(l, recambio));
+  }
+
+  /* fiscal.js esta escrito sin enes («40 anios»). La IA contesta «40
+     años», y el repaso del servidor, que compara lo que dice con lo que
+     tiene delante, no encuentra «40 anos» en «40 anios» y le pega
+     «PENDIENTE DE VERIFICACION» a una cifra que la ficha de la web da por
+     comprobada. Aqui se escribe «años», igual que en saber.js. */
+  function conEnes(t) {
+    return String(t).replace(/\banios\b/g, "a\u00f1os").replace(/\banio\b/g, "a\u00f1o");
   }
 
   /* El recorte de la ficha entera, con el mismo cuidado que el de cada

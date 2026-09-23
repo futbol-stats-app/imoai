@@ -140,7 +140,7 @@ table.t td.resta{color:var(--verde)}
   cobrar más luz de la que gastas</b>. Y como está vacío buena parte del año, gastas poco. Pon
   tus datos y verás cuánta luz produces que no puedes ni usar ni cobrar.</p>
 
-  <!-- 19/09/2026 · tanda 8: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
+  <!-- 19/09/2026: el 31 de diciembre de 2026 ya no está escrito a mano aquí.
        Lo pone el script de abajo leyendo datos.js (fechas.finDeduccionVivienda). Si
        datos.js no trae esa fecha, este reloj no se enseña: no nos inventamos ninguna. -->
   <div class="reloj" id="reloj" hidden>
@@ -180,7 +180,7 @@ table.t td.resta{color:var(--verde)}
     <label for="factura" style="margin-top:14px">¿Cuánto pagas de luz al mes? <small style="font-weight:400">(si no lo pones, lo estimamos por los días ocupado)</small></label>
     <input type="number" id="factura" min="0" max="900" step="5" value="" placeholder="Opcional: lo que pone tu factura" inputmode="decimal">
 
-    <!-- 24/09/2026 · bloque C: si es tu vivienda, las mismas dos preguntas que hacen
+    <!-- 24/09/2026: si es tu vivienda, las mismas dos preguntas que hacen
          renovables.html e IMMO IA Energía. En un turístico no se enseñan: no hay deducción. -->
     <div class="dos" id="preguntas-irpf" hidden style="margin-top:14px">
       <div>
@@ -409,7 +409,7 @@ table.t td.resta{color:var(--verde)}
 </div>
 
 <script src="datos.js?v=24a"></script>
-<!-- 24/09/2026 · bloque C: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
+<!-- 24/09/2026: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
      usan las tres páginas de placas, para que el mismo caso dé la misma cifra. -->
 <script src="energia_cuenta.js?v=24a"></script>
 <script>
@@ -429,7 +429,7 @@ table.t td.resta{color:var(--verde)}
   function pct(n){ return Math.round(n * 100) + " %"; }
 
   /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
-     19/09/2026 · tanda 8. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo
+     19/09/2026. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo
      de ahi. Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE
      ENSENA NADA: nunca se inventa una fecha. */
   var MESES_FIN = ["enero","febrero","marzo","abril","mayo","junio",

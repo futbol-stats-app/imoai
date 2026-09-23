@@ -259,7 +259,7 @@ section.caja > h3{
 
 </div>
 
-<!-- 19/09/2026 · tanda 8: esta página no cargaba datos.js y tenía el 31 de diciembre de
+<!-- 19/09/2026: esta página no cargaba datos.js y tenía el 31 de diciembre de
      2026 escrito a mano, dos veces. Ahora la fecha sale de datos.js y de ningún otro
      sitio; si datos.js no carga o no la trae, el aviso del plazo no se escribe. -->
 <script src="datos.js?v=24a"></script>
@@ -578,7 +578,7 @@ section.caja > h3{
       + tile("2", "les falta algo")
       + tile("1", "sin el papel del ayuntamiento")
     + '</div>'
-    /* 20/09/2026 · tanda 13. AQUÍ HABÍA UNA FECHA QUE NO EXISTE.
+    /* 20/09/2026. AQUÍ HABÍA UNA FECHA QUE NO EXISTE.
        Aquí se daba como plazo firme una fecha que no consta en el Boletín
        Oficial de Canarias: se buscó y no aparece (la ley que se citaba es del
        año anterior, con el año cambiado). No se sustituye por otra fecha: se
@@ -611,7 +611,7 @@ section.caja > h3{
   function tile(c,p){ return '<div class="dato"><div class="cifra">'+esc(c)+'</div><div class="pie">'+esc(p)+'</div></div>'; }
   function caja(t,c){ return '<section class="caja"><h3>'+esc(t)+'</h3>'+c+'</section>'; }
   function aviso(t,c){ return '<div class="aviso"><span class="pun"></span><span><b>'+esc(t)+'</b>'+esc(c)+'</span></div>'; }
-  /* 20/09/2026 · Pestaña 3 (el comprador). El panel presumía de «compradores con
+  /* 20/09/2026. El panel presumía de «compradores con
      aval posible» y no llevaba a ningún sitio. Ahora lleva a la calculadora. */
   function enlaceAval(){
     return '<a id="enlace-aval" href="calculadora.html?de=inmobiliaria" '
@@ -655,7 +655,7 @@ section.caja > h3{
   };
 
   /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
-     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
+     19/09/2026. Antes esta fecha estaba escrita a mano aqui, con el dia y el
      mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
      "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
      se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.

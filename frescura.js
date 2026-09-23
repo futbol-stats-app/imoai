@@ -19,8 +19,7 @@
      2. qué ayudas han pasado ya de su fecha_fin.
 
    Lo que NO se puede hacer todavía, y por eso no se hace, es detectar
-   sola una convocatoria que cierra sin fecha_fin publicada. Para eso
-   hace falta lo que cuenta INFORME_C3.md.
+   sola una convocatoria que cierra sin fecha_fin publicada.
 */
 (function (global) {
   "use strict";
