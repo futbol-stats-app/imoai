@@ -25,6 +25,20 @@
   var CARPETA_SUELTOS = "99_NO_SE_DE_QUIEN_SON";
 
   /* Windows no admite  \ / : * ? " < > |  ni terminar en punto o espacio. */
+  /* ------------------------------------------------------------------
+     ARREGLO DEL 23/09/2026 · AL ACORTAR, LA EXTENSIÓN SE QUEDA
+     ------------------------------------------------------------------
+     Lo que pasaba (nivel 8 del campo de entrenamiento): un nombre de 168
+     letras salía cortado a 120 y SIN el «.pdf» del final, en los seis
+     órdenes. En Windows eso es un fichero que al doble clic pregunta con
+     qué programa abrirlo. El original no se toca nunca —la aplicación
+     copia, no mueve—, pero la carpeta ordenada, que es el producto, se
+     queda con un papel que no se abre.
+     Ahora se corta por el tronco y la extensión se pega detrás. Y cada
+     nombre acortado se cuenta, para poder decirlo en las notas del plan.
+     ------------------------------------------------------------------ */
+  var EXTENSION = /\.([A-Za-z0-9]{1,8})$/;
+
   function limpiarNombre(t, tope) {
     var s = String(t == null ? "" : t)
       .replace(/[\\\/:*?"<>|]/g, "-")
@@ -34,8 +48,19 @@
       .replace(/[. ]+$/, "");
     if (!s) s = "sin nombre";
     tope = tope || 90;
-    if (s.length > tope) s = s.slice(0, tope).replace(/[. ]+$/, "");
-    return s;
+    if (s.length <= tope) return s;
+
+    /* el tronco se acorta; la extensión, si la hay, se queda pegada */
+    var ext = EXTENSION.exec(s);
+    var cola = ext ? ext[0].toLowerCase() : "";
+    var tronco = ext ? s.slice(0, s.length - cola.length) : s;
+    var sitio = tope - cola.length;
+    if (sitio < 1) {                       /* una extensión rarísima y larguísima */
+      return s.slice(0, tope).replace(/[. ]+$/, "");
+    }
+    tronco = tronco.slice(0, sitio).replace(/[. ]+$/, "");
+    if (!tronco) tronco = "sin nombre".slice(0, sitio);
+    return tronco + cola;
   }
 
   function dos(n) { return (n < 10 ? "0" : "") + n; }
@@ -92,9 +117,16 @@
              destinos: [], notas: [] };
   }
   function poner(plan, carpeta, fichero, nombreFinal) {
+    var pedido = String(nombreFinal || fichero.nombre || "");
+    var nombre = limpiarNombre(pedido, 120);
+    /* si se ha acortado, queda apuntado: se dice en las notas del plan */
+    if (pedido.length > 120) {
+      plan.acortados = (plan.acortados || []);
+      plan.acortados.push({ antes: pedido, despues: nombre });
+    }
     plan.destinos.push({
       carpeta: carpeta.map(function (x) { return limpiarNombre(x); }).join("/"),
-      nombre: limpiarNombre(nombreFinal || fichero.nombre, 120),
+      nombre: nombre,
       fichero: fichero
     });
   }
@@ -401,6 +433,13 @@
       var p = o.hacer(estado);
       p.carpetas = cuantasCarpetas(p);
       p.cuenta = unaSolaVez(p, estado);
+      /* ARREGLO DEL 23/09/2026: acortar un nombre es una decisión, y las
+         decisiones se cuentan. Antes no se decía en ningún sitio. */
+      if (p.acortados && p.acortados.length) {
+        p.notas.push("He acortado " + p.acortados.length + " " +
+          (p.acortados.length === 1 ? "nombre demasiado largo" : "nombres demasiado largos") +
+          " para que quepan en Windows. La extensión se queda: el fichero se abre igual.");
+      }
       return p;
     });
   }

@@ -332,10 +332,61 @@
 
   /* Las fechas sueltas que un papel menciona en su texto y que no tienen
      papel propio. Es de donde salen las contradicciones de fechas. */
-  function fechasDelTexto(t) {
-    var out = [], m, re = /(\d{2})\/(\d{2})\/(\d{4})/g;
-    while ((m = re.exec(String(t || "")))) out.push(m[3] + "-" + m[2] + "-" + m[1]);
+  /* ------------------------------------------------------------------
+     ARREGLO DEL 23/09/2026 · UNA FECHA QUE EL PAPEL DICE DE SÍ MISMO NO
+     ES UN PAPEL QUE FALTE
+     ------------------------------------------------------------------
+     Lo que pasaba (nivel 7 del campo de entrenamiento, expediente
+     «Doble Fecha 21»): un certificado energético que lleva dentro la
+     línea «Válido hasta: 07/11/2026» hacía saltar el aviso «Hay una
+     fecha apuntada que no tiene papel». Esa fecha está DENTRO del papel
+     que se está mirando: no falta ningún papel, y no puede faltar.
+     Mandaba a la agencia a buscar algo que no existe.
+
+     La diferencia está en lo que la fecha anuncia:
+       · una fecha que anuncia OTRO trámite («hay que escriturar antes
+         del…», nivel 2) -> el aviso está bien y sigue saliendo;
+       · una fecha que habla DEL PROPIO PAPEL («válido hasta», «caduca
+         el», «emitido el») -> ahí no falta nada: lo que toca decir es
+         cuándo deja de valer ese papel.
+     Por eso cada fecha del texto sale ahora con su etiqueta, que se lee
+     de las palabras que tiene justo delante (o entre paréntesis detrás,
+     que es como las deja deduccion.js).
+     ------------------------------------------------------------------ */
+  var RE_VALIDEZ = /(valido|valida|validez|caduca|caducidad|vence|vencimiento|expira|expiracion)[^0-9]{0,20}$/;
+  var RE_EMISION = /(emitid[oa]|expedid[oa]|fecha de emision|fecha del documento|firmad[oa]|de fecha)[^0-9]{0,20}$/;
+
+  function etiquetaDeLaFecha(texto, desde, hasta) {
+    var antes = sinTildes(String(texto).slice(Math.max(0, desde - 40), desde));
+    var detras = String(texto).slice(hasta, hasta + 34);
+    var entreParentesis = /^\s*\(([^)]{0,30})\)/.exec(detras);
+    var etiqueta = entreParentesis ? sinTildes(entreParentesis[1]) + " " : "";
+    if (RE_VALIDEZ.test(antes) || RE_VALIDEZ.test(etiqueta)) return "validez";
+    if (RE_EMISION.test(antes) || RE_EMISION.test(etiqueta)) return "emision";
+    return null;
+  }
+
+  /* Las fechas del texto, cada una con su etiqueta (o sin ninguna). */
+  function fechasEtiquetadas(t) {
+    var s = String(t || ""), out = [], m, re = /(\d{2})\/(\d{2})\/(\d{4})/g;
+    while ((m = re.exec(s))) {
+      out.push({ iso: m[3] + "-" + m[2] + "-" + m[1], crudo: m[0],
+                 etiqueta: etiquetaDeLaFecha(s, m.index, m.index + m[0].length) });
+    }
     return out;
+  }
+
+  /* La fecha de caducidad que el propio papel declara, si la declara. */
+  function validezQueDiceElPapel(d) {
+    var fuera = null;
+    fechasEtiquetadas(d && d.literal_en_OT25).forEach(function (f) {
+      if (!fuera && f.etiqueta === "validez") fuera = f;
+    });
+    return fuera;
+  }
+
+  function fechasDelTexto(t) {
+    return fechasEtiquetadas(t).map(function (f) { return f.iso; });
   }
 
   /* ==================================================================
@@ -425,6 +476,37 @@
        repaso completo, que es contradecirse en dos líneas. */
     if (!(e && e.propietario && e.propietario.nombre)) ciego.push("el nombre del propietario");
     if (!yo.operacion) ciego.push("si es venta, alquiler o vacacional");
+    /* ------------------------------------------------------------------
+       ARREGLO DEL 23/09/2026 · EL MOTIVO DE VERDAD, NO UNO CUALQUIERA
+       ------------------------------------------------------------------
+       Cuando en un portal se conocen dos pisos y el papel no dice cuál
+       es, la regla de la casa deja el papel aparte — y eso está bien.
+       Lo que estaba mal es lo que se decía en pantalla: «me falta el
+       nombre del propietario y si es venta, alquiler o vacacional».
+       Eso hace creer que se arregla poniendo el propietario, y no se
+       arregla: aunque lo supiera, seguiría sin saber si es el 1ºA o el
+       4ºC. Aquí se dice el motivo de verdad, y el genérico se calla.
+       ------------------------------------------------------------------ */
+    var sinRepartir = e && e._sin_repartir;
+    if (sinRepartir) {
+      h.push(nuevo(yo, "incompleto", 60,
+        "Este papel no dice de qué piso es",
+        "En " + sinRepartir.portal + " conozco " +
+        (sinRepartir.pisos.length === 2 ? "dos pisos" : sinRepartir.pisos.length + " pisos") +
+        (sinRepartir.pisos.length ? ", el " + sinRepartir.pisos.join(" y el ") : "") +
+        ", y este papel no dice cuál es. No lo reparto a ciegas: lo dejo aparte hasta que alguien " +
+        "mire el papel y me diga de cuál es.",
+        "regla de la casa: sin datos, no se supone"));
+      ciego = [];
+    }
+    if (e && e._piso_supuesto) {
+      h.push(nuevo(yo, "incompleto", 40,
+        "He supuesto de qué piso es",
+        "El papel no dice el piso. He supuesto que es el " +
+        (e._piso_supuesto.piso || "que conozco") + ", porque es el único piso que conozco de " +
+        e._piso_supuesto.portal + ". Si no es ése, dímelo y lo cambio.",
+        "lo he supuesto yo, y por eso te lo digo"));
+    }
     if (ciego.length) {
       h.push(nuevo(yo, "incompleto", 60,
         "No sé lo suficiente para repasarlo",
@@ -488,7 +570,26 @@
 
     /* ---- 5.3 qué caduca y cuándo ---- */
     docs.forEach(function (d) {
+      /* Si el papel trae escrito hasta cuándo vale, eso manda sobre
+         cualquier cuenta nuestra: es lo que dice el documento. */
+      var suya = estaEnLaCarpeta(d) ? validezQueDiceElPapel(d) : null;
+      if (suya) {
+        var qs = entre(suya.iso, hoy);
+        if (qs !== null && qs <= 90) {
+          var us = qs < 0 ? 100 : qs === 0 ? 95 : qs <= 2 ? 90 : qs <= ESTA_SEMANA ? 80 : qs <= 15 ? 60 : 35;
+          var plazoSuyo = { fecha: suya.iso, que: conEl(d.cual), dias: qs };
+          yo.plazos.push(plazoSuyo);
+          plazoSuyo._aviso = nuevo(yo, qs < 0 ? "vencido" : "vence", us,
+            (qs < 0 ? "Está caducado " + conEl(d.cual) : "Caduca " + conEl(d.cual)),
+            "Lo pone el propio papel: «" + suya.crudo + "». " +
+            (qs < 0 ? "Lleva sin valer desde el " + enCristiano(suya.iso, hoy) + "."
+                    : "Deja de valer " + cuando(suya.iso, hoy).replace(/^es /, "") + "."),
+            "lo que dice el propio papel", suya.iso);
+          h.push(plazoSuyo._aviso);
+        }
+      }
       VIGENCIAS.forEach(function (vg) {
+        if (suya) return;          /* ya lo ha dicho el papel, no lo calculamos nosotros */
         var entrada = null;
         for (var k in CARPETA) {
           for (var i = 0; i < CARPETA[k].length; i++) {
@@ -691,8 +792,13 @@
 
     /* ---- 5.5 fechas sueltas: se nombran y no tienen papel ---- */
     docs.forEach(function (d) {
-      fechasDelTexto(d.literal_en_OT25).forEach(function (f) {
+      fechasEtiquetadas(d.literal_en_OT25).forEach(function (x) {
+        var f = x.iso;
         if (f === d.fecha) return;
+        /* ARREGLO 23/09/2026: si la fecha habla del propio papel («válido
+           hasta», «emitido el»), no falta ningún papel. Lo que caduca ya
+           se ha dicho arriba, en 5.3. */
+        if (x.etiqueta) return;
         var tienePapel = docs.some(function (o) { return o.fecha === f; });
         if (tienePapel) return;
         var q = entre(f, hoy);
@@ -1003,6 +1109,7 @@
     repasar: repasar, deLaCartera: deLaCartera,
     parte: parte, enTexto: enTexto,
     mirarUno: mirarUno, patrones: patrones,
+    fechasEtiquetadas: fechasEtiquetadas, validezQueDiceElPapel: validezQueDiceElPapel,
     soloConLoQueSeDice: soloConLoQueSeDice,
     /* por si alguien quiere comprobar la regla de la casa desde fuera */
     papelesQuePuedePedir: function () {

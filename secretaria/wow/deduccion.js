@@ -428,6 +428,20 @@
     out.push({ iso: a + "-" + dos(me) + "-" + dos(d), pos: i, crudo: crudo });
   }
   function dos(n) { return (n < 10 ? "0" : "") + n; }
+
+  /* Lo que el papel dice de esa fecha, leído de las palabras que tiene
+     justo delante. Sirve para no confundir la caducidad del propio papel
+     con una fecha que anuncia otro trámite (ver repaso.js, 23/09/2026). */
+  var ROTULOS = [
+    [/(valido|valida|validez|caduca|caducidad|vence|vencimiento|expira|expiracion)[^0-9]{0,20}$/, "válido hasta"],
+    [/(emitid[oa]|expedid[oa]|fecha de emision|fecha del documento|firmad[oa])[^0-9]{0,20}$/, "emitido el"]
+  ];
+  function rotuloDeLaFecha(texto, pos) {
+    var antes = sinTildes(String(texto).slice(Math.max(0, pos - 40), pos));
+    for (var i = 0; i < ROTULOS.length; i++) if (ROTULOS[i][0].test(antes)) return ROTULOS[i][1];
+    return null;
+  }
+
   function aISO(ms) {
     if (!ms) return null;
     var d = new Date(ms);
@@ -643,15 +657,43 @@
       pisosPorPortal[portal] = pisosPorPortal[portal] || {};
       if (t[2]) pisosPorPortal[portal][t[2]] = 1;
     });
+    /* ARREGLO DEL 23/09/2026 · LO QUE SUPONE, SE DICE; Y LO QUE NO
+       REPARTE, SE DICE POR QUÉ.
+       Antes esta marca («piso_supuesto») se apuntaba y no se usaba en
+       ningún otro sitio del programa: la aplicación suponía el piso y se
+       lo callaba. Y en el caso contrario —dos pisos conocidos, papel que
+       no dice cuál— dejaba el papel aparte, que es lo correcto, pero en
+       pantalla daba otro motivo («me falta el nombre del propietario»),
+       que no es verdad: aunque supiera el propietario seguiría sin saber
+       si es el 1ºA o el 4ºC.
+       Ahora las dos caras quedan escritas, con el nombre del portal y
+       los pisos que se conocen, para que la pantalla las cuente. */
+    function comoSeLlamaElPortal(f) {
+      return String(f.direccion.via || "").replace(/,\s*$/, "");
+    }
     ficheros.forEach(function (f) {
       if (!f.direccion) return;
       var t = f.direccion.clave.split("|");
       if (t[2]) return;
       var portal = t[0] + "|" + t[1];
       var pisos = Object.keys(pisosPorPortal[portal] || {});
+      var comoSeEscriben = [];
+      ficheros.forEach(function (o) {
+        if (!o.direccion || !o.direccion.piso) return;
+        var ot = o.direccion.clave.split("|");
+        if (ot[0] + "|" + ot[1] !== portal) return;
+        if (comoSeEscriben.indexOf(o.direccion.piso) < 0) comoSeEscriben.push(o.direccion.piso);
+      });
+      comoSeEscriben.sort();
       if (pisos.length === 1) {
         f.direccion.clave = portal + "|" + pisos[0];
         f.direccion.piso_supuesto = true;
+        f.direccion.piso_supuesto_cual = comoSeEscriben[0] || null;
+        f.direccion.piso_supuesto_portal = comoSeLlamaElPortal(f);
+        f.piso_supuesto = { piso: comoSeEscriben[0] || null, portal: comoSeLlamaElPortal(f) };
+      } else if (pisos.length > 1) {
+        f.direccion.sin_repartir = { portal: comoSeLlamaElPortal(f), pisos: comoSeEscriben };
+        f.sin_repartir = f.direccion.sin_repartir;
       }
     });
 
@@ -728,6 +770,15 @@
         f.por_que_aqui = f.fuertes[0].indexOf("dir:") === 0
           ? "porque " + f.direccion.de_donde + " dice la dirección: «" + f.direccion.frase + "»"
           : "porque " + f.referencia.de_donde + " trae la referencia " + f.referencia.ref;
+        if (f.piso_supuesto) {
+          f.por_que_aqui += ". El papel no dice el piso: he supuesto que es el " +
+            (f.piso_supuesto.piso || "único que conozco") + ", que es el único piso que conozco de " +
+            f.piso_supuesto.portal;
+        } else if (f.sin_repartir) {
+          f.por_que_aqui += ". El papel no dice el piso y en " + f.sin_repartir.portal +
+            " conozco " + (f.sin_repartir.pisos.length === 2 ? "dos pisos" : f.sin_repartir.pisos.length + " pisos") +
+            ", el " + f.sin_repartir.pisos.join(" y el ") + ": no lo reparto a ciegas";
+        }
       } else {
         for (var i = 0; i < f.flojas.length && !g; i++) {
           var k = f.flojas[i];
@@ -895,9 +946,19 @@
       if (f.fecha_papel) literal += " — " + f.fecha_papel.frase;
       /* las fechas sueltas que menciona el papel: de ahí salen los choques */
       if (f.texto) {
-        var otras = fechasDe(f.texto.slice(0, 4000)).slice(0, 6)
+        /* ARREGLO DEL 23/09/2026 · CADA FECHA, CON LO QUE EL PAPEL DICE
+           DE ELLA.  Antes aquí se perdía el rótulo: «Válido hasta:
+           07/11/2026» salía como un 07/11/2026 a secas, y repaso.js, que
+           solo veía el número, lo trataba como «una fecha de la que no
+           hay papel». Ahora la etiqueta viaja con la fecha, entre
+           paréntesis, y así se lee igual en pantalla y en el repaso. */
+        var trozo = f.texto.slice(0, 4000);
+        var otras = fechasDe(trozo).slice(0, 6)
           .filter(function (x) { return !f.fecha_papel || x.iso !== f.fecha_papel.iso; })
-          .map(function (x) { return x.crudo; });
+          .map(function (x) {
+            var et = rotuloDeLaFecha(trozo, x.pos);
+            return x.crudo + (et ? " (" + et + ")" : "");
+          });
         if (otras.length) literal += " — fechas que menciona: " + otras.join(", ");
       }
       var borrador = esBorrador(f);
@@ -952,7 +1013,19 @@
       _recien_abierto: masViejo || null,
       _sin_fecha_ninguna: sinFechaNinguna,
       _borradores: ficheros.filter(function (f) { return f.es_borrador; }),
-      _agrupado_por_carpeta: ficheros.every(function (f) { return f.agrupado_por_la_carpeta; })
+      _agrupado_por_carpeta: ficheros.every(function (f) { return f.agrupado_por_la_carpeta; }),
+      /* las dos caras del piso: lo que se ha supuesto y lo que no se ha
+         repartido a ciegas. Lo lee la pantalla y lo lee el repaso. */
+      _piso_supuesto: (function () {
+        var x = null;
+        ficheros.forEach(function (f) { if (!x && f.piso_supuesto) x = f.piso_supuesto; });
+        return x;
+      })(),
+      _sin_repartir: (function () {
+        var x = null;
+        ficheros.forEach(function (f) { if (!x && f.sin_repartir) x = f.sin_repartir; });
+        return x;
+      })()
     };
   }
 

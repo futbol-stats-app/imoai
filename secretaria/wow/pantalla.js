@@ -547,9 +547,19 @@
       l.forEach(function (e) {
         var f = crear("div", "fila");
         f.appendChild(crear("span", "fila_que", e._titulo));
-        f.appendChild(crear("span", "fila_mas", e.documentos.length +
-          (e.documentos.length === 1 ? " papel" : " papeles") +
-          (e.propietario.nombre ? " · " + e.propietario.nombre : "")));
+        /* ARREGLO DEL 23/09/2026 · aquí se veía «1 expediente sin saber de
+           qué operación son» sin decir de dónde salía. Si es un papel que
+           no se ha repartido porque el portal tiene dos pisos, se dice. */
+        var mas = e.documentos.length + (e.documentos.length === 1 ? " papel" : " papeles") +
+                  (e.propietario.nombre ? " · " + e.propietario.nombre : "");
+        if (e._sin_repartir) {
+          mas += " · no dice de qué piso de " + e._sin_repartir.portal + " es" +
+                 (e._sin_repartir.pisos && e._sin_repartir.pisos.length
+                    ? " (conozco el " + e._sin_repartir.pisos.join(" y el ") + ")" : "");
+        } else if (e._piso_supuesto) {
+          mas += " · piso supuesto: el " + (e._piso_supuesto.piso || "único que conozco");
+        }
+        f.appendChild(crear("span", "fila_mas", mas));
         f.appendChild(botonPruebas("de dónde lo saco", [{
           titulo: "Los papeles de " + e._titulo,
           ficheros: e._ficheros.map(function (x) {
