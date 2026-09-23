@@ -372,7 +372,55 @@
       " NO es que no se pueda saber: se confirma en " + DONDE_SE_PIDE + ". O lo dices diciendo en la MISMA frase que esta pendiente de confirmar y que se puede pedir, o no lo digas.>>";
   }
 
-  function corto(x, max) { return String(x == null ? "" : x).slice(0, max || 150); }
+  /* ---- CORTAR SIN PARTIR UNA CIFRA (23/09/2026) ----------------------
+     Antes se cortaba a ciegas por la letra 80 o 90, y al asistente le
+     llegaba «que la base imponible, incluido» sin los 200.000 EUR, y la
+     bonificacion joven sin los 46.455 EUR. Ahora:
+       1. Nunca se corta dentro de una palabra ni de un numero: se
+          retrocede hasta una coma, un punto y coma o un espacio.
+       2. Si mas alla del tope hay una CIFRA QUE IMPORTA (euros, %, anios,
+          meses, dias), se alarga hasta el final de la frase de esa cifra,
+          pero nunca por encima del doble del tope (los requisitos de los
+          tipos reducidos, que es donde viven las cifras, pueden llegar a
+          TECHO_CIFRAS). Asi ninguna ficha se pasa de las 3.800 letras y
+          no se cae ninguna linea entera, por ejemplo la de la cedula.
+       3. Si se deja algo fuera, se dice con «...». */
+  var CIFRA_QUE_IMPORTA = /\d[\d.]*(?:,\d+)?\s*(?:%|EUR\b|euros?\b|\u20ac|anios\b|a\u00f1os\b|meses\b|mes\b|dias\b|d\u00edas\b)/gi;
+  var TECHO_CIFRAS = 320;
+
+  function sinPartir(s, max) {
+    if (s.length <= max) return s.length;
+    var cabeza = s.slice(0, max + 1);
+    var coma = Math.max(cabeza.lastIndexOf("; "), cabeza.lastIndexOf(", "));
+    if (coma >= max * 0.6) return coma;
+    var esp = cabeza.lastIndexOf(" ");
+    return esp > 0 ? esp : max;
+  }
+
+  function hastaDonde(s, max, techo) {
+    if (s.length <= max) return s.length;
+    var fin = -1, m;
+    techo = Math.min(TECHO_CIFRAS, techo || max * 2);
+    CIFRA_QUE_IMPORTA.lastIndex = 0;
+    while ((m = CIFRA_QUE_IMPORTA.exec(s))) {
+      var e = m.index + m[0].length;
+      if (e <= max) continue;
+      var k = s.slice(e).search(/;|\.\s|\s\(art/);
+      var c = k < 0 ? s.length : e + k;
+      if (c > techo) break;
+      fin = c;
+    }
+    return fin > 0 ? fin : sinPartir(s, max);
+  }
+
+  function corto(x, max, techo) {
+    var s = String(x == null ? "" : x);
+    max = max || 150;
+    if (s.length <= max) return s;
+    var n = hastaDonde(s, max, techo);
+    var dentro = s.slice(0, n).replace(/[\s,;:]+$/, "");
+    return n >= s.length ? dentro : dentro + "...";
+  }
 
   function sinNumero(v) { return /^no verificad/i.test(String(v || "").trim()); }
 
@@ -383,7 +431,7 @@
       if (!F || !F.ccaa || !PISTAS_FISCAL.test(texto)) return null;
       var cc = dondeEs(texto) || ULTIMO_SITIO;
       if (!cc || !F.ccaa[cc]) return null;
-      var c = F.ccaa[cc], l = [];
+      var c = F.ccaa[cc], l = [], recambio = null;
 
       l.push(MARCA_FISCAL + " · esto SI lo tienes delante, usalo tal cual]");
       l.push("Comunidad: " + (c.nombre || cc) + ". Revisado el " + (F.revisado || "") + ".");
@@ -398,9 +446,15 @@
           l.push("OJO, dos fuentes no dicen lo mismo: " + corto(c.itp.contradiccion_fuentes, 220) + " <<AVISO PEGADO: si te preguntan por este tipo, di que hay dos versiones y que hay que confirmarlo.>>");
         }
         if (c.itp.reducidos && c.itp.reducidos.length) {
-          l.push("Tipos reducidos: " + c.itp.reducidos.slice(0, 5).map(function (r) {
-            return corto(r.quien, 55) + " -> " + corto(r.tipo, 45) + (r.requisitos ? " (" + corto(r.requisitos, 80) + ")" : "");
-          }).join(" | "));
+          var reducidos = function (techo) {
+            return "Tipos reducidos: " + c.itp.reducidos.slice(0, 5).map(function (r) {
+              return corto(r.quien, 90) + " -> " + corto(r.tipo, 45) + (r.requisitos ? " (" + corto(r.requisitos, 80, techo) + ")" : "");
+            }).join(" | ");
+          };
+          /* se manda la larga (con sus cifras); si la ficha no cupiera,
+             se cambia por la breve antes de quitar ninguna linea entera */
+          recambio = { i: l.length, breve: reducidos(1) };
+          l.push(reducidos(TECHO_CIFRAS));
         }
         if (c.itp.plazo) {
           l.push(sinNumero(c.itp.plazo)
@@ -425,8 +479,14 @@
 
       l.push("COMO SE DICE: la cifra que tengas aqui la das tal cual y dices desde cuando esta revisada. Lo que lleve AVISO PEGADO se dice con el aviso en la MISMA frase. Lo que no este aqui, no te lo inventes y tampoco lo des por imposible: es PENDIENTE DE VERIFICACION. Di que dato falta, donde se consigue y, si hay que preguntarselo a alguien, a quien. Los estados que puedes usar son estos y ninguno mas: VERIFICADO, PENDIENTE DE VERIFICACION, ESPERANDO RESPUESTA, PENDIENTE DE CONTRASTE y, solo si de verdad no hay a quien acudir, SIN FUENTE DISPONIBLE.");
 
-      var t = l.join("\n");
-      return t.length > 3800 ? t.slice(0, 3800) : t;
+      /* si no cabe, se quitan lineas ENTERAS por el medio (nunca media
+         linea) y la ultima, la de como se dice, se queda siempre;
+         igual que hace inmo.js */
+      var TOPE = 3800, ultima = l[l.length - 1], t = l.join("\n");
+      if (t.length > TOPE && recambio) { l[recambio.i] = recambio.breve; t = l.join("\n"); }
+      while (t.length > TOPE && l.length > 3) { l.splice(l.length - 2, 1); t = l.join("\n"); }
+      if (t.length > TOPE) t = l[0] + "\n" + l[1] + "\n" + ultima;
+      return t;
     } catch (e) { return null; }
   }
 
