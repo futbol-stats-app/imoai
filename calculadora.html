@@ -248,7 +248,7 @@
 
   <div class="thesis">
     <span class="big">2.244 M€</span>
-    <span class="txt">Es lo que quedaba sin usar de los 2.500 millones del aval a 31 de diciembre de 2025: hasta esa fecha se habían concedido 10.453 avales, cuando el Gobierno contaba con unas 50.000 compras. El plazo para firmar la hipoteca acaba el 31 de diciembre de 2027.</span>
+    <span class="txt">Es lo que quedaba sin usar de los 2.500 millones del aval a 31 de diciembre de 2025: hasta esa fecha se habían concedido 10.453 avales (dato de El Español, abajo en las fuentes). El plazo para firmar la hipoteca acaba el 31 de diciembre de 2027.</span>
   </div>
 
   <div class="card">
@@ -462,7 +462,10 @@ var AVAL = (function(){
     rules.push({ id:"plazo", ok:true, name:"Plazo del programa", detail:"Prorrogado por el BOE de 2 de julio de 2026.", val:"hasta 31/12/2027" });
 
     var fallos = rules.filter(function(r){ return !r.ok; });
+    var veredicto = decidir(fallos, {edad:edad, ing:ing, patr:patr, precio:precio,
+      topeRenta:topeRenta, topePrecio:topePrecio, prov:d.prov, ccaa:ccaa});
     return {
+      veredicto: veredicto,
       errores: [], rules: rules, fallos: fallos,
       encaja: fallos.length === 0,
       pct: d.eficiente ? 25 : 20,
@@ -471,8 +474,60 @@ var AVAL = (function(){
     };
   }
 
+  /* ---- EL VEREDICTO (24/09/2026, bloque D) ----------------------------
+     Antes: con una sola condición fallida salía siempre «Por poco» y
+     «a veces se arregla cambiando de vivienda o de provincia», aunque la
+     persona triplicara el tope o el fallo fuera la edad.
+     Ahora «Por poco» SOLO si falla una sola cosa, es de las que tienen
+     número (ingresos, patrimonio o precio) y se pasa del tope en un 10 %
+     o menos (CERCA = 0,10). Si se pasa más, «Hoy no encajas». La edad
+     nunca es «por poco»: no se arregla cambiando de casa ni de provincia.
+     Cada motivo trae su propio texto. */
+  var CERCA = 0.10;
+  function decidir(fallos, x){
+    if (!fallos.length) return { tipo:"si", titulo:"Encajas.", texto:"" };
+    var partes = fallos.map(function(f){
+      var exc, tope, cerca = false, t;
+      if (f.id === "edad") {
+        t = "La edad: el límite es tener 35 años o menos el día de firmar la hipoteca, y tú tienes " + x.edad +
+            ". Eso no cambia con otra vivienda ni con otra provincia; el límite de edad solo desaparece si tienes menores a cargo.";
+      } else if (f.id === "ingresos") {
+        tope = x.topeRenta; exc = x.ing - tope; cerca = exc <= tope * CERCA;
+        t = "Los ingresos: pasas del tope de " + x.prov + " (" + eur(tope) + ") en " + eur(exc) + "." +
+            (cerca ? " El tope depende de la provincia donde está la vivienda y sube con cada menor a cargo y en familia monoparental."
+                   : " No es por poco: con estos ingresos este aval no es para ti.");
+      } else if (f.id === "patrimonio") {
+        tope = PATRIMONIO_MAX; exc = x.patr - tope; cerca = exc <= tope * CERCA;
+        t = "El patrimonio neto: pasas del máximo (" + eur(tope) + ") en " + eur(exc) + ".";
+      } else if (f.id === "precio") {
+        tope = x.topePrecio; exc = x.precio - tope; cerca = exc <= tope * CERCA;
+        t = "El precio: pasa del tope de " + x.ccaa + " (" + eur(tope) + ") en " + eur(exc) + "." +
+            (cerca ? " Una vivienda que no pase de " + eur(tope) + " sí entraría." : "");
+      } else {
+        t = f.name + ".";
+      }
+      f.cerca = cerca;
+      return t;
+    });
+    if (fallos.length === 1 && fallos[0].cerca) {
+      return { tipo:"casi", titulo:"Por poco.",
+               texto:"Cumples todo menos una cosa, y te pasas en un 10 % o menos. " + partes[0] };
+    }
+    return { tipo:"no", titulo:"Hoy no encajas.",
+             texto:(fallos.length === 1 ? "No se cumple una condición. " : "Hay " + fallos.length + " condiciones que no se cumplen. ") +
+                   partes.join(" ") };
+  }
+
+  /* Euros con punto de miles SIEMPRE (también en negativos y con cuatro
+     cifras: Intl en español escribe «-5000 €» sin punto) y SIN redondear
+     hacia arriba: 37.800,50 € se enseña como 37.800,50 €, no 37.801 €.
+     Los céntimos solo salen cuando los hay. */
   function eur(n){
-    return new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(Math.round(n));
+    var c = Math.round(Math.abs(Number(n)) * 100);
+    var ent = Math.floor(c / 100), cen = c % 100;
+    var s = String(ent).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (cen) s += "," + (cen < 10 ? "0" : "") + cen;
+    return (Number(n) < 0 && c ? "-" : "") + s + "\u00a0€";
   }
 
   return { evaluarAval: evaluarAval, PROV: PROV, CCAA: CCAA, CP_PROV: CP_PROV, IPREM: IPREM, eur: eur, numero: numero };
@@ -537,20 +592,19 @@ var AVAL = (function(){
       return;
     }
 
-    var v, mark, title, msg;
+    var v, mark, title, msg, vd = r.veredicto;
     if (r.encaja){
       v="v-yes"; mark="✓"; title="Encajas.";
       msg = "Cumples las condiciones que se pueden comprobar con estos datos. El aval cubriría hasta el " + r.pct +
             " % del préstamo durante los diez primeros años" +
             (r.eficiente ? ", por la calificación energética." : ".") +
             " Que sea tu primera vivienda y el resto de papeles lo comprueba el banco adherido, que es quien decide.";
-    } else if (r.fallos.length === 1){
-      v="v-almost"; mark="~"; title="Por poco.";
-      msg = "Cumples todo menos una cosa: " + esc(r.fallos[0].name.toLowerCase()) +
-            ". Mira abajo cuánto te falta — a veces se arregla cambiando de vivienda o de provincia, y a veces no.";
+    } else if (vd.tipo === "casi"){
+      v="v-almost"; mark="~"; title=vd.titulo;
+      msg = esc(vd.texto);
     } else {
-      v="v-no"; mark="×"; title="Hoy no encajas.";
-      msg = "Hay " + r.fallos.length + " condiciones que no se cumplen. Están marcadas abajo, con el número exacto que falla.";
+      v="v-no"; mark="×"; title=vd.titulo;
+      msg = esc(vd.texto) + (r.fallos.length === 1 ? " Está marcada abajo, con el número exacto que falla." : " Están marcadas abajo, con el número exacto que falla.");
     }
 
     html = '<div class="verdict ' + v + '" id="veredicto" tabindex="-1" data-encaja="' + (r.encaja ? "si" : "no") + '">' +

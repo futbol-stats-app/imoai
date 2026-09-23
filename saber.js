@@ -33,7 +33,7 @@
   }
 
   function cargarTodo() {
-    traer("ayudas_todas.js?v=1", function () {
+    traer("ayudas_todas.js?v=24a", function () {
       traer("municipios_todos.js?v=1", function () {
         traer("ayudas.js?v=2", function () {
           if (window.IMMOIA_AYUDAS && window.IMMOIA_AYUDAS_TODAS) LISTO = true;
@@ -41,7 +41,7 @@
           /* los impuestos de la comunidad: en la portada no los tenia nadie.
              En la pagina de la inmobiliaria ya los pone inmo.js, asi que alli
              no se cargan otra vez. */
-          if (!window.IMMOIA_INMO) traer("fiscal.js?v=2", function () {});
+          if (!window.IMMOIA_INMO) traer("fiscal.js?v=24a", function () {});
         });
       });
     });
@@ -424,23 +424,68 @@
 
   function sinNumero(v) { return /^no verificad/i.test(String(v || "").trim()); }
 
+  /* ---- 24/09/2026 (bloque D) ------------------------------------------
+     1. fiscal.js esta escrito sin enes («40 anios»). La IA contesta «40
+        años», y el repaso del servidor, que compara lo que dice con lo que
+        tiene delante, no encuentra «40 anos» en «40 anios» y le pega
+        «lo de 40 años lo dejo PENDIENTE DE VERIFICACION» a una cifra que
+        la ficha de la web da por comprobada. Aqui se escribe «años».
+     2. El ITP de Canarias llegaba sin norma ni fecha: ahora, si la ficha
+        trae su articulo y su boletin, se le pasan con la fecha de lectura.
+     3. La plusvalia municipal: fiscal.js la tenia (metodos, quien elige,
+        plazos, art. 104.5 y 107.5 del TRLRHL) y no se le pasaba nunca. */
+  function conEnes(t) {
+    return String(t).replace(/\banios\b/g, "a\u00f1os").replace(/\banio\b/g, "a\u00f1o");
+  }
+  function fechaEs(f) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(f || ""));
+    return m ? m[3] + "/" + m[2] + "/" + m[1] : String(f || "");
+  }
+  var PISTAS_PLUSVALIA = /plusval|iivtnu|incremento de valor de los terrenos/i;
+
+  function lineasPlusvalia(F) {
+    var p = F.plusvalia, l = [];
+    if (!p) return l;
+    l.push("PLUSVALIA MUNICIPAL (" + corto(p.nombre_oficial, 110) + "). Es ley estatal, igual en toda Espana: " + corto(p.marco_normativo, 200) + "." + pegar(p.confianza, p.fuente));
+    (p.metodos_calculo || []).slice(0, 2).forEach(function (m) {
+      l.push("Metodo: " + corto(m.nombre, 80) + " -> " + corto(m.descripcion, 260, 320));
+    });
+    if (p.quien_elige) l.push("Quien elige el metodo: " + corto(p.quien_elige, 320, 320) + " Dilo en este orden y sin mezclarlo: lo que dice la ley (el metodo real va a peticion del contribuyente) y, aparte, lo que hacen en la practica algunos ayuntamientos.");
+    if (p.no_pago_si_perdida && p.no_pago_si_perdida.detalle) l.push("Si no hubo ganancia: " + corto(p.no_pago_si_perdida.detalle, 320, 320) + pegar(p.no_pago_si_perdida.confianza, p.no_pago_si_perdida.fuente));
+    var pl = p.plazo_presentacion;
+    if (pl) l.push("Plazo: entre vivos " + corto(pl.inter_vivos, 110) + "; por herencia " + corto(pl.mortis_causa, 140) + "." + (pl.nota ? " Ojo: " + corto(pl.nota, 200) : ""));
+    l.push("Fuente de la plusvalia: " + corto(p.fuente, 160) + ", revisado el " + fechaEs(p.fecha) + ".");
+    return l;
+  }
+
   function fiscal(texto) {
     try {
       if (window.IMMOIA_INMO) return null;          /* alli lo pone inmo.js */
       var F = window.IMMOIA_FISCAL;
       if (!F || !F.ccaa || !PISTAS_FISCAL.test(texto)) return null;
       var cc = dondeEs(texto) || ULTIMO_SITIO;
-      if (!cc || !F.ccaa[cc]) return null;
-      var c = F.ccaa[cc], l = [], recambio = null;
+      var plus = PISTAS_PLUSVALIA.test(texto) ? lineasPlusvalia(F) : [];
+      if ((!cc || !F.ccaa[cc]) && !plus.length) return null;
+      var c = (cc && F.ccaa[cc]) || {}, l = [], recambio = null;
 
       l.push(MARCA_FISCAL + " · esto SI lo tienes delante, usalo tal cual]");
-      l.push("Comunidad: " + (c.nombre || cc) + ". Revisado el " + (F.revisado || "") + ".");
+      if (c.nombre || F.ccaa[cc]) l.push("Comunidad: " + (c.nombre || cc) + ". Revisado el " + (F.revisado || "") + ".");
+      /* la plusvalia va delante: si no cabe todo, se quitan antes las
+         lineas de la comunidad que las de lo que se ha preguntado */
+      l = l.concat(plus);
 
       if (c.itp) {
         if (sinNumero(c.itp.general)) {
           l.push("ITP (segunda mano, lo paga el comprador): estado PENDIENTE DE VERIFICACION. NO lo tenemos verificado todavia, y eso NO quiere decir que no se pueda saber: se pide a " + DONDE_SE_PIDE + ". Dilo asi, como pendiente, y di donde se consigue. No des ninguna cifra.");
         } else {
           l.push("ITP (segunda mano, lo paga el comprador): " + corto(c.itp.general, 170) + "." + pegar(c.itp.confianza, c.itp.fuente));
+          var gc = c.itp.general_confirmado;
+          if (c.itp.fuente_articulo && nivel(c.itp.confianza) === "oficial") {
+            l.push("Norma del ITP y de sus tipos reducidos: " + corto(c.itp.fuente_articulo, 140) +
+              (gc && gc.boletin ? " (" + corto(gc.boletin, 130) + ")" : "") +
+              ", leido el " + fechaEs(c.itp.fecha) + (gc && gc.leido && gc.leido !== c.itp.fecha ? " y el tipo general otra vez el " + fechaEs(gc.leido) : "") +
+              ". Estado VERIFICADO: estas cifras se dan con esta norma y esta fecha, sin llamarlas pendientes.");
+          }
         }
         if (c.itp.contradiccion_fuentes) {
           l.push("OJO, dos fuentes no dicen lo mismo: " + corto(c.itp.contradiccion_fuentes, 220) + " <<AVISO PEGADO: si te preguntan por este tipo, di que hay dos versiones y que hay que confirmarlo.>>");
@@ -486,7 +531,7 @@
       if (t.length > TOPE && recambio) { l[recambio.i] = recambio.breve; t = l.join("\n"); }
       while (t.length > TOPE && l.length > 3) { l.splice(l.length - 2, 1); t = l.join("\n"); }
       if (t.length > TOPE) t = l[0] + "\n" + l[1] + "\n" + ultima;
-      return t;
+      return conEnes(t);
     } catch (e) { return null; }
   }
 

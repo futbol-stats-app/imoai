@@ -83,7 +83,7 @@ caja.innerHTML = '<p class="cha-tit">Habla con la IA</p>'
 + '<textarea id="cha-txt" rows="2" placeholder="Ej.: quiero alquilar en Tenerife, ¿por dónde empiezo?" aria-label="Escríbele a la IA"></textarea>'
 + '<button type="button" id="cha-mic" class="cha-mic" aria-label="Hablar en voz alta">&#127908;</button><button type="button" id="cha-ir">Enviar</button>'
 + '</div>'
-+ '<p class="cha-pie">' + (document.getElementById("calculadora") ? 'Los importes y los plazos no los da ella: los da la calculadora de aquí abajo, con la norma oficial al lado.' : 'Los importes y los plazos que no tiene delante te los manda confirmar: compru&eacute;balos siempre en la fuente oficial.') + ' &middot; <a href="privacidad.html">Privacidad</a></p>';
++ '<p class="cha-pie">' + (document.getElementById("calculadora") ? 'Los importes y los plazos que te da salen de las fichas de esta web, que citan su fuente; lo que no tiene delante te lo manda confirmar. Compru&eacute;balos en la fuente oficial antes de decidir. La cuenta con la norma al lado est&aacute; en la calculadora de aqu&iacute; abajo.' : 'Los importes y los plazos que te da salen de las fichas que tiene delante, que citan su fuente; lo que no tiene delante te lo manda confirmar. Compru&eacute;balos en la fuente oficial antes de decidir.') + ' &middot; <a href="privacidad.html">Privacidad</a></p>';
 ancla.parentNode.insertBefore(caja, ancla); var fb = document.createElement("button"); fb.type = "button"; fb.className = "cha-boton"; fb.id = "cha-boton"; fb.innerHTML = '<span aria-hidden="true">&#128172;</span> Habla con la IA'; fb.addEventListener("click", irAlCuadro); document.body.appendChild(fb);
 historia.push({papel:"ella", texto:"Hola. Soy InmoIA, un asistente con inteligencia artificial: no soy una persona.\n\nTe lo digo antes de que lo preguntes, igual que te digo de d\u00f3nde sale cada dato. Procuro no inventarme nada: lo que est\u00e1 verificado va con su fuente, y lo que no, te digo d\u00f3nde se comprueba. Aun as\u00ed me puedo equivocar.\n\nCu\u00e9ntame tu caso y lo vemos."});
 pintar();
@@ -148,7 +148,7 @@ window.IMMOIA_CHARLA = { version: "2026-09-11+modulos", microfono: "avisa" };  /
                     pagina; en la portada no anade ni una letra.
    Si algun dia molestan, se borran estas lineas y todo vuelve a estar igual. */
 (function(){
-  ["secretaria.js?v=1", "saber.js?v=2", "papeles.js?v=2", "firma.js?v=1", "secretaria_sabe.js?v=1"].forEach(function(f){
+  ["secretaria.js?v=1", "saber.js?v=24a", "papeles.js?v=2", "firma.js?v=1", "secretaria_sabe.js?v=1"].forEach(function(f){
     var s = document.createElement("script"); s.src = f;
     (document.body || document.documentElement).appendChild(s);
   });

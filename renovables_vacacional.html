@@ -177,6 +177,30 @@ table.t td.resta{color:var(--verde)}
     <label for="ocupa">¿Cuántos días al año está ocupado? <span class="valor" id="ocupa-v">180 días · 49 %</span></label>
     <input type="range" id="ocupa" min="0" max="365" step="5" value="180">
 
+    <label for="factura" style="margin-top:14px">¿Cuánto pagas de luz al mes? <small style="font-weight:400">(si no lo pones, lo estimamos por los días ocupado)</small></label>
+    <input type="number" id="factura" min="0" max="900" step="5" value="" placeholder="Opcional: lo que pone tu factura" inputmode="decimal">
+
+    <!-- 24/09/2026 · bloque C: si es tu vivienda, las mismas dos preguntas que hacen
+         renovables.html e IMMO IA Energía. En un turístico no se enseñan: no hay deducción. -->
+    <div class="dos" id="preguntas-irpf" hidden style="margin-top:14px">
+      <div>
+        <label for="irpf">En la renta del año pasado, ¿te salió a pagar más de 2.500 €?</label>
+        <select id="irpf">
+          <option value="si">Sí, más de 2.500 €</option>
+          <option value="no">No, menos</option>
+          <option value="nose" selected>No lo sé</option>
+        </select>
+      </div>
+      <div>
+        <label for="apto">¿Calientas el agua con termo eléctrico o tienes aire acondicionado?</label>
+        <select id="apto">
+          <option value="si">Sí, termo eléctrico o aire</option>
+          <option value="no">No: bombona o gas, y sin aire</option>
+          <option value="nose" selected>No lo sé</option>
+        </select>
+      </div>
+    </div>
+
     <div class="dos" style="margin-top:16px">
       <div>
         <label for="muni">¿En qué municipio?</label>
@@ -191,10 +215,10 @@ table.t td.resta{color:var(--verde)}
           <option value="ca">Candelaria — 30 % · 5 años</option>
           <option value="gr">Granadilla de Abona — 25 % · 5 años</option>
           <option value="st">Santiago del Teide — 20 % · 3 años</option>
-          <option value="sm">San Miguel de Abona — 50 %, años sin publicar</option>
-          <option value="ar">Arona — no tiene bonificación</option>
-          <option value="ad">Adeje — sin publicar</option>
-          <option value="otro" selected>Otro municipio de Tenerife</option>
+          <option value="sm">San Miguel de Abona — sin bonificación confirmada (cuenta 0 €)</option>
+          <option value="ar">Arona — sin bonificación confirmada (cuenta 0 €)</option>
+          <option value="ad">Adeje — sin bonificación confirmada (cuenta 0 €)</option>
+          <option value="otro" selected>otro municipio de Tenerife — sin bonificación confirmada (cuenta 0 €)</option>
         </select>
       </div>
       <div>
@@ -222,6 +246,7 @@ table.t td.resta{color:var(--verde)}
         </select>
       </div>
     </div>
+    <p class="ojo" id="aviso-entrada" hidden style="margin:10px 0 0;padding:10px 12px;font-size:13.5px"></p>
   </section>
 
   <!-- ============ A DÓNDE VA LA LUZ ============ -->
@@ -321,6 +346,8 @@ table.t td.resta{color:var(--verde)}
       del alquiler, y solo por los días alquilados. El porcentaje depende de si va como mejora
       del inmueble o como instalación. <b>Eso lo tiene que decir tu gestor</b>, y no está metido
       en esta cuenta.</li>
+      <li><b>La bonificación del IBI no se cobra de golpe:</b> es un descuento en el recibo de
+      cada año mientras dure, así que aquí va aparte, año a año.</li>
       <li><b>La bonificación del IBI puede pedir vivienda habitual.</b> Granadilla de Abona lo
       exige por escrito. En el resto de municipios <b>no está publicado si vale para un
       vacacional</b>. Hay que confirmarlo antes de prometer nada.</li>
@@ -359,7 +386,12 @@ table.t td.resta{color:var(--verde)}
     <div class="aviso"><span class="pun"></span><span>
       <b>Consumo del apartamento</b>
       Estimado en 10 kWh al día ocupado y 1,2 kWh al día vacío (nevera y espera).
-      <b>No es un dato publicado</b>: se cambia por tus facturas reales.</span></div>
+      <b>No es un dato publicado</b>: si nos dices lo que pagas de luz, sale de tu factura.
+      Si es tu vivienda (habitual o de larga temporada), se cuenta ocupada todo el año.</span></div>
+    <div class="aviso"><span class="pun"></span><span>
+      <b>El préstamo</b>
+      <span id="nota-prestamo">El préstamo está calculado con un 6,25 % de interés nominal
+      anual. Es un supuesto de prudencia, no la oferta de ningún banco.</span></span></div>
     <div class="aviso"><span class="pun"></span><span>
       <b>Precio de la instalación</b>
       Entre 600 y 900 € por panel puesto, según calidad y tejado. Aquí se usa <b>687,50 €</b>,
@@ -376,79 +408,30 @@ table.t td.resta{color:var(--verde)}
 
 </div>
 
-<script src="datos.js?v=1"></script>
+<script src="datos.js?v=24a"></script>
+<!-- 24/09/2026 · bloque C: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
+     usan las tres páginas de placas, para que el mismo caso dé la misma cifra. -->
+<script src="energia_cuenta.js?v=24a"></script>
 <script>
 (function(){
   "use strict";
 
-  /* Si datos.js cargó, manda él. Si no, valen los de aquí abajo. */
+  /* Si datos.js cargó, manda él. La cuenta la hace energia_cuenta.js, que lee datos.js
+     (también el consumo por día ocupado y vacío, y la parte que cae en horas de sol,
+     que antes estaban escritos aquí). Si energia_cuenta.js no cargara, esta página NO
+     da ningún número: lo dice. */
   var D = window.DATOS_IMMOIA || {};
-  var DN = D.numeros || {};
-  function dato(v, porDefecto){ return (v === undefined || v === null) ? porDefecto : v; }
-
-  /* ---------- los números, todos en un sitio ---------- */
-  var EUR_PANEL   = dato(DN.eurPorPanel, 687.5);      /* 600-900 segun calidad y tejado */
-  var KWP_PANEL   = dato(DN.kwpPorPanel, 0.45);
-  var KWH_POR_KWP = dato(DN.kwhPorKwp, 1700);     /* estimacion Tenerife, no dato publicado */
-  var PRECIO_LUZ  = dato(DN.precioLuz, 0.19);     /* 0,16 - 0,22 */
-  var PRECIO_EXC  = dato(DN.precioExcedente, 0.06);     /* 0,04 - 0,10 · referencia de PPA en tejado: 0,045 */
-  var COSTE_CERT  = dato(DN.costeCertificados, 200);      /* dos certificados, 60-130 cada uno */
-  /* 19/09/2026 · tanda 8. Aquí se negaba en redondo la deducción del 10 %, y era falso.
-     La del 10 % por AUTOCONSUMO sí existe (RDL 7/2026) y está en datos.js, en
-     irpfEstatal.autoconsumo. Lo que no existe es un 10 % dentro de la deducción por OBRAS.
-     Aquí se sigue sin calcular la del 10 %: a un turístico no se le cuenta ninguna
-     deducción —y si le cabe la del 10 % está SIN CONFIRMAR con la AEAT—, y a la vivienda
-     esta página le calcula la del 40 %. El texto de «De dónde salen los números» se lo
-     explica al cliente. */
-  var BASE_40     = 7500;
-  var ICIO        = dato(DN.icio, 150);
-  var TAE         = dato(DN.tae, 0.0625);
-
-  /* consumo del apartamento — estimacion, no dato publicado */
-  var KWH_DIA_OCUPADO = dato(DN.kwhDiaOcupado, 10);
-  var KWH_DIA_VACIO   = dato(DN.kwhDiaVacio, 1.2);
-  /* que parte del consumo cae en horas de sol */
-  var SOL_OCUPADO = 0.45;   /* la gente esta fuera media manana y media tarde */
-  var SOL_VACIO   = 0.50;   /* la nevera consume igual de dia que de noche */
-
-  /* municipio -> [porcentaje, años, tope anual (0 = sin tope), aviso, nombre, soloVivHabitual]
-     🔴 ARREGLADO (C2, 18/09/2026): aquí faltaba la columna del NOMBRE. El respaldo iba con
-     cinco columnas y datos.js va con seis, así que abajo se leía b[4] —que es el nombre del
-     municipio— como si fuera la bandera de «solo vivienda habitual». Un nombre nunca está
-     vacío, así que en un vacacional el IBI salía a CERO en los catorce municipios y encima
-     se le decía al cliente que le «piden vivienda habitual» donde nadie se lo pide.
-     La bandera buena es b[5]. */
-  /* Los municipios salen de datos.js; esto es el respaldo. */
-  var IBI = D.municipios || {
-    gu:  [0.50, 25, 0,   "", "Güímar", false],
-    ro:  [0.50, 10, 0,   "", "El Rosario", false],
-    sc:  [0.50,  5, 0,   "Hay que pedirlo ANTES del 1 de enero, o se pierde el primer año.", "Santa Cruz de Tenerife", false],
-    ll:  [0.50,  5, 0,   "Hay que estar al corriente de pagos y tener el IBI domiciliado.", "San Cristóbal de La Laguna", false],
-    re:  [0.50,  5, 0,   "", "Los Realejos", false],
-    pc:  [0.50,  5, 0,   "", "Puerto de la Cruz", false],
-    ta:  [0.50,  5, 300, "Tope de 300 € al año. Los paneles tienen que dar al menos el 30 % de la potencia contratada.", "Tacoronte", false],
-    ca:  [0.30,  5, 0,   "Hay que pedirlo ANTES del 30 de noviembre del año anterior.", "Candelaria", false],
-    gr:  [0.25,  5, 0,   "Granadilla EXIGE vivienda habitual y empadronamiento. En un vacacional no aplica.", "Granadilla de Abona", true],
-    st:  [0.20,  3, 0,   "SIN CONFIRMAR que cubra fotovoltaica: la ordenanza publicada habla de solar térmica. Llamar al ayuntamiento.", "Santiago del Teide", false],
-    sm:  [0,     0, 0,   "El ayuntamiento anunció un 50 % en 2022, pero NO están publicados los años ni los requisitos. Aquí va a cero hasta confirmarlo.", "San Miguel de Abona", false],
-    ar:  [0,     0, 0,   "Arona no tiene bonificación de IBI ni de ICIO por placas solares.", "Arona", false],
-    ad:  [0,     0, 0,   "Adeje no tiene la bonificación publicada. Hay que llamar al 922 756 200 antes de prometer nada.", "Adeje", false],
-    otro:[0,     0, 0,   "Si tu municipio no está en la lista, no consta bonificación publicada. Se puede consultar en el Consorcio de Tributos: 922 20 82 00.", "otro municipio de Tenerife", false]
-  };
+  var C = window.IMMOIA_ENERGIA_CUENTA || null;
 
   function $(id){ return document.getElementById(id); }
-  function eur(n){ return Math.round(n).toLocaleString("es-ES") + " €"; }
-  function kwh(n){ return Math.round(n).toLocaleString("es-ES") + " kWh"; }
+  var eur = C ? C.fmt.eur : function(n){ return Math.round(n).toLocaleString("es-ES") + " €"; };
+  var kwh = C ? C.fmt.kwh : function(n){ return Math.round(n).toLocaleString("es-ES") + " kWh"; };
   function pct(n){ return Math.round(n * 100) + " %"; }
 
-  /* ---------- la cuenta atras ---------- */
   /* ---------- la fecha de fin, que sale de datos.js y de ningun otro sitio ----------
-     19/09/2026 · tanda 8. Antes esta fecha estaba escrita a mano aqui, con el dia y el
-     mes a pelo, y otra vez en el texto de arriba. Es la misma forma que tenia el pie de
-     "Datos revisados el 10 de septiembre": el dia que se mueva la de datos.js, esta no
-     se mueve sola. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo de ahi.
-     Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE ENSENA NADA:
-     nunca se inventa una fecha. */
+     19/09/2026 · tanda 8. Ahora sale de datos.js (fechas.finDeduccionVivienda) y solo
+     de ahi. Si datos.js no cargo, o no trae la fecha, o la trae mal escrita, NO SE
+     ENSENA NADA: nunca se inventa una fecha. */
   var MESES_FIN = ["enero","febrero","marzo","abril","mayo","junio",
                    "julio","agosto","septiembre","octubre","noviembre","diciembre"];
   function finDeduccion(){
@@ -476,133 +459,122 @@ table.t td.resta{color:var(--verde)}
     }
   })();
 
+  /* la lista de municipios: el texto sale de datos.js, igual en las tres páginas */
+  (function etiquetas(){
+    var sel = $("muni");
+    if(!C || !sel || !sel.options) return;
+    for(var i = 0; i < sel.options.length; i++){
+      sel.options[i].textContent = C.etiquetaMunicipio(sel.options[i].value);
+    }
+  })();
+  (function notaPrestamo(){
+    var caja = $("nota-prestamo");
+    if(caja && C) caja.textContent = C.textoTipoLargo();
+  })();
+
+  function leer(id){ var el = $(id); return el ? el.value : ""; }
+  function siNo(v){ return v === "si" ? true : v === "no" ? false : null; }
+
   /* ---------- calcular ---------- */
   function calcular(){
-    var n      = Number($("paneles").value);
-    var uso    = $("uso").value;
-    var dias   = Math.max(0, Math.min(365, Number($("ocupa").value) || 0));
-    var muni   = $("muni").value;
-    var ibiAn  = Math.max(0, Number($("ibi").value) || 0);
-    var oc     = dias / 365;
+    if(!C){
+      $("tabla").innerHTML = "<tr><td>No se ha podido cargar la cuenta (energia_cuenta.js). "
+        + "Vuelve a cargar la página: sin ella no te damos ningún número.</td><td></td></tr>";
+      return;
+    }
+    var uso    = leer("uso") || "tur";
+    var esTur  = uso === "tur";
+    var diasDichos = Math.max(0, Math.min(365, Number(leer("ocupa")) || 0));
+    var ibiDicho = Number(leer("ibi"));
 
-    $("ocupa-v").textContent = dias + (dias === 1 ? " día" : " días") + " · " + Math.round(oc * 100) + " %";
+    var r = C.cuenta({
+      paneles:    Number(leer("paneles")),
+      uso:        uso,
+      dias:       diasDichos,
+      facturaMes: Number(leer("factura")) || 0,
+      ccaa:       "cn",
+      muni:       leer("muni") || "otro",
+      ibiRecibo:  ibiDicho > 0 ? ibiDicho : 0,
+      irpf:       esTur ? "no" : (leer("irpf") || "nose"),
+      apto:       esTur ? false : siNo(leer("apto")),
+      entrada:    leer("entrada") === "" ? 0 : Number(leer("entrada")),
+      plazoAnos:  Number(leer("plazo"))
+    });
+    var m = r.muni;
 
-    /* ---------- producción ---------- */
-    var coste = n * EUR_PANEL;
-    var kwp   = n * KWP_PANEL;
-    var prod  = kwp * KWH_POR_KWP;
-    var prodDia = prod / 365;
-
-    /* ---------- consumo del apartamento ---------- */
-    var consumoDia   = KWH_DIA_VACIO + oc * (KWH_DIA_OCUPADO - KWH_DIA_VACIO);
-    var consumoAno   = consumoDia * 365;
-
-    /* ---------- lo que se aprovecha: solo lo que coincide con el sol ---------- */
-    var solDia = (KWH_DIA_VACIO * SOL_VACIO)
-               + oc * (KWH_DIA_OCUPADO * SOL_OCUPADO - KWH_DIA_VACIO * SOL_VACIO);
-    var autoDia = Math.min(solDia, prodDia);
-    var auto    = autoDia * 365;
-    var sobra   = Math.max(0, prod - auto);
-
-    /* ---------- el tope del RD 244/2019 ---------- */
-    var compra      = Math.max(0, consumoAno - auto);      /* lo que sigue comprando de la red */
-    var valorCompra = compra * PRECIO_LUZ;                 /* tope de la compensación */
-    var valorSobra  = sobra * PRECIO_EXC;
-    var compensa    = Math.min(valorSobra, valorCompra);
-    var regala      = Math.max(0, valorSobra - compensa);
-    var kwhRegala   = PRECIO_EXC > 0 ? regala / PRECIO_EXC : 0;
-    var kwhCompensa = Math.max(0, sobra - kwhRegala);
-
-    var ahorroAno = auto * PRECIO_LUZ + compensa;
+    /* ---------- los días: una vivienda está ocupada todo el año ---------- */
+    var ocupa = $("ocupa");
+    if(ocupa) ocupa.disabled = !esTur;
+    $("ocupa-v").textContent = esTur
+      ? r.dias + (r.dias === 1 ? " día" : " días") + " · " + Math.round(r.dias / 365 * 100) + " %"
+      : "todo el año (es una vivienda)";
+    var pregIrpf = $("preguntas-irpf");
+    if(pregIrpf) pregIrpf.hidden = esTur;
 
     /* ---------- la barra ---------- */
     function trozo(v, cls, tit){
-      if(prod <= 0 || v <= 0) return "";
+      if(r.prod <= 0 || v <= 0) return "";
       return '<i class="' + cls + '" style="flex:' + v + '" title="' + tit + '"></i>';
     }
     $("barra").innerHTML =
-        trozo(auto,        "b-uso",    "La gastas tú: "        + kwh(auto))
-      + trozo(kwhCompensa, "b-comp",   "Te la compensan: "     + kwh(kwhCompensa))
-      + trozo(kwhRegala,   "b-regalo", "La regalas: "          + kwh(kwhRegala));
+        trozo(r.auto,        "b-uso",    "La gastas tú: "        + kwh(r.auto))
+      + trozo(r.kwhCompensa, "b-comp",   "Te la compensan: "     + kwh(r.kwhCompensa))
+      + trozo(r.kwhRegala,   "b-regalo", "La regalas: "          + kwh(r.kwhRegala));
+    var llega = r.prod > 0 ? (r.auto + r.kwhCompensa) / r.prod : 0;
     $("barra-txt").innerHTML =
-        "De " + kwh(prod) + " al año: gastas " + kwh(auto)
-      + ", te compensan " + kwh(kwhCompensa)
-      + " y regalas " + kwh(kwhRegala) + ". "
-      + "<b>Solo te llega el " + (prod > 0 ? pct((auto + kwhCompensa) / prod) : "—") + "</b> "
-      + "de lo que produce tu tejado.";
+        "De " + kwh(r.prod) + " al año: gastas " + kwh(r.auto)
+      + ", te compensan " + kwh(r.kwhCompensa)
+      + " y regalas " + kwh(r.kwhRegala) + ". "
+      + (r.kwhRegala > 0.5
+          ? "<b>Solo te llega el " + pct(llega) + "</b> de lo que produce tu tejado."
+          : "<b>Te llega todo</b> lo que produce tu tejado: no regalas nada.");
 
     /* ---------- IRPF según el uso ---------- */
-    var gastoCert = 0, irpf = 0, textoIrpf = "";
-    if(uso === "tur"){
-      irpf = 0;
+    var textoIrpf;
+    if(r.esTuristico){
       textoIrpf = "no se cuenta ninguna deducción de IRPF: la norma habla de vivienda habitual "
                 + "o arrendada «para su uso como vivienda», y un turístico no lo es. Pregúntalo "
                 + "a tu gestor antes de contar con ese dinero.";
-      $("v-irpf").textContent = "0 €";
+    } else if(r.irpf > 0){
+      textoIrpf = "te devuelve Hacienda en la declaración del año siguiente ("
+                + (r.irpfTipo || "") + (r.irpfCcaa > 0 ? ", más la de " + r.ccaaNom : "") + ").";
     } else {
-      gastoCert = COSTE_CERT;
-      irpf = 0.40 * Math.min(coste + gastoCert, BASE_40);
-      $("v-irpf").textContent = eur(irpf);
-      textoIrpf = "te devuelve Hacienda en la declaración del año siguiente, con los dos "
-                + "certificados energéticos (deducción del 40 %).";
+      textoIrpf = "de devolución de Hacienda en esta cuenta: " + (r.motivoSin40 || "no te sale ninguna deducción") + ".";
     }
+    $("v-irpf").textContent = eur(r.irpf);
     $("v-irpf-txt").textContent = textoIrpf;
-    $("li-irpf").style.opacity = (uso === "tur") ? "1" : "0.55";
+    $("li-irpf").style.opacity = r.esTuristico ? "1" : "0.55";
 
-    /* ---------- IBI ---------- */
-    var b = IBI[muni] || IBI.otro;
-    /* b[5] es «solo vivienda habitual» (antes se leía b[4], que es el nombre). */
-    var soloHabitual = b[5] === true;
-    var aplicaIbi = !(soloHabitual && uso === "tur");
-    var ibiAnual = aplicaIbi ? ibiAn * b[0] : 0;
-    if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];
-    var ibiTotal = ibiAnual * b[1];
-
+    /* ---------- los avisos del municipio ---------- */
     var avi = $("aviso-muni");
-    var textoAviso = b[3];
-    if(uso === "tur" && b[0] > 0 && !soloHabitual){
+    var textoAviso = m.aviso || "";
+    if(r.esTuristico && m.pct > 0 && !m.soloHabitual){
       textoAviso = (textoAviso ? textoAviso + " " : "")
         + "Y no está publicado si esta bonificación vale para una vivienda vacacional: confírmalo en el ayuntamiento.";
     }
     /* No nos inventamos tu IBI: si no lo has escrito, aquí va a cero y se te pide. */
-    if(ibiAn <= 0 && b[0] > 0 && aplicaIbi){
+    if(!(ibiDicho > 0) && m.pct > 0 && r.aplicaIbi){
       textoAviso = (textoAviso ? textoAviso + " " : "")
         + "No sabemos cuánto pagas tú de IBI, así que aquí va a cero. Escríbelo arriba, tal cual viene en tu recibo, y te lo descontamos.";
     }
     if(textoAviso){ avi.textContent = textoAviso; avi.hidden = false; } else { avi.hidden = true; }
 
-    /* ---------- lo que cuesta de verdad ---------- */
-    var real = coste + gastoCert - irpf - ibiTotal - ICIO;
-    if(real < 0) real = 0;
-    var anos = ahorroAno > 0 ? real / ahorroAno : 0;
-
-    /* ---------- la cuota ---------- */
-    var entrada = Math.max(0, Number($("entrada").value) || 0);
-    var anos_p  = Number($("plazo").value);
-    var aPagar  = coste + gastoCert;
-    var presta  = Math.max(0, aPagar - entrada);
-
-    var cuota = 0;
-    if(anos_p > 0 && presta > 0){
-      var i = TAE / 12, m = anos_p * 12;
-      cuota = presta * i / (1 - Math.pow(1 + i, -m));
+    var avE = $("aviso-entrada");
+    if(avE){
+      if(r.avisos.length){ avE.textContent = r.avisos.join(" "); avE.hidden = false; }
+      else { avE.textContent = ""; avE.hidden = true; }
     }
 
-    var ahorroMes = ahorroAno / 12;
-    var bolsillo  = cuota - ahorroMes;
-
-    /* ---------- las tres cifras grandes ---------- */
-    $("v-regalas").textContent  = eur(regala) + "/año";
-    $("v-paga").textContent     = (ahorroAno > 0 && anos < 60)
-      ? (Math.round(anos * 10) / 10).toString().replace(".", ",") + " años"
-      : "nunca";
-    $("v-bolsillo").textContent   = (anos_p === 0)
-      ? "Al contado"
+    /* ---------- las tres cifras grandes: la misma respuesta que la tabla ---------- */
+    var bolsillo = r.c1 - r.ahorroMes;
+    $("v-regalas").textContent  = eur(r.regala) + "/año";
+    $("v-paga").textContent     = C.textoPagaSola(r);
+    $("v-bolsillo").textContent = r.alContado ? eur(r.aPagar)
       : (bolsillo <= 0 ? "0 €/mes" : eur(bolsillo) + "/mes");
 
     var pieB = $("v-bolsillo").nextElementSibling;
-    if(anos_p === 0){
-      pieB.innerHTML = "<b>te ahorra " + eur(ahorroMes) + " al mes</b> desde el primer recibo";
+    if(r.alContado){
+      pieB.innerHTML = "<b>lo pagas hoy de una vez</b>, y te ahorra " + eur(r.ahorroMes) + " al mes desde el primer recibo";
     } else if(bolsillo <= 0){
       pieB.innerHTML = "<b>la luz te paga la cuota entera.</b> No pones nada al mes";
     } else {
@@ -610,17 +582,17 @@ table.t td.resta{color:var(--verde)}
     }
 
     var pieR = $("v-regalas").nextElementSibling;
-    pieR.innerHTML = (regala <= 0)
+    pieR.innerHTML = (r.regala <= 0)
       ? "<b>no regalas nada</b>: con este tamaño te compensan todo el sobrante"
       : "<b>al año regalas</b> en luz que no puedes usar ni cobrar";
 
     /* ---------- el aviso del tamaño ---------- */
     var ojo = $("ojo-tamano");
-    if(regala > 40){
+    if(r.regala > 40){
       ojo.hidden = false;
       $("ojo-tamano-txt").innerHTML =
-        "Con " + n + " paneles produces mucha más luz de la que tu apartamento puede usar o "
-        + "cobrar. <b>" + eur(regala) + " al año se van a la red sin que nadie te los pague.</b> "
+        "Con " + r.n + " paneles produces mucha más luz de la que tu apartamento puede usar o "
+        + "cobrar. <b>" + eur(r.regala) + " al año se van a la red sin que nadie te los pague.</b> "
         + "O pones menos paneles, o buscas a alguien que te compre ese sobrante. "
         + "Poner más paneles solo te compensa si el sobrante lo cobra alguien.";
     } else {
@@ -628,48 +600,71 @@ table.t td.resta{color:var(--verde)}
     }
 
     /* ---------- lo que ganamos nosotros, dicho claro ---------- */
-    $("v-nuestro").textContent =
-      "El sobrante que nos cedes son " + kwh(sobra) + " al año. Vendiéndolo en el mercado a unos "
-      + "0,06 €/kWh son " + eur(valorSobra) + " al año para nosotros. Para ti hoy valen "
-      + eur(compensa) + ", porque la ley no te deja cobrar más. Esa diferencia de "
-      + eur(regala) + " al año es lo que hace que este trato tenga sentido para los dos.";
+    $("v-nuestro").textContent = (r.regala > 0.5)
+      ? "El sobrante que nos cedes son " + kwh(r.sobra) + " al año. Vendiéndolo en el mercado a unos "
+        + "0,06 €/kWh son " + eur(r.valorSobra) + " al año para nosotros. Para ti hoy valen "
+        + eur(r.compensa) + ", porque la ley no te deja cobrar más. Esa diferencia de "
+        + eur(r.regala) + " al año es lo que hace que este trato tenga sentido para los dos."
+      : "El sobrante que nos cedes son " + kwh(r.sobra) + " al año, y hoy te lo compensan entero en "
+        + "tu factura: " + eur(r.compensa) + " al año. Con este uso no regalas nada, así que "
+        + "cedérnoslo te costaría esos " + eur(r.compensa) + " al año. Aquí te conviene más la opción A.";
 
-    $("op-a").innerHTML = eur(aPagar) + "<small>de entrada</small>";
+    /* la opción A dice lo mismo que la tabla */
+    $("op-a").innerHTML = r.alContado
+      ? eur(r.aPagar) + "<small>al contado</small>"
+      : eur(r.entrada) + "<small>de entrada y " + eur(r.c1) + "/mes de cuota</small>";
 
     /* ---------- la tabla ---------- */
+    var dedFila = r.esTuristico
+      ? ["Deducción del IRPF", "0 € · no aplica al turístico", ""]
+      : (r.irpfEstado > 0
+          ? ["Deducción del IRPF (" + r.irpfTipo + ")", "− " + eur(r.irpfEstado), "resta"]
+          : ["Deducción del IRPF", "0 € · " + (r.motivoSin40 || "no te sale ninguna"), ""]);
     var filas = [
-      ["Instalación de " + n + " paneles (" + kwp.toLocaleString("es-ES") + " kW)", eur(coste), ""],
-      gastoCert ? ["Los dos certificados energéticos", eur(gastoCert), ""] : null,
-      uso === "tur"
-        ? ["Deducción del IRPF", "0 € · no aplica al turístico", ""]
-        : ["Deducción del IRPF (40 %)", "− " + eur(irpf), "resta"],
-      (b[0] > 0 && aplicaIbi && ibiAn > 0)
-        ? ["Bonificación del IBI (" + Math.round(b[0]*100) + " % durante " + b[1] + " años)", "− " + eur(ibiTotal), "resta"]
-        : ["Bonificación del IBI",
-           (soloHabitual && uso === "tur") ? "0 € · tu ayuntamiento la da solo para vivienda habitual"
-           : (ibiAn <= 0 && b[0] > 0) ? "nos falta tu recibo del IBI"
-           : "sin publicar", ""],
-      ["Bonificación del ICIO", "− " + eur(ICIO), "resta"],
+      ["Instalación de " + r.n + " paneles (" + r.kwp.toLocaleString("es-ES") + " kW)", eur(r.coste), ""],
+      r.conCert ? ["Los dos certificados energéticos", eur(r.gastoCert), ""] : null,
+      dedFila,
+      (!r.esTuristico && r.ccaaDed)
+        ? (r.irpfCcaa > 0
+            ? ["Deducción de " + r.ccaaNom + " (" + Math.round(r.ccaaDed.pct * 100) + " %)", "− " + eur(r.irpfCcaa), "resta"]
+            : ["Deducción de " + r.ccaaNom, uso === "lar"
+                ? "0 € · sin confirmar para un alquiler de larga temporada"
+                : "0 € · pide los dos certificados y lo mismo que el 40 %", ""])
+        : null,
+      r.icio > 0
+        ? ["Bonificación del ICIO (estimada, sin verificar en la ordenanza)", "− " + eur(r.icio), "resta"]
+        : ["Bonificación del ICIO", "0 € · sin bonificación confirmada en tu municipio", ""],
       ["Subvención de Canarias", "0 € · cerrada", ""],
-      ["__total__", eur(real), ""],
+      ["__total__", eur(r.neto), ""],
+      r.ibiAnual > 0
+        ? ["Bonificación del IBI (" + Math.round(m.pct * 100) + " % durante " + r.ibiAnos + " años)",
+           "− " + eur(r.ibiAnual) + " al año", "resta"]
+        : ["Bonificación del IBI",
+           (m.soloHabitual && r.esTuristico) ? "0 € · tu ayuntamiento la da solo para vivienda habitual"
+           : (!(ibiDicho > 0) && m.pct > 0) ? "nos falta tu recibo del IBI"
+           : "0 € · sin bonificación confirmada", ""],
+      r.ibiAnual > 0
+        ? ["Al acabar esos " + r.ibiAnos + " años, contando el IBI, te habrá costado", eur(r.netoConIbi), ""]
+        : null,
       ["__sep__|La luz, al año", "", ""],
-      ["Produce", kwh(prod), ""],
-      ["Gasta el apartamento (" + dias + " días ocupado)", kwh(consumoAno), ""],
-      ["De eso, lo cubre el sol", kwh(auto), ""],
-      ["Sobrante", kwh(sobra), ""],
-      ["Te lo compensan hasta el tope de tu factura", eur(compensa), ""],
-      ["Lo que pasa del tope y se regala", "− " + eur(regala), ""],
-      ["Te ahorra en total", eur(ahorroAno), ""],
+      ["Produce", kwh(r.prod), ""],
+      [(r.esTuristico ? "Gasta el apartamento (" + r.dias + " días ocupado" : "Gasta la vivienda (ocupada todo el año")
+        + (r.consumoFuente === "factura" ? ", sale de tu factura)" : ", estimado)"), kwh(r.consumo), ""],
+      ["De eso, lo cubre el sol", kwh(r.auto), ""],
+      ["Sobrante", kwh(r.sobra), ""],
+      ["Te lo compensan hasta el tope de tu factura", eur(r.compensa), ""],
+      ["Lo que pasa del tope y se regala", "− " + eur(r.regala), ""],
+      ["Te ahorra en total", eur(r.ahorroAno), ""],
       ["__sep__|Cómo lo pagas", "", ""],
-      ["Pones de entrada", eur(entrada), ""],
-      ["Financias", eur(presta), ""],
-      anos_p === 0 ? null : ["Cuota al mes (" + anos_p + " años, 6,25 % TAE)", eur(cuota), ""],
-      ["Se paga sola en", (Math.round(anos * 10) / 10).toString().replace(".", ",") + " años", ""]
+      r.alContado ? ["Al contado, hoy", eur(r.aPagar), ""] : ["Pones de entrada", eur(r.entrada), ""],
+      r.alContado ? null : ["Financias", eur(r.presta), ""],
+      r.alContado ? null : ["Cuota al mes (" + r.plazo + " años, " + C.textoTipo() + ")", eur(r.c1), ""],
+      ["Se paga sola en", C.textoPagaSola(r), ""]
     ].filter(Boolean);
 
     $("tabla").innerHTML = filas.map(function(f){
       if(f[0] === "__total__"){
-        return '<tr class="total"><td>TE CUESTA DE VERDAD</td><td>' + f[1] + '</td></tr>';
+        return '<tr class="total"><td>TE CUESTA DE VERDAD (sin contar el IBI, que llega año a año)</td><td>' + f[1] + '</td></tr>';
       }
       if(f[0].indexOf("__sep__|") === 0){
         return '<tr><td colspan="2" style="padding-top:14px;font-size:10.5px;font-weight:800;'
@@ -678,11 +673,14 @@ table.t td.resta{color:var(--verde)}
       }
       return '<tr><td>' + f[0] + '</td><td class="' + f[2] + '">' + f[1] + '</td></tr>';
     }).join("");
+    return r;
   }
 
-  ["paneles","uso","ocupa","muni","ibi","entrada","plazo"].forEach(function(id){
-    $(id).addEventListener("input", calcular);
-    $(id).addEventListener("change", calcular);
+  ["paneles","uso","ocupa","muni","ibi","factura","irpf","apto","entrada","plazo"].forEach(function(id){
+    var el = $(id);
+    if(!el) return;
+    el.addEventListener("input", calcular);
+    el.addEventListener("change", calcular);
   });
   calcular();
 

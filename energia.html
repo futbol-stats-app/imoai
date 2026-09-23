@@ -197,8 +197,10 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
 </div>
 
-<script src="datos.js?v=18c"></script>
+<script src="datos.js?v=24a"></script>
 <script src="orden.js?v=18c"></script>
+<!-- 24/09/2026 · bloque C: la cuenta de las placas, la misma para las tres páginas. -->
+<script src="energia_cuenta.js?v=24a"></script>
 <!-- 🔴 ARREGLADO (C2, 18/09/2026): faltaba ayudas_todas.js. ayudas.js solo sabe mirar en
      window.IMMOIA_AYUDAS_TODAS o, si no está, en la carpeta ayudas/, que NO existe en el
      repositorio. Resultado: la IA de esta página no veía ni una sola ayuda, nunca.
@@ -206,7 +208,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      cliente dice dónde vive, mucho después de que la página haya pintado.
      (18/09 · JUNTADO X2: la versión de caché ?v=18c es la de la auditoría; el «defer» y
      el propio ayudas_todas.js son de C2. Las dos cosas van juntas.) -->
-<script src="ayudas_todas.js?v=18c" defer></script>
+<script src="ayudas_todas.js?v=24a" defer></script>
 <script src="ayudas.js?v=18c" defer></script>
 <script>
 (function(){
@@ -261,9 +263,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   var COSTE_CERT  = dato(DN.costeCertificados, 200);
   var BASE_40     = dato((D.irpfEstatal||{}).conCertificados && D.irpfEstatal.conCertificados.base, 7500);
   var ICIO        = dato(DN.icio, 150);
-  var TAE         = dato(DN.tae, 0.0625);
+  var TAE         = dato(DN.tae, 0.0625);   /* OJO: la cuenta lo usa como interés NOMINAL (supuesto), no es una TAE */
   var PLAZO       = dato(DN.plazoAnos, 10);   /* L-36: respaldo igual que datos.js (10 años) */
-  var DESCUENTO   = dato(DN.descuentoInstalador, 500);
   var PARTE_ENERGIA = dato(DN.parteEnergiaFactura, 0.70);
 
   /* ----------------------------------------------------------
@@ -286,37 +287,25 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   }
   WHATSAPP = limpiarMovil(WHATSAPP);
 
-  /* Los municipios salen de datos.js. Lo de aquí abajo es el respaldo por si
-     ese archivo no cargara: son los mismos trece. */
+  /* Los municipios salen de datos.js y de ningún otro sitio. 24/09/2026 · bloque C: aquí
+     había una copia de respaldo con textos que contradecían a datos.js (Arona, Adeje, San
+     Miguel). Si datos.js no cargara, no se inventa nada: todo municipio va a cero. */
   var IBI = D.municipios || {
-    gu:  [0.50, 25, 0,   "", "Güímar"],
-    ro:  [0.50, 10, 0,   "", "El Rosario"],
-    sc:  [0.50,  5, 0,   "Hay que pedirlo antes del 1 de enero.", "Santa Cruz de Tenerife"],
-    ll:  [0.50,  5, 0,   "Piden estar al corriente de pagos y el IBI domiciliado.", "La Laguna"],
-    re:  [0.50,  5, 0,   "", "Los Realejos"],
-    pc:  [0.50,  5, 0,   "", "Puerto de la Cruz"],
-    ta:  [0.50,  5, 300, "Tope de 300 € al año.", "Tacoronte"],
-    ca:  [0.30,  5, 0,   "Hay que pedirlo antes del 30 de noviembre del año anterior.", "Candelaria"],
-    gr:  [0.25,  5, 0,   "Solo vivienda habitual, con empadronamiento.", "Granadilla de Abona"],
-    st:  [0.20,  3, 0,   "Sin confirmar que cubra fotovoltaica. Hay que llamar al ayuntamiento.", "Santiago del Teide"],
-    sm:  [0,     0, 0,   "Anunciaron un 50 % en 2022 pero no está publicado. Aquí va a cero.", "San Miguel de Abona"],
-    ar:  [0,     0, 0,   "Arona: no consta bonificación publicada por placas (sin confirmar con el ayuntamiento).", "Arona"],
-    ad:  [0,     0, 0,   "Adeje no la tiene publicada. Hay que llamar al 922 756 200.", "Adeje"],
-    otro:[0,     0, 0,   "En tu municipio no consta bonificación publicada.", "otro municipio"]
+    otro:[0, 0, 0, "No se han podido cargar los datos de los municipios: la bonificación del IBI va a cero.", "otro municipio", false]
   };
 
   /* ==========================================================
      2 · LO QUE VA CONTESTANDO
      ========================================================== */
   var LLAVE = "immoia.energia.v1";
-  var R = { de:"general", irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, agua:null, aire:null };
+  var R = { de:"general", irpf:null, factura:null, tipo:null, dias:null, diasSupuesto:false, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, agua:null, aire:null };
   var PASO = "inicio";   /* dónde está el cliente ahora mismo, para que la IA lo sepa */
 
   try{
     var g = JSON.parse(localStorage.getItem(LLAVE) || "null");
     if(g && typeof g === "object"){
       /* solo respuestas de la calculadora — nunca nombre, teléfono ni correo */
-      ["irpf","factura","tipo","muni","ibi","ccaa","ccaaElegida","pago","agua","aire"].forEach(function(k){
+      ["irpf","factura","tipo","dias","diasSupuesto","muni","ibi","ccaa","ccaaElegida","pago","agua","aire"].forEach(function(k){
         if(g[k] !== undefined) R[k] = g[k];
       });
     }
@@ -327,7 +316,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       localStorage.setItem(LLAVE, JSON.stringify({
         irpf:R.irpf, factura:R.factura, tipo:R.tipo, muni:R.muni, ibi:R.ibi,
         ccaa:R.ccaa, ccaaElegida:R.ccaaElegida, pago:R.pago,
-        agua:R.agua, aire:R.aire
+        agua:R.agua, aire:R.aire, dias:R.dias, diasSupuesto:R.diasSupuesto
       }));
     }catch(e){}
   }
@@ -340,186 +329,69 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
   /* ==========================================================
      3 · LA CUENTA
+     ----------------------------------------------------------
+     24/09/2026 · bloque C. La cuenta ya NO se hace aquí: la hace
+     energia_cuenta.js, la misma que usan renovables.html y
+     renovables_vacacional.html. Antes cada página contaba a su
+     manera y para el mismo caso daban cifras distintas (646 €
+     de ahorro aquí contra 384 € en la del vacacional; aquí el
+     descuento de 500 € sin fuente y el 40 % con otra regla).
+     Aquí solo se traducen las respuestas de la conversación a
+     lo que pide esa cuenta, y se devuelven los mismos nombres
+     de siempre para que nada de lo que lee esto se rompa.
      ========================================================== */
-  function cuota(P, anos){
-    if(P <= 0 || anos <= 0) return 0;
-    var i = TAE / 12, m = anos * 12;
-    return P * i / (1 - Math.pow(1 + i, -m));
-  }
-  /* Cuantos meses tarda en pagarse un prestamo con una cuota fija dada,
-     metiendo la devolucion de Hacienda por el camino. Es lo que permite
-     decirle al cliente: "sigue pagando lo mismo que ahora, y son N anos". */
-  function mesesPagando(principal, cuotaMes, devolucion, mesDev){
-    if(principal <= 0) return 0;
-    if(cuotaMes <= 0) return null;
-    var i = TAE / 12, s = principal, m = 0;
-    while(s > 0 && m < 480){
-      s = s * (1 + i) - cuotaMes;
-      m++;
-      if(m === mesDev && devolucion > 0) s = Math.max(0, s - devolucion);
-      /* si la cuota no cubre ni los intereses, no se paga nunca */
-      if(m > 60 && cuotaMes <= s * i) return null;
-    }
-    return s <= 0 ? m : null;
-  }
+  var CUENTA = window.IMMOIA_ENERGIA_CUENTA || null;
+  /* Si en un vacacional no sabe los días, se cuentan 180: es el mismo supuesto con el
+     que arranca la calculadora del vacacional, y en pantalla se dice que es un supuesto. */
+  var DIAS_SUPUESTO = 180;
 
-  function saldoTras(P, anos, meses){
-    var i = TAE / 12, c = cuota(P, anos), s = P;
-    for(var k = 0; k < meses; k++){ s = s * (1 + i) - c; }
-    return Math.max(0, s);
+  function entradaDeLaCuenta(extra){
+    var esTuristico = (R.tipo === "vac");
+    var apto = (R.agua === "electrico" || R.aire === "si") ? true
+             : (R.agua && R.agua !== "nose" && R.aire) ? false : null;
+    var e = {
+      facturaMes: R.factura || 100,
+      uso:        esTuristico ? "tur" : "vivienda",
+      dias:       (R.dias == null) ? DIAS_SUPUESTO : R.dias,
+      ccaa:       R.ccaa || "cn",
+      muni:       (R.ccaa === "cn") ? R.muni : null,
+      ibiRecibo:  R.ibi,
+      irpf:       R.irpf,
+      apto:       !esTuristico && apto,
+      entrada:    0,
+      plazoAnos:  PLAZO
+    };
+    if(esTuristico) e.apto = false;
+    for(var k in (extra || {})) e[k] = extra[k];
+    return e;
   }
 
   function calcular(){
-    var factura = R.factura || 100;
-    var consumo = factura * 12 * PARTE_ENERGIA / PRECIO_LUZ;
-
-    /* cuántos paneles pide esa casa */
-    var kwpIdeal = (consumo / KWH_POR_KWP) * 1.4;
-    var n = Math.round(kwpIdeal / KWP_PANEL);
-    n = Math.max(4, Math.min(16, Math.round(n / 2) * 2));
-
-    var kwp   = n * KWP_PANEL;
-    var prod  = kwp * KWH_POR_KWP;
-    var coste = n * EUR_PANEL;
-
-    var auto   = Math.min(prod * AUTOCONSUMO, consumo);
-    var sobra  = Math.max(0, prod - auto);
-
-    /* Lo que le compensan por el sobrante nunca puede pasar del valor de la luz que
-       sigue comprando de la red (RD 244/2019, art. 14). */
-    var compra      = Math.max(0, consumo - auto);
-    var compensa    = Math.min(sobra * PRECIO_EXC, compra * PRECIO_LUZ);
-
-    var ahorroPropio = auto * PRECIO_LUZ;          /* lo que se ahorra por gastar su luz */
-    var ahorroAno    = ahorroPropio + compensa;    /* si se queda el sobrante */
-    var ahorroCede   = ahorroPropio;               /* si nos cede el sobrante */
-    var ahorroMes    = ahorroAno / 12;
-    var luzNueva     = Math.max(0, factura - ahorroMes);
-
-    var CC = (D.comunidades || {})[R.ccaa] || null;
-    var esForal = !!(CC && CC.foral);
-
-    /* 🔴 La deducción no la da poner placas: la da el RESULTADO de comparar los dos
-       certificados, y el certificado solo mide calefacción, clima, agua caliente y
-       ventilación. Si el agua caliente es de bombona y no hay aire acondicionado,
-       las placas no tienen consumo eléctrico que compensar y no hay 40 %.
-       Mientras no lo sepamos, se cuenta a CERO: mejor prometer de menos. */
-    /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): faltaba mirar el TIPO de vivienda.
-       Un apartamento de alquiler turístico NO tiene esta deducción: la norma la da a
-       la vivienda habitual o a la que esté «arrendada para su uso como vivienda», y
-       un turístico no es ninguna de las dos. Esta página se la enseñaba igual en
-       cuanto el agua era eléctrica o había aire. renovables_vacacional.html ya lo
-       decía bien; esta no. Ahora dicen lo mismo. */
-    var esTuristico  = (R.tipo === "vac");
-    var aptoDeduccion = !esTuristico && ((R.agua === "electrico") || (R.aire === "si"));
-    var gastoCert = (CC && CC.deduccion && CC.deduccion.sinCertificados) ? 0 : COSTE_CERT;
-
-    /* El descuento que le negociamos al instalador se lo pasamos a él. */
-    var descuento = Math.min(DESCUENTO, coste);
-    var gasto = coste + gastoCert - descuento;
-
-    /* --- la subvención de la comunidad, si la hay abierta --- */
-    var subv = 0, subvNota = "";
-    if(CC && CC.subvencion){
-      subvNota = CC.subvencion.nota || "";
-      if(CC.subvencion.estado === "abierta" && CC.subvencion.importe > 0){
-        subv = CC.subvencion.importe * kwp;     /* €/kW × los kW instalados */
-        if(subv > gasto) subv = gasto;
-      }
-    }
-
-    /* 18/09 · AUDITORIA (L-16): la subvencion cobrada SE RESTA de la base de la
-       deduccion (datos.js, subvencion.fiscalidad). Antes se deducia sobre el gasto entero. */
-    var baseIrpf = Math.max(0, gasto - subv);
-
-    /* --- la del Estado: no vale en territorio foral (Navarra, País Vasco) --- */
-    var irpfEstado = 0, irpfTipo = "";
-    if(R.irpf === "si" && !esForal && aptoDeduccion){
-      irpfEstado = 0.40 * Math.min(baseIrpf, BASE_40); irpfTipo = "40 %, eficiencia energética";
-    } else if(R.irpf === "si" && !esForal && !esTuristico){
-      /* 18/09 · AUDITORIA (D-13): sin el 40 % queda la deduccion nueva por
-         AUTOCONSUMO del RDL 7/2026: 10 %, base 5.000 €, solo instalaciones de
-         2026 con su certificado de instalacion electrica. No se suma al 40 %.
-
-         🔴 EL !esTuristico ES DEL 19/09/2026 (tanda 7), Y NO VENIA EN NINGUNA
-         DE LAS DOS VERSIONES QUE SE HAN JUNTADO. Se encontro probando el
-         juntado, y estaba pasando YA EN LA WEB PUBLICADA, no lo trae el
-         juntado. Lo que pasaba: la tanda 4 cerro el 40 % al alquiler
-         turistico, pero la tanda 5 metio en datos.js esta segunda deduccion
-         estatal, y esta rama NO mira el tipo de vivienda. Resultado, medido
-         en la pagina publicada hoy: a un apartamento turistico le salia la
-         fila "Deduccion estatal del IRPF (10 %, autoconsumo 2026)  - 500 €"
-         Y JUSTO DEBAJO la frase "no he metido ni un euro de deduccion".
-         Las dos cosas en la misma pantalla.
-         Por que va a cero y no se deja: porque datos.js dice, para TODO el
-         bloque irpfEstatal, soloVivienda: "habitual o arrendada para su uso
-         como vivienda", y un turistico no es ninguna de las dos; y porque
-         renovables_vacacional.html, que es la pagina que la direccion dio
-         por buena, le da CERO de IRPF a un turistico, sin excepciones.
-         NO COMPROBADO: si la AEAT admite o no esta deduccion del 10 % en un
-         turistico. No se ha encontrado quien lo diga. Mientras no se sepa,
-         se cuenta a cero: prometer de menos se arregla, prometer de mas no. */
-      var AC = (D.irpfEstatal || {}).autoconsumo;
-      if(AC && new Date() <= new Date(AC.hasta + "T23:59:59")) { irpfEstado = AC.pct * Math.min(Math.max(0, coste - descuento - subv), AC.base); irpfTipo = "10 %, autoconsumo 2026"; }
-    }
-
-    /* --- la de la comunidad, la que muchos no saben ni que existe --- */
-    var irpfCcaa = 0;
-    if(R.irpf === "si" && aptoDeduccion && D.deduccionAutonomica){
-      irpfCcaa = D.deduccionAutonomica(R.ccaa, baseIrpf);
-    }
-    var irpf = irpfEstado + irpfCcaa;
-
-    /* --- el IBI, que es municipal y solo lo tenemos de Tenerife --- */
-    var b = IBI[R.muni] || IBI.otro;
-    var hayMuni = R.ccaa === "cn" && !!R.muni;
-    /* 🔴 ARREGLADO (C2, 18/09/2026): aquí había un IBI fijo de trescientos cincuenta euros
-       que no había dicho nadie y que se le colaba al cliente en la cuenta como suyo. Ahora sale
-       de lo que él escriba en el paso del municipio (R.ibi). Si no lo ha escrito, va a CERO
-       y la pantalla le dice que nos falta su recibo. */
-    var ibiSuyo = Math.max(0, Number(R.ibi) || 0);
-    var hayIbi = hayMuni && ibiSuyo > 0;
-    var ibiAnual = hayIbi ? ibiSuyo * b[0] : 0;
-    if(b[2] > 0 && ibiAnual > b[2]) ibiAnual = b[2];
-    var ibiTotal = ibiAnual * b[1];
-    /* 18/09 · AUDITORIA (L-15): el ICIO solo se resta donde el ayuntamiento
-       tiene bonificacion. Donde la de IBI es 0 (Arona, Adeje, otro...), tampoco. */
-    var icio = (hayMuni && b[0] > 0) ? ICIO : 0;
-
-    var aFinanciar = Math.max(0, gasto - subv);
-    var anos_p = PLAZO;
-    var c1 = cuota(aFinanciar, anos_p);
-
-    var saldo12 = saldoTras(aFinanciar, anos_p, 12);
-    var resto   = Math.max(0, saldo12 - irpf);
-    var c2      = resto > 0 ? cuota(resto, anos_p - 1) : 0;
-
-    var real = Math.max(0, gasto - subv - irpf - ibiTotal - icio);
-
-    return {
-      n:n, kwp:kwp, prod:prod, coste:coste, cert:gastoCert, consumo:consumo,
-      auto:auto, sobra:sobra, compensa:compensa,
-      ahorroPropio:ahorroPropio, ahorroAno:ahorroAno, ahorroCede:ahorroCede,
-      ahorroMes:ahorroMes, factura:factura, luzNueva:luzNueva,
-      irpf:irpf, irpfEstado:irpfEstado, irpfTipo:irpfTipo, irpfCcaa:irpfCcaa, esForal:esForal,
-      aptoDeduccion:aptoDeduccion, esTuristico:esTuristico,
-      descuento:descuento, gasto:gasto,
-      subv:subv, subvNota:subvNota,
-      ccaaNom: CC ? CC.nombre : "—", ccaaDed: (CC && CC.deduccion) ? CC.deduccion : null,
-      ibiTotal:ibiTotal, ibiPct: hayMuni ? b[0] : 0, ibiAnos:b[1], ibiAviso: hayMuni ? b[3] : "",
-      hayIbi:hayIbi, ibiSuyo:ibiSuyo,
-      muniNom: hayMuni ? b[4] : (CC ? CC.nombre : "—"), hayMuni:hayMuni, icio:icio,
-      aFinanciar:aFinanciar, anos:anos_p, c1:c1, c2:c2, real:real,
-      mes1: luzNueva + c1, mes2: luzNueva + c2, mesFin: luzNueva
-    };
+    if(!CUENTA) return null;
+    var r = CUENTA.cuenta(entradaDeLaCuenta());
+    /* los nombres de siempre, para quien ya los leía (contexto de la IA, IMMOIA.numeros) */
+    r.anos = r.plazo;
+    r.aFinanciar = r.aPagar;
+    r.gasto = r.aPagar;
+    r.real = r.neto;
+    r.descuento = 0;
+    r.ibiAviso = r.hayMuni ? r.muni.aviso : "";
+    r.ibiSuyo = r.ibiRecibo;
+    r.hayIbi = r.ibiAnual > 0;
+    r.diasSupuesto = (R.tipo === "vac") && (R.dias == null || R.diasSupuesto === true);
+    var luz = r.luzNueva == null ? 0 : r.luzNueva;
+    r.mes1 = luz + r.c1; r.mes2 = luz + r.c2; r.mesFin = luz;
+    return r;
   }
 
   /* ==========================================================
      4 · PINTAR
      ========================================================== */
   function $(id){ return document.getElementById(id); }
-  function eur(x){ return Math.round(x).toLocaleString("es-ES") + " €"; }
-  function kwh(x){ return Math.round(x).toLocaleString("es-ES") + " kWh"; }
+  /* 24/09/2026 · bloque C: los euros se escriben como en las otras dos páginas
+     (punto de miles, y el menos delante si es negativo) */
+  function eur(x){ return CUENTA ? CUENTA.fmt.eur(x) : Math.round(x).toLocaleString("es-ES") + " €"; }
+  function kwh(x){ return CUENTA ? CUENTA.fmt.kwh(x) : Math.round(x).toLocaleString("es-ES") + " kWh"; }
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
@@ -607,7 +479,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     mu:["murcia","cartagena","lorca"],
     na:["navarra","pamplona","nafarroa"],
     pv:["pais vasco","euskadi","vizcaya","bizkaia","guipuzcoa","gipuzkoa","alava","araba","bilbao","san sebastian","vitoria","donostia"],
-    ri:["la rioja","logroño","logrono","rioja"]
+    ri:["la rioja","logroño","logrono","rioja"],
+    ce:["ceuta"], me:["melilla"]
   };
 
   function entender(dicho){
@@ -753,6 +626,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     aire:      ["Dime si tienes aire acondicionado", "Ej.: sí tengo aire · no tengo"],
     factura:   ["Dime lo que pagas de luz", "Ej.: unos 110 al mes"],
     vivienda:  ["Dime qué tipo de vivienda es", "Ej.: una casa con tejado · un apartamento vacacional"],
+    dias:      ["Dime cuántos días al año está ocupado", "Ej.: unos 200 días"],
     municipio: ["Dime dónde está la vivienda", "Ej.: en Adeje · en Murcia · en Bilbao"],
     numeros:   ["Pregúntame lo que quieras o dime cómo quieres pagarlo", "Ej.: enséñame las formas de pago"],
     pago:      ["Dime cuál eliges, con tus palabras", "Ej.: la de pagar lo mismo que ahora · al contado"],
@@ -895,6 +769,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     if(!R.aire)    { paso1c(); return; }
     if(!R.factura) { paso2(); return; }
     if(!R.tipo)    { paso3(); return; }
+    if(R.tipo === "vac" && R.dias == null){ pasoDias(); return; }
     if(!R.muni && R.ccaa === "cn" && !R.ccaaElegida){ paso4(); return; }
     if(!R.ccaaElegida){ paso4(); return; }
     if(!R.pago){
@@ -972,7 +847,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       opciones([
         { texto:"Seguimos con eso", fuerte:true, hacer:function(){ seguirDondeToque(false); } },
         { texto:"Empezamos de nuevo", hacer:function(){
-            R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+            R = { de:R.de, irpf:null, factura:null, tipo:null, dias:null, diasSupuesto:false, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
             try{ localStorage.removeItem(LLAVE); }catch(e){}
             charla.innerHTML = ""; paso0();
           } }
@@ -1079,8 +954,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     } else {
       ia("<p>Te lo digo claro, aunque no me convenga: <b>con el agua de bombona y sin aire, "
        + "la deducción del 40 % probablemente no te va a salir</b>, y no te la voy a meter "
-       + "en la cuenta. Las placas te van a ahorrar luz igual, pero Hacienda no te va a "
-       + "devolver nada por ellas.</p>"
+       + "en la cuenta. Las placas te van a ahorrar luz igual. Lo que sí te puede quedar es "
+       + "la <b>deducción del 10 % por autoconsumo</b>, que no pide los dos certificados "
+       + "(salvo en un alquiler turístico, que ahí no la contamos).</p>"
        + "<p>Hay una salida y te la digo: si algún día cambias la bombona por un "
        + "<b>termo eléctrico</b> o pones aire, la cosa cambia — y entonces sí. Un técnico "
        + "lo simula en una hora antes de que te gastes un euro.</p>");
@@ -1120,7 +996,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     ia("<p>¿Y qué tipo de vivienda es?</p>");
     opciones([
       { texto:"Casa con tejado propio", hacer:function(){ yo("Casa con tejado propio"); R.tipo = "casa"; guardar(); tras(paso4); } },
-      { texto:"Apartamento de alquiler vacacional", hacer:function(){ yo("Apartamento vacacional"); R.tipo = "vac"; guardar(); avisoTuristico(); tras(paso4); } },
+      { texto:"Apartamento de alquiler vacacional", hacer:function(){ yo("Apartamento vacacional"); R.tipo = "vac"; guardar(); avisoTuristico(); tras(pasoDias); } },
       { texto:"Piso en un edificio", pie:"Tejado compartido", hacer:function(){ yo("Piso en un edificio"); R.tipo = "piso"; guardar(); esPiso(); } }
     ], true);
   }
@@ -1143,6 +1019,24 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      + "días alquilados — eso no está metido en esta cuenta.</p>");
   }
 
+  /* 24/09/2026 · bloque C: en un vacacional la cuenta depende de los días que está
+     ocupado (la calculadora del vacacional ya lo preguntaba; esta página no, y le daba
+     el ahorro de una vivienda: 646 € donde la otra decía 384 €). */
+  function pasoDias(){
+    PASO = "dias"; avance(3);
+    ia("<p>Una más, porque en un vacacional cambia mucho la cuenta: <b>¿cuántos días al año "
+     + "está ocupado, más o menos?</b></p>"
+     + "<p>Las placas producen todos los días, pero la luz solo la aprovechas cuando hay "
+     + "alguien, y lo que te compensan por el sobrante nunca pasa de lo que compras en ese "
+     + "recibo.</p>");
+    var lista = [60, 120, 180, 240, 300, 365].map(function(v){
+      return { texto: v + " días", hacer:function(){ yo(v + " días ocupado"); R.dias = v; R.diasSupuesto = false; guardar(); tras(paso4); } };
+    });
+    lista.push({ texto:"No lo sé", pie:"Cuento " + DIAS_SUPUESTO + " días, y te digo que es un supuesto",
+      hacer:function(){ yo("No lo sé"); R.dias = DIAS_SUPUESTO; R.diasSupuesto = true; guardar(); tras(paso4); } });
+    opciones(lista);
+  }
+
   function esPiso(){
     ia("<p>Te lo digo claro para no hacerte perder el tiempo: <b>en un piso el tejado es de toda "
      + "la comunidad</b>, así que tú solo no puedes poner placas ahí. Hace falta acuerdo de la "
@@ -1163,21 +1057,29 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     PASO = "municipio"; avance(4);
 
     var COM = D.comunidades || {};
+    /* 24/09/2026 · bloque C: el número se cuenta de datos.js; antes ponía «seis» a mano
+       y la lista de debajo enseñaba siete. */
+    var nDeduccion = CUENTA ? CUENTA.comunidadesConDeduccion().length
+                   : Object.keys(COM).filter(function(k){ return !!COM[k].deduccion; }).length;
     var claves = Object.keys(COM).sort(function(x, y){
       return COM[x].nombre.localeCompare(COM[y].nombre, "es");
     });
 
     ia("<p>Última pregunta: <b>¿dónde está la vivienda?</b></p>"
-     + "<p>Lo necesito por dos motivos. Uno, porque <b>seis comunidades tienen su propia "
-     + "deducción de la renta</b> además de la del Estado, y mucha gente no sabe ni que existe. "
+     + "<p>Lo necesito por dos motivos. Uno, porque "
+     + (nDeduccion > 0
+         ? "<b>" + nDeduccion + " comunidades tienen su propia deducción de la renta</b>"
+         : "<b>algunas comunidades tienen su propia deducción de la renta</b>")
+     + " además de la del Estado, y mucha gente no sabe ni que existe. "
      + "Y dos, porque la bonificación del IBI <b>la pone cada ayuntamiento</b>, y no se parecen "
-     + "en nada: Güímar la da 25 años y Arona no la da.</p>");
+     + "en nada: Güímar la da 25 años y en otros, como Adeje, no hay ninguna.</p>");
 
     var opsC = claves.length
       ? claves.map(function(k){
           var c = COM[k], extra = "";
           if(c.subvencion && c.subvencion.estado === "abierta") extra = " — ✅ con subvención abierta";
-          else if(c.deduccion) extra = " — deducción propia del " + Math.round(c.deduccion.pct * 100) + " %";
+          if(c.deduccion) extra += (extra ? " ·" : " —") + " deducción propia del " + Math.round(c.deduccion.pct * 100) + " %";
+          else if(c.deduccionSinVerificar) extra += (extra ? " ·" : " —") + " sin verificar";
           return '<option value="' + k + '"' + (R.ccaa === k ? " selected" : "")
                + '>' + esc(c.nombre) + extra + '</option>';
         }).join("")
@@ -1186,8 +1088,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var opsM = Object.keys(IBI).map(function(k){
       var b2 = IBI[k];
       return '<option value="' + k + '"' + (R.muni === k ? " selected" : "") + '>'
-        + esc(b2[4]) + (b2[0] > 0 ? " — " + Math.round(b2[0]*100) + " % · " + b2[1] + " años"
-                                  : " — sin bonificación publicada")
+        + esc(CUENTA ? CUENTA.etiquetaMunicipio(k)
+                     : b2[4] + (b2[0] > 0 ? " — " + Math.round(b2[0]*100) + " % · " + b2[1] + " años"
+                                          : " — sin bonificación confirmada (cuenta 0 €)"))
         + '</option>';
     }).join("");
 
@@ -1223,6 +1126,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
           + ", además de la del Estado.");
       } else if(c.foral){
         partes.push("<b>" + c.nombre + " tiene su propio IRPF</b>, así que la deducción estatal no aplica: va la foral.");
+      } else if(c.deduccionSinVerificar){
+        partes.push("No hemos comprobado todavía si " + c.nombre + " tiene deducción propia para placas: <b>sin verificar</b>, así que aquí va a 0. La del Estado sí se aplica.");
       } else {
         partes.push("En " + c.nombre + " <b>no hay deducción autonómica</b> para placas: solo la del Estado y lo del ayuntamiento.");
       }
@@ -1230,6 +1135,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         partes.push("Y <b>hay subvención abierta</b>: " + esc(c.subvencion.nota || ""));
       } else if(c.subvencion && c.subvencion.estado === "reabre"){
         partes.push("Subvención: " + esc(c.subvencion.nota || ""));
+      } else if(c.subvencion && c.subvencion.estado === "sinVerificar" && c.subvencion.nota){
+        partes.push("Subvención: " + esc(c.subvencion.nota));
       } else if(c.subvencion && c.subvencion.estado === "cerrada" && c.subvencion.nota){
         /* 11/09/2026: si la subvención está cerrada pero tenemos algo que decir
            (por qué cerró, o que hay otra ayuda que NO cubre placas), se dice.
@@ -1261,10 +1168,22 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   function paso5(){
     PASO = "numeros"; avance(5);
     var d = calcular();
+    if(!d){
+      ia("<p><b>No he podido cargar la cuenta</b> (el fichero energia_cuenta.js). Vuelve a "
+       + "cargar la página: sin ella no te doy ningún número.</p>");
+      return;
+    }
+    var F = CUENTA.fmt;
 
     ia("<p>Pues con lo que me has dicho, esto es lo que te sale. "
      + "<b>Te haría falta una instalación de " + d.n + " paneles</b> (" + d.kwp.toLocaleString("es-ES")
-     + " kW), que produce unos " + kwh(d.prod) + " al año.</p>"
+     + " kW), que produce unos " + F.kwh(d.prod) + " al año.</p>"
+     + (d.esTuristico
+         ? "<p>Como es un apartamento vacacional, cuento <b>" + d.dias + " días ocupado al año</b>"
+           + (d.diasSupuesto ? " (es un supuesto: no me lo has dicho)" : "")
+           + ": la luz solo la aprovechas cuando hay alguien, y lo que te compensan por el sobrante "
+           + "nunca pasa de lo que compras en el recibo.</p>"
+         : "")
      + "<p>Mira el mes, que es lo que se nota:</p>");
 
     /* El plan por defecto es el que pidió Leidy: que siga pagando lo mismo que ahora. */
@@ -1276,21 +1195,20 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       ? ('<div class="grande">'
         + '  <div class="dato eje"><div class="cifra">' + eur(d.factura) + '</div>'
         + '    <div class="pie">al mes, <b>lo mismo que pagas hoy</b>. No sube ni un euro</div></div>'
-        + '  <div class="dato"><div class="cifra">' + plan.anos + ' años</div>'
+        + '  <div class="dato"><div class="cifra">' + F.meses(plan.meses) + '</div>'
         + '    <div class="pie">pagando eso, y ya está pagada</div></div>'
         + '  <div class="dato"><div class="cifra">' + eur(d.luzNueva) + '</div>'
         + '    <div class="pie">al mes <b>a partir de ahí</b>, para siempre</div></div>'
         + '</div>'
         + '<div class="linea-tiempo">'
         + '  <div class="tramo hoy"><span>Hoy<small>toda la factura es luz que compras</small></span><b>' + eur(d.factura) + '</b></div>'
-        + '  <div class="tramo"><span>Los próximos ' + plan.anos + ' años<small>'
-        + eur(d.luzNueva) + ' de luz + ' + eur(d.ahorroAno/12) + ' de préstamo</small></span><b>' + eur(d.factura) + '</b></div>'
-        + (d.irpf > 0
+        + '  <div class="tramo"><span>Los próximos ' + F.meses(plan.meses) + '<small>'
+        + eur(d.luzNueva) + ' de luz + ' + eur(plan.cuota) + ' de préstamo</small></span><b>' + eur(d.factura) + '</b></div>'
+        + ((d.irpf > 0 && plan.mesesSinDevolucion)
             ? '  <div class="tramo"><span>Por el camino<small>entra la devolución de ' + eur(d.irpf)
-              + ' y acorta el plazo</small></span><b>−' + (plan.mesesSinDevolucion
-                  ? Math.round((plan.mesesSinDevolucion - plan.meses)/12*10)/10 + " años" : "") + '</b></div>'
+              + ' y acorta el plazo</small></span><b>−' + F.anos((plan.mesesSinDevolucion - plan.meses) / 12) + '</b></div>'
             : '')
-        + '  <div class="tramo fin"><span>Desde el año ' + plan.anos + '<small>placas pagadas y tuyas</small></span><b>' + eur(d.luzNueva) + '</b></div>'
+        + '  <div class="tramo fin"><span>Cuando acabes<small>placas pagadas y tuyas</small></span><b>' + eur(d.luzNueva) + '</b></div>'
         + '</div>')
       : ('<div class="grande">'
         + '  <div class="dato eje"><div class="cifra">' + eur(d.mes1) + '</div>'
@@ -1303,12 +1221,11 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     var frase;
     if(plan){
       frase = "<p><b>Ese es el trato entero:</b> no pones nada, tu recibo se queda igual que "
-            + "está, y en " + plan.anos + " años las placas están pagadas. Desde ahí pagas "
+            + "está, y en " + F.meses(plan.meses) + " las placas están pagadas. Desde ahí pagas "
             + eur(d.luzNueva) + " al mes en vez de " + eur(d.factura)
             + " — <b>" + eur(d.factura - d.luzNueva) + " menos, todos los meses</b>.</p>"
-            + "<p>Lo que hacemos nosotros: te negociamos el precio con el instalador —y ese "
-            + "descuento de " + eur(d.descuento) + " <b>te lo quedas tú</b>—, y te peleamos el "
-            + "préstamo con el banco. Tú no llamas a nadie.</p>";
+            + "<p>Lo que hacemos nosotros: te negociamos el precio con el instalador y te "
+            + "peleamos el préstamo con el banco. Tú no llamas a nadie.</p>";
     } else {
       frase = "<p>Con tu factura, lo que te ahorras al mes no da para pagar el préstamo sin "
             + "poner algo de tu bolsillo. Te enseño igualmente las opciones para que lo veas.</p>";
@@ -1317,74 +1234,85 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
            + "del IBI las pides tú, porque son tuyas: nosotros solo hacemos el papeleo.</p>";
     ia(frase);
 
+    var filaIrpfEstado = d.esForal
+      ? fila("Deducción estatal del IRPF", "no aplica · " + esc(d.ccaaNom) + " tiene IRPF propio")
+      : d.irpfEstado > 0
+        ? fila("Deducción estatal del IRPF (" + d.irpfTipo + ")", "− " + eur(d.irpfEstado), "resta")
+        : fila("Deducción estatal del IRPF", "0 € · " + esc(d.motivoSin40 || "no te sale ninguna"));
+    var filaIrpfCcaa = (d.irpfCcaa > 0)
+      ? fila("Deducción de " + d.ccaaNom + " (" + Math.round(d.ccaaDed.pct*100) + " %)", "− " + eur(d.irpfCcaa), "resta")
+      : d.ccaaDed
+        ? fila("Deducción de " + d.ccaaNom,
+               d.esTuristico ? "0 € · no la contamos en un alquiler turístico"
+               : "0 € · pide los dos certificados y lo mismo que el 40 %")
+        : ((D.comunidades || {})[R.ccaa] && D.comunidades[R.ccaa].deduccionSinVerificar)
+          ? fila("Deducción autonómica", "sin verificar en " + esc(d.ccaaNom) + " · aquí va a 0")
+          : fila("Deducción autonómica", "no existe en " + esc(d.ccaaNom));
+    var filasMuni = d.hayMuni
+      ? ((d.icio > 0
+            ? fila("Bonificación del ICIO (estimada, sin verificar en la ordenanza)", "− " + eur(d.icio), "resta")
+            : fila("Bonificación del ICIO", "0 € · sin bonificación confirmada en tu municipio")))
+      : fila("IBI e ICIO", "los pone tu ayuntamiento");
+    var filasIbi = d.hayMuni
+      ? (d.ibiAnual > 0
+          ? fila("Bonificación del IBI (" + Math.round(d.ibiPct*100) + " % · " + d.ibiAnos + " años)", "− " + eur(d.ibiAnual) + " al año", "resta")
+            + fila("Al acabar esos " + d.ibiAnos + " años, contando el IBI, te habrá costado", eur(d.netoConIbi))
+          : d.ibiPct > 0
+            ? fila("Bonificación del IBI", (d.muni.soloHabitual && d.esTuristico)
+                ? "0 € · tu ayuntamiento la da solo para vivienda habitual" : "nos falta tu recibo del IBI")
+            : fila("Bonificación del IBI", "0 € · sin bonificación confirmada en tu municipio"))
+      : "";
+
     var det = document.createElement("details");
     det.className = "mas";
     det.innerHTML =
         '<summary>Ver la cuenta completa</summary>'
       + '<div class="dentro"><div class="envoltorio"><table class="t">'
       + fila("Instalación de " + d.n + " paneles", eur(d.coste))
-      + fila("Los dos certificados energéticos", eur(d.cert))
-      + (d.descuento > 0
-          ? fila("Descuento que te conseguimos con el instalador", "− " + eur(d.descuento), "resta")
-          : "")
-      + (d.esForal
-          ? fila("Deducción estatal del IRPF", "no aplica · " + esc(d.ccaaNom) + " tiene IRPF propio")
-          : d.irpfEstado > 0
-            ? fila("Deducción estatal del IRPF (" + (d.irpfTipo || "40 %") + ")", "− " + eur(d.irpfEstado), "resta")
-            : fila("Deducción estatal del IRPF",
-                   d.esTuristico ? "0 € · no aplica al alquiler turístico"
-                   : (R.irpf !== "si") ? "0 € · no llegas a la cuota"
-                   : "0 € · sin consumo eléctrico que compensar"))
-      + (d.irpfCcaa > 0
-          ? fila("Deducción de " + d.ccaaNom + " (" + Math.round(d.ccaaDed.pct*100) + " %)", "− " + eur(d.irpfCcaa), "resta")
-          : d.ccaaDed
-            /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): esta fila daba SIEMPRE el mismo
-               motivo —«no llegas a la cuota»— aunque el cero viniera de otra cosa. A un
-               turístico que paga IRPF de sobra le estaba diciendo algo falso. Aquí se dice
-               lo que hace esta página, no lo que dice la norma de cada comunidad: la nota
-               de debajo de la tabla ya trae la condición que pone cada una. */
-            ? fila("Deducción de " + d.ccaaNom,
-                   d.esTuristico ? "0 € · no la contamos en un alquiler turístico"
-                   : (R.irpf !== "si") ? "0 € · no llegas a la cuota"
-                   : "0 € · sin consumo eléctrico que compensar")
-            : fila("Deducción autonómica", "no existe en " + d.ccaaNom))
+      + (d.conCert ? fila("Los dos certificados energéticos", eur(d.cert)) : "")
+      + filaIrpfEstado
+      + filaIrpfCcaa
       + (d.subv > 0
           ? fila("Subvención de " + d.ccaaNom, "− " + eur(d.subv), "resta")
-          : fila("Subvención autonómica", "0 € · " + (d.subvNota ? "cerrada" : "no consta")))
-      + (d.hayMuni
-          ? (d.ibiPct > 0
-              ? (d.hayIbi
-                  ? fila("Bonificación del IBI (" + Math.round(d.ibiPct*100) + " % · " + d.ibiAnos + " años)", "− " + eur(d.ibiTotal), "resta")
-                  : fila("Bonificación del IBI", "nos falta tu recibo del IBI"))
-              : fila("Bonificación del IBI", "sin publicar en tu municipio"))
-            + fila("Bonificación del ICIO", "− " + eur(d.icio), "resta")
-          : fila("IBI e ICIO", "los pone tu ayuntamiento"))
-      + '<tr class="total"><td>TE CUESTA DE VERDAD</td><td>' + eur(d.real) + '</td></tr>'
-      + fila("Produce al año", kwh(d.prod))
-      + fila("De eso lo aprovechas tú", kwh(d.auto))
+          : fila("Subvención autonómica", "0 € · " + (!d.subvNota ? "no consta"
+              : (((D.comunidades || {})[R.ccaa] || {}).subvencion || {}).estado === "sinVerificar" ? "sin verificar"
+              : "cerrada")))
+      + filasMuni
+      + '<tr class="total"><td>TE CUESTA DE VERDAD (sin contar el IBI, que llega año a año)</td><td>' + eur(d.real) + '</td></tr>'
+      + filasIbi
+      + fila("Produce al año", F.kwh(d.prod))
+      + (d.esTuristico ? fila("Gasta el apartamento (" + d.dias + " días ocupado" + (d.diasSupuesto ? ", supuesto" : "")
+                              + (d.consumoFuente === "factura" ? "; sale de tu factura" : "; estimado") + ")", F.kwh(d.consumo)) : "")
+      + fila("De eso lo aprovechas tú", F.kwh(d.auto))
+      + fila("Te compensan por el sobrante, hasta el tope de tu factura", eur(d.compensa))
       + fila("Te ahorra al año", eur(d.ahorroAno))
-      + fila("Cuota a " + d.anos + " años (6,25 % TAE)", eur(d.c1))
+      + fila("Se paga sola en", CUENTA.textoPagaSola(d))
+      + (plan
+          ? fila("Préstamo, pagando cada mes lo que te ahorra la luz (" + CUENTA.textoTipo() + ")",
+                 eur(plan.cuota) + "/mes durante " + F.meses(plan.meses))
+            + fila("Si lo prefieres a cuota fija a " + d.anos + " años", eur(d.c1) + "/mes")
+          : fila("Cuota a " + d.anos + " años (" + CUENTA.textoTipo() + ")", eur(d.c1) + "/mes"))
       + '</table></div>'
       + '<p style="font-size:13px;color:var(--tinta2);margin:10px 0 0">'
       + (d.ibiAviso ? "<b>Ojo con el IBI:</b> " + esc(d.ibiAviso) + " " : "")
       + (d.ccaaDed && d.ccaaDed.nota ? "<b>Sobre la deducción de " + esc(d.ccaaNom) + ":</b> " + esc(d.ccaaDed.nota) + " " : "")
       + (d.hayMuni
           ? (d.hayIbi
-              ? 'La bonificación del IBI está calculada sobre los ' + eur(d.ibiSuyo) + ' al año que nos has dicho que pagas. '
+              ? 'La bonificación del IBI está calculada sobre los ' + eur(d.ibiSuyo) + ' al año que nos has dicho que pagas, '
+                + 'y se descuenta en el recibo de cada año mientras dura: por eso no se resta del precio de hoy. '
               : '<b>No sabemos cuánto pagas de IBI</b>, así que aquí va a cero: no nos lo inventamos. '
                 + 'Dinos lo que pone tu recibo y te lo descontamos. ')
           : '')
       + 'El precio es de 687,50 € por panel puesto, dentro del rango de 600-900 € que se publica, '
-      + 'y es el número con el que está hecha esta cuenta.</p></div>';
+      + 'y es el número con el que está hecha esta cuenta. ' + esc(CUENTA.textoTipoLargo()) + '</p></div>';
     charla.appendChild(det);
 
     /* ---- si la deducción no le va a salir, se le dice AQUÍ, que es donde mira ---- */
     if(!d.aptoDeduccion && R.irpf === "si"){
       var avD = document.createElement("div");
       avD.className = "ojo";
-      /* 🔴 ARREGLADO (19/09/2026 · LOS_ENCHUFES): este texto daba UNA sola explicación
-         —la del agua y el aire— y ofrecía una salida —«pon un termo y sí sale»— que a un
-         apartamento turístico NO le vale. Ahora cada caso lee su motivo. */
+      /* lo que saldría con termo o aire, contado con la MISMA cuenta */
+      var conApto = d.esTuristico ? null : CUENTA.cuenta(entradaDeLaCuenta({ apto: true }));
       avD.innerHTML = d.esTuristico
         ? "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
         + "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. "
@@ -1398,28 +1326,34 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         + "los ingresos del alquiler, y solo por los días alquilados; no está en esta "
         + "cuenta. Y las placas te siguen ahorrando luz igual: lo que no habrá es devolución."
         : "<b>Y lo que no te va a decir nadie del sector:</b> en esa cuenta "
-        + "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. "
-        + "El motivo: Hacienda no paga por poner placas, paga porque tu casa gaste menos "
+        + (d.irpfEstado > 0
+            ? "<b>no he metido la deducción del 40 %</b>, y eso que tú sí pagas IRPF de sobra. "
+              + "Sí te he metido la del <b>10 % por autoconsumo</b> (" + eur(d.irpfEstado) + "), que no pide "
+              + "los dos certificados. "
+            : "<b>no he metido ni un euro de deducción</b>, y eso que tú sí pagas IRPF de sobra. ")
+        + "El motivo del 40 %: Hacienda no paga por poner placas, paga porque tu casa gaste menos "
         + "energía de la sucia — y eso solo se mide en calefacción, aire, agua caliente y "
         + "ventilación. Con el agua de bombona y sin aire, <b>las placas no tienen nada "
         + "eléctrico que compensar ahí</b>.<br><br>"
-        + "<b>La salida:</b> con un termo eléctrico o con aire acondicionado, la deducción "
-        + "sí sale y son unos " + eur(0.40 * Math.min(d.gasto, BASE_40)) + " menos. "
-        + "Un técnico te lo simula en una hora antes de que te gastes un euro. "
-        + "Y si no, las placas te siguen ahorrando luz igual: lo que no habrá es devolución.";
+        + (conApto && conApto.irpf > d.irpf
+            ? "<b>La salida:</b> con un termo eléctrico o con aire acondicionado, la deducción "
+              + "sí sale y te devolverían unos " + eur(conApto.irpf) + " en vez de " + eur(d.irpf) + ". "
+              + "Un técnico te lo simula en una hora antes de que te gastes un euro. "
+            : "")
+        + "Y si no, las placas te siguen ahorrando luz igual.";
       charla.appendChild(avD);
     }
 
     /* ---- si con sus números esto no le compensa, se le dice ----
        Vale más un cliente que confía que una venta que se cae al mes. */
-    var tarda = d.ahorroAno > 0 ? d.real / d.ahorroAno : 99;
-    if(tarda > 12){
+    var tarda = d.pagaSola;
+    if(tarda === null || tarda > 12){
       var ojo = document.createElement("div");
       ojo.className = "ojo";
-      ojo.innerHTML = "<b>Y ahora lo que no te va a decir nadie:</b> con tus números esto tarda "
-        + "<b>" + (Math.round(tarda * 10) / 10).toString().replace(".", ",") + " años</b> en "
-        + "pagarse solo. Es mucho. Te pasa porque "
-        + (d.irpf === 0 ? "no puedes aprovechar la deducción del IRPF" : "tu factura de luz es baja")
+      ojo.innerHTML = "<b>Y ahora lo que no te va a decir nadie:</b> con tus números esto "
+        + (tarda === null ? "<b>no se paga nunca solo</b>" : "tarda <b>" + F.anos(tarda) + "</b> en pagarse solo")
+        + ". Es mucho. Te pasa porque "
+        + (d.irpf === 0 ? "no puedes aprovechar ninguna deducción del IRPF" : "tu factura de luz es baja")
         + ", y el ahorro que sacas es pequeño.<br><br>"
         + "<b>Comprarlas tú, así, no te lo recomiendo.</b> Si te interesa el tema, lo que sí "
         + "encaja en tu caso es la otra fórmula: <b>no pones nada y nos quedamos la luz que te "
@@ -1452,20 +1386,20 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      engranaje_completo.md. Todas se calculan con SUS números, no
      con un ejemplo. El cliente elige; no se le empuja a ninguna.
      ========================================================== */
-  var DESCUENTO_CESION = 500;   /* lo que se le negocia al instalador y se le pasa a él */
-
-  var MES_DEVOLUCION = 18;   /* la devolucion entra sobre el mes 18 desde la obra */
+  /* 24/09/2026 · bloque C: estos 500 € no tienen fuente (datos.js los tiene pendientes de
+     cerrar por escrito con el instalador). Ya no se restan en la cuenta principal; aquí
+     solo se nombran en la fórmula de ceder el sobrante, y marcados como supuesto. */
+  var DESCUENTO_CESION = (window.IMMOIA_ENERGIA_CUENTA ? window.IMMOIA_ENERGIA_CUENTA.parametros().descuentoInstalador : 0);
 
   function formasDePago(){
     var d = calcular();
+    if(!d) return [];
+    var F = CUENTA.fmt;
     var lista = [];
 
     /* --- 1 · LA BUENA: sigue pagando lo mismo que ahora --- */
-    var disponible = d.ahorroAno / 12;                 /* lo que se ahorra de luz */
-    var mesesIgual = mesesPagando(d.aFinanciar, disponible, d.irpf, MES_DEVOLUCION);
-    var mesesSinDev = mesesPagando(d.aFinanciar, disponible, 0, 0);
-    if(mesesIgual !== null && mesesIgual <= 144){
-      var anosIgual = Math.ceil(mesesIgual / 12);
+    var plan = CUENTA.planIgual(d);
+    if(plan){
       lista.push({
         id: "igual",
         titulo: "Pagas lo mismo que ahora",
@@ -1473,19 +1407,20 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         mes: d.factura,
         mesDespues: d.factura,
         mesAlFinal: d.luzNueva,
-        anos: anosIgual,
-        meses: mesesIgual,
-        mesesSinDevolucion: mesesSinDev,
+        anos: plan.anos,
+        meses: plan.meses,
+        cuota: plan.cuota,
+        mesesSinDevolucion: plan.mesesSinDevolucion,
         devolucion: d.irpf,
         sobrante: "tuyo",
         recomendada: true,
         resumen: "No pones nada y <b>tu recibo no sube ni un euro</b>: sigues pagando los "
                + eur(d.factura) + " de siempre. De esos, " + eur(d.luzNueva) + " son la luz que "
-               + "aún compras y " + eur(disponible) + " se van al préstamo. "
-               + "Durante <b>" + anosIgual + " años</b>. "
-               + (d.irpf > 0 && mesesSinDev
-                   ? "Y la devolución de Hacienda te quita " + Math.round((mesesSinDev - mesesIgual)/12*10)/10
-                     + " años de golpe."
+               + "aún compras y " + eur(plan.cuota) + " se van al préstamo. "
+               + "Durante <b>" + F.meses(plan.meses) + "</b>. "
+               + (d.irpf > 0 && plan.mesesSinDevolucion
+                   ? "Y la devolución de Hacienda te quita " + F.anos((plan.mesesSinDevolucion - plan.meses) / 12)
+                     + " de golpe."
                    : "")
                + " Al terminar te quedas en <b>" + eur(d.luzNueva) + " al mes, para siempre</b>, "
                + "y las placas son tuyas.",
@@ -1497,80 +1432,73 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     lista.push({
       id: "contado",
       titulo: "Al contado",
-      hoy: d.aFinanciar,
+      hoy: d.aPagar,
       mes: -d.ahorroAno / 12,
       mesDespues: -d.ahorroAno / 12,
       devolucion: d.irpf,
       sobrante: "tuyo",
       resumen: "Lo pagas de una vez y desde el primer recibo la luz te sale " + eur(d.ahorroAno/12)
-             + " más barata. Con la devolución y el resto de ayudas, te acaba costando "
-             + eur(d.real) + " y se paga sola en "
-             + (Math.round((d.ahorroAno > 0 ? d.real/d.ahorroAno : 0)*10)/10).toString().replace(".", ",")
-             + " años.",
+             + " más barata. "
+             + (d.irpf > 0 ? "Con la devolución de Hacienda" : "Sin devolución de Hacienda")
+             + (d.icio > 0 ? " y la bonificación del ICIO" : "")
+             + ", te acaba costando " + eur(d.neto)
+             + (d.ibiAnual > 0 ? " (y el IBI te baja " + eur(d.ibiAnual) + " al año durante " + d.ibiAnos + " años)" : "")
+             + ", y se paga sola en " + CUENTA.textoPagaSola(d) + ".",
       paraQuien: "Si tienes el dinero parado, es la que menos te cuesta de todas."
     });
 
-    /* --- 2 · a plazos, sin entrada, a 5 / 7 / 10 años --- */
+    /* --- 3 · a plazos, sin entrada, a 5 / 7 / 10 años --- */
     [5, 7, 10].forEach(function(anos){
-      var c1 = cuota(d.aFinanciar, anos);
-      var saldo = saldoTras(d.aFinanciar, anos, 12);
-      var resto = Math.max(0, saldo - d.irpf);
-      var c2 = resto > 0 ? cuota(resto, anos - 1) : 0;
+      var p = CUENTA.cuenta(entradaDeLaCuenta({ plazoAnos: anos, entrada: 0 }));
       lista.push({
         id: "plazos" + anos,
         titulo: "A plazos, " + anos + " años",
         hoy: 0,
-        mes: d.luzNueva + c1,
-        mesDespues: d.luzNueva + c2,
+        mes: d.luzNueva + p.c1,
+        mesDespues: d.luzNueva + p.c2,
         devolucion: d.irpf,
         sobrante: "tuyo",
-        resumen: "No pones nada. Pagas " + eur(c1) + " de cuota más " + eur(d.luzNueva)
-               + " de luz. Cuando entre la devolución, la cuota baja a " + eur(c2)
-               + ". Al acabar, " + eur(d.luzNueva) + " al mes para siempre.",
-        paraQuien: anos === 10 ? "Acabas antes que con la de arriba, pero pagas mas al mes."
+        resumen: "No pones nada. Pagas " + eur(p.c1) + " de cuota más " + eur(d.luzNueva)
+               + " de luz. "
+               + (d.irpf > 0 ? "Cuando entre la devolución, la cuota baja a " + eur(p.c2) + ". " : "")
+               + "Al acabar, " + eur(d.luzNueva) + " al mes para siempre.",
+        paraQuien: anos === 10 ? "La cuota fija más baja de las tres, pero la que más intereses paga."
                  : anos === 5  ? "La que menos intereses paga de todas, pero se nota mucho al mes."
                  : "Un término medio.",
         recomendada: false
       });
     });
 
-    /* --- 3 · con entrada --- */
-    var entrada = Math.min(1000, d.aFinanciar);
-    var presta = Math.max(0, d.aFinanciar - entrada);
-    var ce1 = cuota(presta, 10);
-    var se = saldoTras(presta, 10, 12);
-    var re = Math.max(0, se - d.irpf);
-    var ce2 = re > 0 ? cuota(re, 9) : 0;
+    /* --- 4 · con entrada --- */
+    var pe = CUENTA.cuenta(entradaDeLaCuenta({ plazoAnos: 10, entrada: Math.min(1000, d.aPagar) }));
     lista.push({
       id: "entrada",
-      titulo: "1.000 € de entrada, 10 años",
-      hoy: entrada,
-      mes: d.luzNueva + ce1,
-      mesDespues: d.luzNueva + ce2,
+      titulo: eur(pe.entrada) + " de entrada, 10 años",
+      hoy: pe.entrada,
+      mes: d.luzNueva + pe.c1,
+      mesDespues: d.luzNueva + pe.c2,
       devolucion: d.irpf,
       sobrante: "tuyo",
-      resumen: "Pones 1.000 € al principio y la cuota baja a " + eur(ce1)
-             + ". Tras la devolución, " + eur(ce2) + ".",
+      resumen: "Pones " + eur(pe.entrada) + " al principio y la cuota baja a " + eur(pe.c1) + "."
+             + (d.irpf > 0 ? " Tras la devolución, " + eur(pe.c2) + "." : ""),
       paraQuien: "Si puedes poner algo, bajas la cuota y pagas menos intereses."
     });
 
-    /* --- 4 · sin poner nada, cediéndonos el sobrante --- */
-    var financiaCesion = Math.max(0, d.aFinanciar - DESCUENTO_CESION);
-    var cc1 = cuota(financiaCesion, 10);
-    var sc = saldoTras(financiaCesion, 10, 12);
+    /* --- 5 · sin poner nada, cediéndonos el sobrante --- */
+    var financiaCesion = Math.max(0, d.aPagar - DESCUENTO_CESION);
+    var cc1 = CUENTA.cuota(financiaCesion, 10);
+    var sc = CUENTA.saldoTras(financiaCesion, cc1, d.mesDevolucion);
     var rc = Math.max(0, sc - d.irpf);
-    var cc2 = rc > 0 ? cuota(rc, 9) : 0;
+    var cc2 = rc > 0 ? CUENTA.cuota(rc, (120 - d.mesDevolucion) / 12) : 0;
     var luzCesion = Math.max(0, d.factura - d.ahorroCede / 12);
-    /* Esta solo se le ofrece SI LE SALE MEJOR que pagarlo él a 10 años.
-       En una vivienda normal de Tenerife el tope de la compensación no llega a morder,
-       así que el sobrante le vale a él lo mismo que a nosotros y cederlo es perder
-       dinero. Donde sí tiene sentido es en el vacacional. Ver el informe. */
+    /* Esta solo se le ofrece SI LE SALE MEJOR que pagarlo él. En una vivienda normal de
+       Tenerife el tope de la compensación no llega a morder, así que el sobrante le vale a
+       él lo mismo que a nosotros y cederlo es perder dinero. Donde sí tiene sentido es en
+       el vacacional. */
     var refDiez = null;
     for(var q = 0; q < lista.length; q++){
-      if(lista[q].id === "igual" || (!refDiez && lista[q].id === "plazos10")) {
-        if(lista[q].id === "igual"){ refDiez = lista[q]; break; }
-        refDiez = lista[q];
-      }
+      if(lista[q].id === "igual"){ refDiez = lista[q]; break; }
+      if(!refDiez && lista[q].id === "plazos10") refDiez = lista[q];
     }
     var mesCesion = luzCesion + cc1;
     var leSaleMejor = refDiez ? (mesCesion < refDiez.mes - 0.5) : true;
@@ -1585,9 +1513,12 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       mesDespues: luzCesion + cc2,
       devolucion: d.irpf,
       sobrante: "nuestro, 30 años",
-      resumen: "Te negociamos el precio con el instalador y <b>el descuento te lo quedas tú</b>: "
-             + "financias " + eur(DESCUENTO_CESION) + " menos, así que la cuota baja a " + eur(cc1)
-             + ". A cambio, la luz que te sobra es nuestra durante 30 años — hoy te la compensan "
+      resumen: (DESCUENTO_CESION > 0
+                 ? "Te negociamos el precio con el instalador y <b>el descuento te lo quedas tú</b>: "
+                   + "financias " + eur(DESCUENTO_CESION) + " menos (<b>supuesto</b>: ese descuento todavía "
+                   + "no está cerrado por escrito con ningún instalador), así que la cuota baja a " + eur(cc1) + ". "
+                 : "La cuota es de " + eur(cc1) + ". ")
+             + "A cambio, la luz que te sobra es nuestra durante 30 años — hoy te la compensan "
              + eur(d.compensa) + " al año, así que eso es lo que dejas de cobrar.",
       paraQuien: "Es opcional. Si no te convence, cualquiera de las otras vale igual.",
       esNuestra: true
@@ -1617,7 +1548,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         + " · sobrante " + esc(o.sobrante) + '</p>'
         + '<p class="precio">' + (o.mes < 0 ? "−" + eur(-o.mes) : eur(o.mes)) + '/mes'
         + '<small>' + (o.mes < 0 ? "te AHORRA eso al mes"
-            : "y " + eur(o.mesDespues) + "/mes tras la devolución") + '</small></p>'
+            : (o.devolucion > 0 && Math.abs(o.mesDespues - o.mes) >= 0.5
+                ? "y " + eur(o.mesDespues) + "/mes tras la devolución"
+                : "al mes, luz y cuota")) + '</small></p>'
         + '<p style="font-size:14px;margin:11px 0 0">' + o.resumen + '</p>'
         + '<p style="font-size:13px;color:var(--tinta2);margin:8px 0 0"><b>'
         + esc(o.paraQuien) + '</b></p>'
@@ -1634,9 +1567,10 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         + "en la que nosotros te ponemos la instalación y nos quedamos la luz que te sobra. "
         + "<b>Con tus números no te sale a cuenta</b>: ese sobrante hoy te lo compensan a ti en "
         + "tu propia factura, unos " + eur(o.loQuePierde) + " al año, y lo que te daríamos a "
-        + "cambio vale menos que eso. Así que págalo tú y quédatelo.<br><br>"
-        + "Donde sí tiene sentido es en un <b>apartamento vacacional</b>, porque ahí está vacío "
-        + "media temporada y buena parte de esa luz se regala sin que nadie te la pague.";
+        + "cambio vale menos que eso. Así que págalo tú y quédatelo."
+        + (R.tipo === "vac" ? ""
+           : "<br><br>Donde sí puede tener sentido es en un <b>apartamento vacacional</b>, porque "
+           + "ahí está vacío parte del año y buena parte de esa luz se regala sin que nadie te la pague.");
       charla.appendChild(av);
     });
 
@@ -1693,11 +1627,21 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       + "consentimiento firmado.";
     charla.appendChild(ojo);
 
-    ia("<p>Y una cosa importante de plazos: para que la deducción del 40 % cuente, "
-     + "<b>la instalación tiene que estar terminada y certificada antes del 31 de diciembre de "
-     + "2026</b>. En enero ya no vale. Por eso conviene no dejarlo.</p>"
-     + "<p>Otras dos, para que no haya sorpresas: <b>todo se paga por banco</b> —en efectivo se "
-     + "pierde la deducción entera— y si firmamos en tu casa sin que tú nos hayas llamado, "
+    var finD = finDeduccion();
+    var fraseDeduccion = "";
+    if(d && d.irpfTipo && d.irpfTipo.indexOf("40") === 0){
+      fraseDeduccion = "<p>Y una cosa importante de plazos: para que la deducción del 40 % cuente, "
+        + "<b>la instalación tiene que estar terminada y certificada"
+        + (finD ? " antes del " + finD.texto : " dentro del plazo") + "</b>. Pasado eso ya no vale. "
+        + "Por eso conviene no dejarlo.</p>";
+    } else if(d && d.irpfTipo){
+      var hastaAC = String((((D.irpfEstatal || {}).autoconsumo) || {}).hasta || "").slice(0, 4);
+      fraseDeduccion = "<p>Y una cosa importante de plazos: la deducción del 10 % por autoconsumo "
+        + "pide que la instalación se <b>termine y se pague dentro de " + (hastaAC || "su plazo") + "</b>. Por eso conviene no dejarlo.</p>";
+    }
+    ia(fraseDeduccion
+     + "<p>" + (fraseDeduccion ? "Otras dos" : "Dos cosas") + ", para que no haya sorpresas: <b>todo se paga por banco</b>"
+     + (fraseDeduccion ? " —en efectivo se pierde la deducción entera—" : "") + " y si firmamos en tu casa sin que tú nos hayas llamado, "
      + "<b>tienes 30 días para echarte atrás</b> sin dar explicaciones.</p>");
 
     opciones([
@@ -1959,6 +1903,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     aire:      "me estan preguntando si tengo aire acondicionado",
     factura:   "me estan preguntando cuanto pago de luz al mes",
     vivienda:  "me estan preguntando que tipo de vivienda tengo",
+    dias:      "me estan preguntando cuantos dias al ano esta ocupado el apartamento",
     municipio: "me estan preguntando en que municipio vivo",
     numeros:   "ya he visto mis numeros",
     pago:      "estoy eligiendo como pagarlo",
@@ -2150,7 +2095,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
   /* ---------- empezar de nuevo ---------- */
   $("reiniciar").addEventListener("click", function(){
     try{ localStorage.removeItem(LLAVE); }catch(e){}
-    R = { de:R.de, irpf:null, factura:null, tipo:null, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
+    R = { de:R.de, irpf:null, factura:null, tipo:null, dias:null, diasSupuesto:false, muni:null, ibi:null, ccaa:"cn", ccaaElegida:false, pago:null, agua:null, aire:null };
     charla.innerHTML = ""; responder.innerHTML = "";
     paso0();
   });
@@ -2178,7 +2123,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
        IMMOIA.municipios()                 -> los trece, con su bonificación
      ========================================================== */
   var PASOS = {
-    inicio: paso0, irpf: paso1, agua: paso1b, aire: paso1c, factura: paso2, vivienda: paso3,
+    inicio: paso0, irpf: paso1, agua: paso1b, aire: paso1c, factura: paso2, vivienda: paso3, dias: pasoDias,
     municipio: paso4, numeros: paso5, pago: paso5b, papeles: paso6,
     contacto: function(){ paso7(false); }
   };
@@ -2193,7 +2138,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
         paso: PASO,
         puerta: R.de,
         respuestas: { irpf:R.irpf, agua:R.agua, aire:R.aire, factura:R.factura,
-                      tipo:R.tipo, muni:R.muni, ccaa:R.ccaa, pago:R.pago || null },
+                      tipo:R.tipo, dias:R.dias, muni:R.muni, ccaa:R.ccaa, pago:R.pago || null },
         faltan: ["irpf","agua","aire","factura","tipo"].filter(function(k){ return !R[k]; })
                  .concat(R.ccaaElegida ? [] : ["donde"]),
         completo: !!(R.irpf && R.agua && R.aire && R.factura && R.tipo && R.ccaaElegida),
@@ -2219,6 +2164,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       return { eurPorPanel:EUR_PANEL, kwpPorPanel:KWP_PANEL, kwhPorKwp:KWH_POR_KWP,
                autoconsumo:AUTOCONSUMO, precioLuz:PRECIO_LUZ, costeCertificados:COSTE_CERT,
                baseDeduccion40:BASE_40, icio:ICIO, tae:TAE,
+               /* 24/09/2026: «tae» se queda por si alguien ya lo leía, pero es el
+                  interés NOMINAL que usa la cuenta, y es un supuesto */
+               tipoNominal:TAE, tipoEsSupuesto:true,
                /* 19/09/2026 · tanda 8: estas dos fechas estaban escritas a mano aquí.
                   Ahora salen de datos.js. Si no están, se devuelve null, y quien lea
                   esto sabe que no hay fecha en vez de recibir una inventada. */
@@ -2231,6 +2179,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       if(clave === "factura"){ R.factura = Math.max(10, Math.min(900, Number(valor) || 0)); }
       else if(clave === "irpf"){ R.irpf = (valor === "si" || valor === true) ? "si" : "no"; }
       else if(clave === "tipo"){ R.tipo = String(valor); }
+      else if(clave === "dias"){ R.dias = Math.max(0, Math.min(365, Math.round(Number(valor) || 0))); R.diasSupuesto = false; }
       else if(clave === "muni"){
         /* los municipios que tenemos son de Tenerife: elegir uno ya dice la comunidad */
         R.muni = IBI[valor] ? valor : "otro";

@@ -740,6 +740,9 @@ button:disabled{opacity:.55;cursor:default}
 }
 .aparte b{color:var(--tinta)}
 .aparte ul{margin:8px 0 0;padding-left:18px}
+/* 24/09 · bloque B: las que encajan pero no se pueden pedir hoy, plegadas (se dicen arriba) */
+.mas-ayudas{margin:14px 0}
+.mas-ayudas>summary{cursor:pointer;padding:10px 0;color:var(--tinta)}
 .sin-nada{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:18px;font-size:15px}
 
 /* ---------- compartir ---------- */
@@ -1110,7 +1113,10 @@ html.cerrado body>*:not(#cortina){display:none!important}
 
 <!-- Las 293 ayudas viven en ayudas_todas.js y SOLO ahí. Esta página no
      guarda ninguna copia: las lee de este fichero. -->
-<script src="ayudas_todas.js?v=18c"></script>
+<!-- 24/09 · bloque B (fallo 58): saber.js pide «ayudas_todas.js» con la misma marca si no encuentra un
+     script con data-saber igual. Con esta marca lo encuentra y no lo carga otra vez:
+     un solo fichero de ayudas en la portada, el de la marca de caché de arriba. -->
+<script src="ayudas_todas.js?v=24a" data-saber="ayudas_todas.js?v=24a"></script>
 <script src="frescura.js?v=18c"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -1144,13 +1150,14 @@ const esFiscal = (a) => FISCALES.includes(a.c) || RE_FISCAL.test(a.n || "");
    ═══════════════════════════════════════════════════════════════════ */
 const FUENTE_UNICA = (typeof window !== "undefined" && window.IMMOIA_AYUDAS_LISTA) || null;
 const AYUDAS = (FUENTE_UNICA || []).map(a => ({
-  id: a.id, n: a.nombre, c: a.categoria, e: a.estado, t: a.tipo, ine: a.codigo_ine,
+  id: a.id, ccaa: a.ccaa, n: a.nombre, c: a.categoria, e: a.estado, t: a.tipo, ine: a.codigo_ine,
   da: a.cuanto_da, f: a.fuente,
   emin: a.edad_min ?? null, emax: a.edad_max ?? null, imax: a.ingresos_max ?? null,
   obj: a.objetivos || [], jov: !!a.joven, vieja: !!a.cuantia_vieja, x: a.extras || [],
   quien_puede: a.quien_puede, quien_queda_fuera: a.quien_queda_fuera,
   cuando: a.cuando, caduca_en: a.caduca_en, aviso_frescura: a.aviso_frescura,
-  comprobado: a.comprobado, fecha_fin: a.fecha_fin || null
+  comprobado: a.comprobado, fecha_fin: a.fecha_fin || null,
+  incomp: a.incompatibilidades || "", verif: a.verificacion || ""
 }));
 const COMPROBADO_DATO = (typeof window !== "undefined" && window.IMMOIA_AYUDAS_COMPROBADO) || "";
 
@@ -1189,7 +1196,22 @@ function avisarSiFaltanLasAyudas(){
     + "inventado: vuelve a cargar la página o escríbenos.";
   c.hidden = false;
 }
-const MAPA   = {"01":{"abierta":1,"pendiente":0},"02":{"abierta":1,"pendiente":4},"03":{"abierta":1,"pendiente":0},"04":{"abierta":3,"pendiente":0},"05":{"abierta":0,"pendiente":3},"06":{"abierta":4,"pendiente":1},"07":{"abierta":4,"pendiente":1},"08":{"abierta":0,"pendiente":2},"09":{"abierta":1,"pendiente":1},"10":{"abierta":2,"pendiente":1},"11":{"abierta":1,"pendiente":1},"12":{"abierta":5,"pendiente":0},"13":{"abierta":2,"pendiente":0},"14":{"abierta":0,"pendiente":1},"15":{"abierta":9,"pendiente":0},"16":{"abierta":6,"pendiente":0},"17":{"abierta":9,"pendiente":0}};
+/* 24/09 · bloque B (fallo 13). El mapa estaba escrito a mano y ya no cuadraba
+   con las fichas (Galicia 5 cuando hay 4, La Rioja 9/0 cuando hay 8/1...).
+   Ahora se cuenta de las MISMAS fichas que usa la calculadora, con la misma
+   regla: lo que la propia ficha dice que no es una ayuda que se pida no cuenta. */
+function calcularMapa(){
+  const m = {};
+  for(const a of AYUDAS){
+    const ccaa = a.ccaa;                 /* la comunidad que pone la propia ficha */
+    if(!ccaa || ccaa === "ES" || NOMBRE_CCAA[ccaa] === undefined) continue;
+    const d = m[ccaa] || (m[ccaa] = {abierta:0, pendiente:0});
+    if(noEsUnaAyuda(a)) continue;
+    if(a.e === "abierta") d.abierta++;
+    else if(a.e === "pendiente") d.pendiente++;
+  }
+  return m;
+}
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1279,33 +1301,102 @@ function orden(a){
   return ({abierta:0, permanente:1, derivacion:2, pendiente:3, cerrada:4})[a.e] ?? 5;
 }
 
+/* ══ LO QUE NO ES UNA AYUDA PARA ESTA PERSONA · 24/09/2026 · bloque B ══════
+   (fallos 4 a 8 y 10-11 de LO_QUE_FALLA_EN_LA_WEB.md)
+   No se reescribe ninguna ficha: se lee lo que la PROPIA ficha dice de sí
+   misma y, si ella dice que no es una ayuda que se pida, no se cuenta como
+   «ayuda que encaja». Se cuenta aparte y se dice en «Por qué no salen».
+
+   1. Lo que la ficha dice en su nombre: «(no la pide el ciudadano)»,
+      «(no vigente)», «(no hay prestación …)».
+   2. Lo que dice en su texto: «No es una ayuda que se pida», «NO ES UNA
+      AYUDA: …», «No es una ayuda, sino un precio …». Ojo: «No es una ayuda
+      aparte, sino cupos dentro del programa general» SÍ es una ayuda, y la
+      regla no la toca.
+   3. Quién la pide, según su propia ficha: si la primera frase de «quién
+      puede» son municipios, entidades locales, ayuntamientos o promotores,
+      la pide una administración o una empresa, no un particular. (Ojo: «Municipios
+      o núcleos de población … con 10.000 habitantes o menos» es DÓNDE vive
+      el particular que la pide, y esa sí es suya.)                          */
+const RE_NO_ES_AYUDA_NOMBRE = /\((no la pide el ciudadano|no vigente|no hay prestaci[óo]n[^)]*)\)/i;
+const RE_NO_ES_AYUDA_TEXTO  = /\bno es una ayuda(?: que se pida|\s*[:,])/i;
+const RE_LA_PIDE_UNA_ENTIDAD = /^(Municipios|Entidades locales|Ayuntamientos|Promotores)\b/i;
+function noEsUnaAyuda(a){
+  if(RE_NO_ES_AYUDA_NOMBRE.test(a.n || "")) return true;
+  const quien = String(a.quien_puede || "").trim().split(/[.;]/)[0];
+  if(RE_LA_PIDE_UNA_ENTIDAD.test(quien) && !/habitantes o menos|n[úu]cleos de poblaci[óo]n/i.test(quien)) return true;
+  return RE_NO_ES_AYUDA_TEXTO.test(a.da || "") || RE_NO_ES_AYUDA_TEXTO.test(a.incomp || "");
+}
+
+/* 3. Programas del PROPIETARIO que alquila su piso. La puerta «Alquilar» es
+      «para el inquilino», y a él no se le pueden enseñar como suyos. Se
+      reconocen por lo que la ficha dice de quién cobra: «Al propietario …»,
+      «Cubre al propietario …», o «Propietarios / Arrendadores / El
+      propietario …» como primera frase de quién puede pedirla (si esa misma
+      frase nombra también a arrendatarios o inquilinos, sí es para él). */
+const RE_DA_PROPIETARIO  = /^(Al propietario|Cubre al propietario|Compensaci[óo]n econ[óo]mica al propietario)/i;
+const RE_QUIEN_PROPIETARIO = /^(Propietarios|Arrendadores|El propietario)\b/i;
+function esDelPropietario(a, perfil){
+  if(perfil.objetivo !== "alquilar" && perfil.objetivo !== "necesidad_basica") return false;
+  if(/arrendador/i.test(a.n || "")) return true;
+  if(RE_DA_PROPIETARIO.test(String(a.da || "").trim())) return true;
+  const primera = String(a.quien_puede || "").trim().split(".")[0];
+  return RE_QUIEN_PROPIETARIO.test(primera) && !/arrendatari|inquilin/i.test(primera);
+}
+
+/* 4. Lo que depende de algo que la portada NO pregunta. El aval del ICO:
+      la propia ficha dice que con menores a cargo no hay límite de edad, y
+      que el tope de ingresos va por provincia y en brutos al año (el más
+      alto de la tabla, 63.000 € por comprador). Aquí no se pregunta ni por
+      hijos ni por la provincia en brutos, así que no se puede decir «encaja»
+      ni «no encaja»: se enseña aparte, diciendo qué falta, y se manda a la
+      calculadora del aval. */
+const DEPENDE_DE_LO_QUE_NO_PREGUNTAMOS = {
+  "es-aval-ico": (a, perfil) => {
+    if(a.emax !== null && perfil.edad > a.emax)
+      return `Por la edad no entras (el límite son ${a.emax} años), salvo que tengas menores a cargo: entonces no hay límite de edad. Aquí no te lo hemos preguntado.`;
+    if(perfil.ingresos*12 > 63000)
+      return "Con los ingresos que has puesto lo más probable es que no entres: el tope más alto de la tabla del ICO son 63.000 € brutos al año por comprador (sube si compráis dos, con menores a cargo o en familia monoparental). Aquí no lo podemos cruzar.";
+    return null;
+  }
+};
+
 function calcularLocal(perfil){
-  /* Se cuenta por qué se cae cada una. Decir lo que se ha descartado y por qué
-     es parte del producto: es lo que nos separa de un buscador. */
-  const descartes = {territorio:0, objetivo:0, edad:0, ingresos:0};
+  /* Cada una de las fichas cae en UN solo sitio, y se cuentan todas: así lo
+     que se enseña y lo que se explica suman siempre el total (fallo 3). Antes
+     se cortaba la lista en 4 sin decirlo (fallo 1) y las que quedaban debajo
+     del corte no salían en ningún lado. */
+  const descartes = {territorio:0, objetivo:0, noAyuda:0, propietario:0, edad:0, ingresos:0};
   const objMotor = objetivoDelMotor(perfil.objetivo);
+  const esMunicipal = (a) => (a.ine || "").trim().length === 5;
+  const directas = [], fiscales = [], municipales = [], derivaciones = [], dudosas = [];
   for(const a of AYUDAS){
     if(!alcanzaTerritorio(a.ine, perfil.cp)){ descartes.territorio++; continue; }
     if(a.obj.length && !a.obj.includes(objMotor)){ descartes.objetivo++; continue; }
-    /* Sin el tope inventado de 45: solo se descarta por la edad que la
-       convocatoria publica de verdad. */
-    if((a.emax !== null && perfil.edad > a.emax) || (a.emin !== null && perfil.edad < a.emin)){ descartes.edad++; continue; }
-    if(a.imax !== null && perfil.ingresos*12 > a.imax){ descartes.ingresos++; }
+    if(noEsUnaAyuda(a)){ descartes.noAyuda++; continue; }
+    if(esDelPropietario(a, perfil)){ descartes.propietario++; continue; }
+    const depende = DEPENDE_DE_LO_QUE_NO_PREGUNTAMOS[a.id];
+    const falta = depende ? depende(a, perfil) : null;
+    if(falta){ dudosas.push({...a, falta}); continue; }
+    const ev = evaluar(a, perfil);
+    if(!ev){
+      /* Sin el tope inventado de 45: solo se descarta por la edad que la
+         convocatoria publica de verdad. */
+      if((a.emax !== null && perfil.edad > a.emax) || (a.emin !== null && perfil.edad < a.emin)) descartes.edad++;
+      else descartes.ingresos++;
+      continue;
+    }
+    /* Las municipales van APARTE. Del código postal sabemos la provincia, no
+       el municipio: se enseñan las de su provincia diciendo que mire si el
+       ayuntamiento es el suyo. Van todas, también las de impuestos: antes
+       esas se perdían sin salir en ningún sitio. */
+    if(esMunicipal(ev)) municipales.push(ev);
+    else if(ev.e === "derivacion") derivaciones.push(ev);   /* fallo 4: una ventanilla no es una ayuda */
+    else if(esFiscal(ev)) fiscales.push(ev);
+    else directas.push(ev);
   }
-  const todas = AYUDAS.map(a=>evaluar(a,perfil)).filter(Boolean);
-
-  /* Las municipales van APARTE, y esto es importante. Del código postal sabemos
-     la provincia, no el municipio: no hay tabla que traduzca CP a ayuntamiento y
-     no la vamos a inventar. Así que una bonificación de La Laguna no se le puede
-     poner a alguien de Arona como si fuera suya — se enseñan las de su provincia
-     diciendo claramente que hay que mirar si el ayuntamiento es el suyo. */
-  const esMunicipal = (a) => (a.ine || "").trim().length === 5;
-  const municipales = todas.filter(a=>esMunicipal(a) && !esFiscal(a));
-  const resto = todas.filter(a=>!esMunicipal(a));
-
-  const directas = resto.filter(a=>!esFiscal(a)).sort((x,y)=>orden(x)-orden(y)).slice(0,4);
-  const fiscales = resto.filter(esFiscal).slice(0,3);
-  return {directas, fiscales, municipales, descartes, total:AYUDAS.length,
+  directas.sort((x,y)=>orden(x)-orden(y));
+  return {directas, fiscales, municipales, derivaciones, dudosas, descartes, total:AYUDAS.length,
           extras: calcularExtras(perfil)};
 }
 
@@ -1362,7 +1453,7 @@ function htmlExtras(extras){
         return `<li><b>${esc(a.n)}</b>
           ${a.vieja
             ? `<em>Cifra anterior al Plan 2026-2030: no la enseñamos hasta comprobarla.</em>`
-            : esc(a.da || "Cuantía no publicada.")}
+            : esc(sinNotasInternas(a.da) || "Cuantía no publicada.")}
           ${fuente ? `<div class="fte">Fuente: ${esc(fuente)}</div>` : ""}</li>`;
       }).join("")}</ul>
     </div>`).join("")}
@@ -1425,7 +1516,7 @@ function pintarAyuda(a){
     ${a.vieja
       ? `<p class="dinero aviso-cuantia">La cifra que consta en nuestra base es anterior al Plan
          2026-2030. <b>No la enseñamos hasta comprobarla en el boletín.</b></p>`
-      : a.da ? `<p class="dinero">${esc(a.da)}</p>`
+      : a.da ? `<p class="dinero">${esc(sinNotasInternas(a.da))}</p>`
              : `<p class="dinero"><em>Cuantía no publicada.</em></p>`}
     ${a.publicados >= 1
       ? `<p class="cumple">${REQUISITOS_EN_LA_CALCULADORA[a.id] ? "Con tus datos de aquí solo se puede mirar la edad, y la cumples" : a.publicados === 1 ? "Cumples el único requisito que publica la convocatoria" : `Cumples ${a.cumplidos} de los ${a.publicados} requisitos que publica la convocatoria`}</p>
@@ -1493,17 +1584,34 @@ function htmlSaltoAval(perfil){
   if(!perfil || (perfil.objetivo !== "comprar" && perfil.objetivo !== "vender")) return "";
   const q = new URLSearchParams({edad:String(perfil.edad), cp:String(perfil.cp||"").slice(0,2), de:"portada"});
   const quien = perfil.objetivo === "vender" ? "tu comprador" : "tú";
+  const verbo = perfil.objetivo === "vender" ? "Encaja" : "Encajas";   /* fallo 44: «¿Encajas tú…?» */
   return `<a class="salto-aval" id="salto-aval" href="calculadora.html?${q.toString()}">
-    <b>¿Encaja ${quien} en el aval del Estado para la hipoteca?</b>
+    <b>¿${verbo} ${quien} en el aval del Estado para la hipoteca?</b>
     <span>Si es primera vivienda, el Estado avala hasta el 20 % del préstamo (el 25 % si la casa tiene certificado energético D o mejor) y se puede comprar sin ahorros para la entrada (los impuestos y gastos de la compra se pagan aparte). Te lo decimos en un minuto, con la norma al lado.</span>
   </a>`;
 }
 
-function pintar({directas, fiscales, municipales = [], descartes, total, extras = {}}, perfil){
+/* «1 tiene» / «3 tienen»: el número decide el verbo (fallo 45). */
+const plural = (n, uno, varios) => n === 1 ? uno : varios;
+
+/* Fallo 43: una nota de trabajo no va delante del cliente. La ficha se queda
+   como está (otras partes la leen entera); aquí solo se cambia lo que se ve
+   por lo que quiere decir para quien lo lee. */
+function sinNotasInternas(t){
+  return String(t ?? "").replace(/,?\s*aunque idealista cita [^—]*—\s*son cifras en conflicto y sin verificar/gi,
+                                 " (cifra sin verificar)");
+}
+
+/* Cuántas se enseñan abiertas antes de plegar el resto. Las que se pueden
+   pedir hoy se enseñan SIEMPRE, sean las que sean (fallo 2: DAVID). */
+const A_LA_VISTA = 4;
+
+function pintar({directas, fiscales = [], municipales = [], derivaciones = [], dudosas = [], descartes, total, extras = {}}, perfil){
   const caja = $("#resultados");
   caja.classList.remove("oculto");
   const ccaa = NOMBRE_CCAA[PROV_CCAA[perfil.cp.slice(0,2)]] || "tu zona";
-  const hoy = directas.filter(a=>a.e==="abierta"||a.e==="permanente").length;
+  const sePide = (a) => a.e==="abierta" || a.e==="permanente";
+  const hoy = directas.filter(sePide).length;
   const vende = ES_INMO && perfil.objetivo === "vender";
 
   let html = `<h2 class="res-cab" id="res-titulo" tabindex="-1">${
@@ -1518,10 +1626,33 @@ function pintar({directas, fiscales, municipales = [], descartes, total, extras 
       <p style="margin:9px 0 0">Puede ser por los ingresos, por la edad, o porque en tu comunidad no hay convocatoria abierta ahora mismo.
       Prueba a cambiar el objetivo: la misma persona puede tener derecho a cosas distintas según quiera comprar, alquilar o reformar.</p></div>`;
   } else {
-    html += `<p class="res-sub">${directas.length} ayuda${directas.length!==1?"s":""} encaja${directas.length!==1?"n":""} con tu perfil. ${
-      hoy ? `<strong>${hoy} se puede${hoy!==1?"n":""} pedir hoy.</strong>` : "<strong>Ninguna se puede pedir hoy.</strong>"}</p>`;
+    /* Fallo 1: el número que se dice es el de las que se enseñan, todas. */
+    const vista = Math.max(hoy, Math.min(A_LA_VISTA, directas.length));
+    const plegadas = directas.length - vista;
+    html += `<p class="res-sub" id="res-cuantas" data-encajan="${directas.length}" data-hoy="${hoy}">${
+      directas.length === 1 ? "1 ayuda encaja con tu perfil." : `Estas son las ${directas.length} ayudas que encajan con tu perfil.`} ${
+      hoy ? `<strong>${hoy} se puede${hoy!==1?"n":""} pedir hoy.</strong>` : "<strong>Ninguna se puede pedir hoy.</strong>"}${
+      plegadas ? ` Primero van las que se pueden pedir; las otras ${plegadas} están plegadas al final de la lista.` : ""}</p>`;
     html += memComparar(perfil, {directas});
-    html += directas.map(pintarAyuda).join("");
+    html += directas.slice(0, vista).map(pintarAyuda).join("");
+    if(plegadas){
+      html += `<details class="mas-ayudas"><summary><b>Ver las otras ${plegadas} que también encajan</b>
+        — aprobadas que todavía no se pueden pedir o con el plazo cerrado</summary>
+        ${directas.slice(vista).map(pintarAyuda).join("")}</details>`;
+    }
+  }
+
+  if(dudosas.length){
+    html += `<div class="aparte dudosas"><b>${plural(dudosas.length, "Esta depende", `Estas ${dudosas.length} dependen`)} de algo que aquí no te preguntamos</b>
+      — por eso no ${plural(dudosas.length, "la contamos", "las contamos")} entre las que encajan:
+      <ul>${dudosas.map(a=>`<li><b>${esc(a.n)}</b> · ${esc(a.falta)}${
+        a.id === "es-aval-ico" ? ` <a href="calculadora.html">Míralo en la calculadora del aval</a>.` : ""}</li>`).join("")}</ul></div>`;
+  }
+
+  if(derivaciones.length){
+    html += `<div class="aparte derivaciones"><b>Dónde preguntar si lo necesitas (${derivaciones.length})</b>
+      — no ${plural(derivaciones.length, "es una ayuda", "son ayudas")} con convocatoria: ${plural(derivaciones.length, "es la ventanilla", "son las ventanillas")} a ${plural(derivaciones.length, "la", "las")} que te derivan.
+      <ul>${derivaciones.map(a=>`<li><b>${esc(a.n)}</b> · ${esc(sinNotasInternas(a.da) || "sin cuantía publicada")}</li>`).join("")}</ul></div>`;
   }
 
   if(municipales.length){
@@ -1530,7 +1661,7 @@ function pintar({directas, fiscales, municipales = [], descartes, total, extras 
       — <b>mira si el tuyo está</b>: por el código postal sabemos tu provincia, pero no tu
       municipio, y esto solo vale en el suyo. Cuando pone que no existe, también sirve:
       te ahorra la llamada.
-      <ul>${municipales.map(a=>`<li><b>${esc((a.n||"").split(" — ")[0])}</b> · ${esc(a.da || "sin cuantía publicada")}</li>`).join("")}</ul>
+      <ul>${municipales.map(a=>`<li><b>${esc((a.n||"").split(" — ")[0])}</b> · ${esc(sinNotasInternas(a.da) || "sin cuantía publicada")}</li>`).join("")}</ul>
       <p class="ojo">Y ojo con esto: <b>no se aplican solas.</b> Hay que pedirlas, no son
       retroactivas, y cada ayuntamiento tiene su plazo — alguno vence en diciembre del año
       anterior a la obra.</p></div>`;
@@ -1542,18 +1673,24 @@ function pintar({directas, fiscales, municipales = [], descartes, total, extras 
       <ul>${fiscales.map(a=>`<li>${esc(a.n)}</li>`).join("")}</ul></div>`;
   }
 
-  const d = descartes, fuera = d.territorio + d.objetivo + d.edad + d.ingresos;
-  if(fuera){
+  /* Fallo 3: «las otras N» son el total menos TODO lo que se ha enseñado
+     arriba, y los motivos de debajo suman exactamente N. */
+  const d = descartes;
+  const ensenadas = directas.length + fiscales.length + municipales.length + derivaciones.length + dudosas.length;
+  const otras = total - ensenadas;
+  if(otras > 0){
     const motivos = [];
-    if(d.territorio) motivos.push(`<li><b>${d.territorio}</b> no llegan a tu comunidad</li>`);
-    if(d.objetivo)   motivos.push(`<li><b>${d.objetivo}</b> son para otra cosa distinta de lo que buscas</li>`);
-    if(d.edad)       motivos.push(`<li><b>${d.edad}</b> se quedan fuera por la edad</li>`);
-    if(d.ingresos)   motivos.push(`<li><b>${d.ingresos}</b> tienen un tope de ingresos por debajo del tuyo</li>`);
-    html += `<div class="aparte"><b>Por qué no salen las otras ${total - directas.length - fiscales.length}</b>
+    if(d.territorio)  motivos.push(`<li><b>${d.territorio}</b> no ${plural(d.territorio, "llega", "llegan")} a tu comunidad</li>`);
+    if(d.objetivo)    motivos.push(`<li><b>${d.objetivo}</b> ${plural(d.objetivo, "es", "son")} para otra cosa distinta de lo que buscas</li>`);
+    if(d.noAyuda)     motivos.push(`<li><b>${d.noAyuda}</b> no ${plural(d.noAyuda, "es una ayuda", "son ayudas")} que pida un particular: lo dice su propia ficha (la piden ayuntamientos, entidades o promotores; o es una medida sobre viviendas vacías, un precio máximo o un programa que no está en vigor)</li>`);
+    if(d.propietario) motivos.push(`<li><b>${d.propietario}</b> ${plural(d.propietario, "es", "son")} para el propietario que alquila su piso, no para el inquilino</li>`);
+    if(d.edad)        motivos.push(`<li><b>${d.edad}</b> se ${plural(d.edad, "queda", "quedan")} fuera por la edad</li>`);
+    if(d.ingresos)    motivos.push(`<li><b>${d.ingresos}</b> ${plural(d.ingresos, "tiene", "tienen")} un tope de ingresos por debajo del tuyo</li>`);
+    html += `<div class="aparte" id="res-otras" data-otras="${otras}"><b>Por qué no salen las otras ${otras}</b>
       — te lo decimos porque es tan importante como lo que sí sale:
       <ul>${motivos.join("")}</ul></div>`;
   }
-  html += htmlJuez({directas, fiscales, municipales}) + htmlExtras(extras)
+  html += htmlJuez({directas, fiscales, municipales, derivaciones, dudosas}) + htmlExtras(extras)
         + htmlMemoria() + htmlCaptura() + htmlCompartir();
   caja.innerHTML = html;
   engancharExtras();
@@ -1865,6 +2002,10 @@ function memGuardar(perfil, resultado){
       hoy: resultado.directas.filter(a=>a.e==="abierta"||a.e==="permanente").length,
       /* Solo los nombres: es lo que hace falta para comparar, y ocupa poco. */
       nombres: resultado.directas.map(a=>a.n).slice(0, 40),
+      /* 24/09 · bloque B: desde hoy se guarda la lista ENTERA (antes solo las
+         4 del corte). Esta marca evita comparar con consultas guardadas con
+         el corte, que darían «nuevas» que no lo son. */
+      lista: "entera",
     });
     localStorage.setItem(MEM_LLAVE, JSON.stringify(h.slice(0, MEM_TOPE)));
   }catch(e){ /* Si no cabe o no se puede, se sigue sin memoria. */ }
@@ -1877,8 +2018,12 @@ function memBorrar(){
 /* La comparación con la última vez QUE TENÍA EL MISMO OBJETIVO: comparar
    «comprar» con «alquilar» daría diferencias falsas. */
 function memComparar(perfil, resultado){
+  /* Fallo 46: y de la MISMA comunidad. Comparar Navarra con Madrid daba
+     «4 nuevas / 4 ya no aparecen» que no eran cambios de nada. */
+  const comunidad = (cp) => PROV_CCAA[String(cp || "").slice(0,2)] || "";
   const previas = memHistorial().filter(x =>
-    x.perfil && x.perfil.objetivo === perfil.objetivo && Array.isArray(x.nombres));
+    x.perfil && x.perfil.objetivo === perfil.objetivo && Array.isArray(x.nombres)
+    && x.lista === "entera" && comunidad(x.perfil.cp) === comunidad(perfil.cp));
   if(!previas.length) return "";
 
   const antes = previas[0];
@@ -2054,6 +2199,7 @@ function pintarContadores(){
 function pintarMapa(){
   const caja = $("#baldosas");
   const codigos = Object.keys(NOMBRE_CCAA).filter(k=>k!=="ES").sort();
+  const MAPA = calcularMapa();
   caja.innerHTML = codigos.map(k=>{
     const d = MAPA[k];
     if(!d) return `<div class="b nodata"><b>${esc(NOMBRE_CCAA[k])}</b><span>sin datos</span></div>`;
@@ -2065,11 +2211,15 @@ function pintarMapa(){
 }
 
 function pintarEstatal(){
-  const est = AYUDAS.filter(a=>a.ine==="ES");
+  /* Fallo 14: esto NO es el total de España, son solo las estatales (las que
+     valen en todas las comunidades y que el mapa de abajo no cuenta). Se dice
+     así, y con la misma regla que el mapa y la calculadora. */
+  const est = AYUDAS.filter(a=>a.ine==="ES" && !noEsUnaAyuda(a));
   const ab = est.filter(a=>a.e==="abierta").length;
   const pe = est.filter(a=>a.e==="pendiente").length;
   document.getElementById("estatal").innerHTML =
-    `En todo el Estado, <b>${ab} convocatoria${ab!==1?"s":""} abierta${ab!==1?"s":""}</b> y ` +
+    `Aparte, solo las <b>ayudas estatales</b> (valen en todas las comunidades y no están en el mapa): ` +
+    `<b>${ab} convocatoria${ab!==1?"s":""} abierta${ab!==1?"s":""}</b> y ` +
     `<b>${pe} aprobada${pe!==1?"s":""} que todavía no se puede${pe!==1?"n":""} pedir</b>.`;
 }
 
@@ -2321,13 +2471,21 @@ async function interpretar(){
    ══════════════════════════════════════════════════════════════════════ */
 function htmlJuez(r){
   if(!ES_ASIS) return "";
-  const todas = [...(r.directas||[]), ...(r.fiscales||[]), ...(r.municipales||[])];
+  const todas = [...(r.directas||[]), ...(r.fiscales||[]), ...(r.municipales||[]),
+                 ...(r.derivaciones||[]), ...(r.dudosas||[])];
   if(!todas.length) return "";
 
-  const conFuente = todas.filter(a => limpiarFuente(a.f).fuente).length;
+  /* Fallo 9: «lleva fuente» no es lo mismo que «lleva la norma». Una fuente
+     que dice ella misma «sin norma de convocatoria localizada» no cuenta, y
+     las fichas que su propia verificación da «a medias» se dicen. Solo si no
+     queda ninguna de las dos cosas se puede decir «ninguna cifra sin fuente». */
+  const RE_SIN_NORMA = /sin norma|no localizad|sin localizar|no consta|sin verificar/i;
+  const conNorma  = todas.filter(a => { const f = limpiarFuente(a.f).fuente; return f && !RE_SIN_NORMA.test(f); }).length;
+  const aMedias   = todas.filter(a => /^a medias/i.test(a.verif || "")).length;
   const viejas    = todas.filter(a => a.vieja).length;
   const conIncomp = todas.filter(a => limpiarFuente(a.f).incompat).length;
   const promete   = (!CONFIG.formulario && location.protocol !== "file:") ? 0 : null;
+  const n = todas.length;
 
   const linea = (ok, txt) =>
     `<li><span class="marca ${ok ? "ok" : "stop"}">${ok ? "✔" : "✋"}</span><span>${txt}</span></li>`;
@@ -2337,17 +2495,21 @@ function htmlJuez(r){
     <p class="sub">Esto es lo que comprueba el revisor sobre cada respuesta, y lo enseñamos
     porque creemos que es lo que nos separa de un buscador.</p>
     <ul>
-      ${linea(conFuente === todas.length,
-        conFuente === todas.length
-          ? `<b>${conFuente} de ${todas.length}</b> llevan la norma de la que salen. Ninguna cifra sin fuente.`
-          : `<b>${conFuente} de ${todas.length}</b> llevan la norma de la que salen. <b>${todas.length - conFuente}</b> todavía no: tómalas como orientación y compruébalas.`)}
+      ${linea(conNorma === n,
+        conNorma === n
+          ? `<b>${conNorma} de ${n}</b> llevan la norma de la que salen.`
+          : `<b>${conNorma} de ${n}</b> llevan la norma de la que salen. <b>${n - conNorma}</b> ${plural(n - conNorma, "no la lleva", "no la llevan")} todavía: ${plural(n - conNorma, "tómala", "tómalas")} como orientación y ${plural(n - conNorma, "compruébala", "compruébalas")}.`)}
+      ${linea(conNorma === n && aMedias === 0,
+        aMedias
+          ? `<b>${aMedias} de ${n}</b> ${plural(aMedias, "tiene", "tienen")} datos que todavía no hemos contrastado con su boletín: van dichos en ${plural(aMedias, "su ficha", "sus fichas")}.`
+          : conNorma === n ? `Ninguna cifra sin fuente.` : `Las que llevan norma están contrastadas con su boletín.`)}
       ${linea(viejas === 0,
-        viejas ? `<b>${viejas}</b> tienen una cuantía anterior al Plan 2026-2030: <b>te enseño el aviso, no la cifra</b>, hasta comprobarla en el boletín.`
+        viejas ? `<b>${viejas}</b> ${plural(viejas, "tiene", "tienen")} una cuantía anterior al Plan 2026-2030: <b>te enseño el aviso, no la cifra</b>, hasta comprobarla en el boletín.`
                : `Ninguna arrastra una cuantía vieja sin comprobar.`)}
-      ${linea(conIncomp === todas.length,
-        conIncomp === todas.length
+      ${linea(conIncomp === n,
+        conIncomp === n
           ? `Todas traen escrito con qué son incompatibles. Pedir una puede costarte otra.`
-          : `<b>${conIncomp} de ${todas.length}</b> traen escrito con qué son incompatibles; en las demás <b>no lo sabemos todavía</b>. Pedir una puede costarte otra.`)}
+          : `<b>${conIncomp} de ${n}</b> traen escrito con qué son incompatibles; en las demás <b>no lo sabemos todavía</b>. Pedir una puede costarte otra.`)}
       ${linea(true, `Nada de lo que sale es una promesa de concesión: es encaje con los requisitos publicados.`)}
       ${promete === 0 ? linea(true, `No te pido el correo, porque hoy no hay a dónde mandarlo. <b>No prometo un aviso que no podría cumplir.</b>`) : ""}
     </ul>
@@ -2432,14 +2594,19 @@ function numeroES(crudo){
 }
 window.numeroES = numeroES;
 
+const EDAD_CON_DECIMALES = "la edad: van los años cumplidos, sin decimales";
 function leerPerfil(){
   const ingresos = numeroES($("#ingresos").value);
-  const edad = parseInt($("#edad").value,10);
+  const edadTexto = String($("#edad").value ?? "").trim();
+  const edad = parseInt(edadTexto,10);
   const cp = $("#cp").value.trim();   /* L-39: ya no se rellena con un 0 delante: «3864» no es Alicante, es un código mal escrito */
   const objetivo = $("#objetivo").value;
   const fallos = [];
   if(!(ingresos>=0 && ingresos<=20000)) fallos.push("los ingresos (entre 0 y 20.000 € al mes)");
-  if(!(edad>=16 && edad<=110)) fallos.push("la edad");
+  /* Fallo 47: «30.5» se leía como 30 sin decir nada. Ahora se avisa, igual
+     que hace la calculadora del aval: la edad va en años cumplidos. */
+  if(/^\d+[.,]\d+$/.test(edadTexto)) fallos.push(EDAD_CON_DECIMALES);
+  else if(!(edad>=16 && edad<=110)) fallos.push("la edad");
   if(!/^\d{5}$/.test(cp) || !PROV_CCAA[cp.slice(0,2)]) fallos.push("el código postal");
   return {perfil:{ingresos, edad, cp, objetivo}, fallos};
 }
@@ -2501,12 +2668,16 @@ $("#ejemplo").addEventListener("click", ()=>{
 
 /* Qué campo corresponde a cada cosa que puede fallar, para poder marcarlo
    y llevar el foco allí en vez de dejar al que navega con teclado buscándolo. */
-const CAMPO_DE = {"los ingresos (entre 0 y 20.000 € al mes)":"#ingresos", "la edad":"#edad", "el código postal":"#cp"};
+const CAMPO_DE = {"los ingresos (entre 0 y 20.000 € al mes)":"#ingresos", "la edad":"#edad", "el código postal":"#cp",
+                  [EDAD_CON_DECIMALES]:"#edad"};
 
 function marcarFallos(fallos){
-  for(const [texto, sel] of Object.entries(CAMPO_DE)){
+  /* Dos textos pueden ir al mismo campo (la edad): primero se junta qué
+     campos están mal y luego se marcan, para que uno no desmarque al otro. */
+  const mal = new Set(fallos.map(t => CAMPO_DE[t]).filter(Boolean));
+  for(const sel of new Set(Object.values(CAMPO_DE))){
     const campo = $(sel);
-    if(fallos.includes(texto)) campo.setAttribute("aria-invalid","true");
+    if(mal.has(sel)) campo.setAttribute("aria-invalid","true");
     else campo.removeAttribute("aria-invalid");
   }
 }
@@ -2562,7 +2733,7 @@ montarAsistente();        /* el cuadro de texto, solo en la demo «asistente» *
 if(leerPerfilDeLaDireccion()){ marcarPuerta($("#objetivo").value); $("#calculadora").requestSubmit(); }
 pintarCaducidad();
 pintarMapa();
-pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=18c"; document.body.appendChild(s);})();
+pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=24a"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="botones_rapidos.js?v=1"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="casas_ia.js?v=18c"; document.body.appendChild(s);})();
 </script>

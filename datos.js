@@ -27,7 +27,7 @@
 
 window.DATOS_IMMOIA = {
 
-  version: "1.6.1",
+  version: "1.7.0",
   revisado: "2026-09-18",
 
   /* -----------------------------------------------------------
@@ -35,17 +35,17 @@ window.DATOS_IMMOIA = {
      ----------------------------------------------------------- */
   numeros: {
     /* 5.500 € la instalación estándar de 8 paneles = 687,50 €/panel.
-       Precio negociado con instalador (INSTRUCCIONES_FINALES_CLOUD.md).
-       ⚠️ Pendiente de presupuesto por escrito: ningún instalador de
-       Tenerife publica precio. Rango publicado: 4.500-8.500 €. */
+       Fuente: precio acordado con el instalador, pendiente de presupuesto
+       por escrito; ningún instalador de Tenerife publica precio.
+       Rango publicado en el mercado: 4.500-8.500 €. */
     eurPorPanel: 687.5,
     precioEstandar8: 5500,
 
-    /* Lo que le negociamos al instalador por volumen y le pasamos AL CLIENTE.
-       El techo real es lo que el instalador se ahorra en captacion: el CAC
-       publicado del sector son 150-400 € por instalacion vendida, mas el tiempo
-       de su comercial. Se pide 500 y se acepta 300.
-       ⚠️ Pendiente de cerrarlo por escrito con el instalador. */
+    /* Descuento por volumen que se acuerda con el instalador y se le
+       descuenta al cliente. Pendiente de cerrarlo por escrito.
+       SUPUESTO SIN FUENTE: desde el 24/09/2026 no se resta en la cuenta principal
+       de ninguna página; solo se nombra, marcado como supuesto, en la fórmula de
+       ceder el sobrante (energia.html). */
     descuentoInstalador: 500,
 
     kwpPorPanel: 0.45,
@@ -54,10 +54,17 @@ window.DATOS_IMMOIA = {
     precioLuz: 0.19,          /* €/kWh de compra · rango 0,16-0,22 */
     precioExcedente: 0.06,    /* €/kWh de venta en mercado · PPA en tejado 0,045 */
     costeCertificados: 200,   /* los dos, antes y después · 60-130 € cada uno */
+    /* SIN FUENTE: estos 150 € no salen de ninguna ordenanza. La cuenta
+       (energia_cuenta.js) solo los resta donde el municipio tiene bonificación
+       del IBI publicada, y en pantalla van marcados «sin verificar». */
     icio: 150,
 
     /* Préstamo. Se trabaja con 6,25 % por prudencia: es peor que la mejor
-       oferta publicada, así que la oferta real solo puede mejorar. */
+       oferta publicada, así que la oferta real solo puede mejorar.
+       OJO CON EL NOMBRE: la clave se llama «tae», pero la cuenta lo usa como
+       tipo NOMINAL anual (se divide entre 12). Un 6,25 % nominal equivale a una
+       TAE de 6,43 % sin comisiones. Es un SUPUESTO, no la oferta de ningún banco,
+       y en pantalla se dice así («interés nominal, supuesto»), nunca «TAE». */
     tae: 0.0625,
 
     /* PLAZO. Cambiado de 10 a 15 anos el 11/09/2026 por CORREGIR_PLAZO.md
@@ -121,6 +128,16 @@ window.DATOS_IMMOIA = {
     /* consumo estimado de un vacacional, por día */
     kwhDiaOcupado: 10,
     kwhDiaVacio: 1.2,
+    /* qué parte de ese consumo cae en horas de sol (estimación, no dato publicado).
+       Estaban escritos dentro de renovables_vacacional.html; desde el 24/09/2026
+       viven aquí para que las tres páginas cuenten igual. */
+    solOcupado: 0.45,
+    solVacio: 0.50,
+
+    /* SUPUESTO: el mes en que entra la devolución de Hacienda, contado desde la obra.
+       Depende de cuándo se instale y de cuándo se presente la renta. Antes cada
+       página usaba uno distinto (9, 12 y 18); desde el 24/09/2026 las tres usan este. */
+    mesDevolucion: 12,
 
     /* cuánto de la factura es energía y no términos fijos ni impuestos */
     parteEnergiaFactura: 0.70,
@@ -293,7 +310,7 @@ window.DATOS_IMMOIA = {
   },
 
   /* -----------------------------------------------------------
-     4 · LAS 17 COMUNIDADES
+     4 · LAS 17 COMUNIDADES Y LAS 2 CIUDADES AUTÓNOMAS
      -----------------------------------------------------------
      Fuente: INVESTIGACION_CCAA/AYUDAS_POR_COMUNIDAD.md, 10/09/2026.
      Todas las deducciones autonómicas están contrastadas con la AEAT.
@@ -303,47 +320,49 @@ window.DATOS_IMMOIA = {
      deduccion.base:    base máxima anual en €
      deduccion.tope:    tope de la deducción en € (0 = sin tope propio)
      foral:             true = tiene IRPF propio y NO aplica el estatal
+     deduccionSinVerificar: true = no hemos comprobado si tiene deducción propia
      nota:              lo que LEE EL CLIENTE en pantalla. En cristiano y corto.
-     notaInterna:       lo de casa (quién lo verificó, cuándo y qué corregimos).
-                        NO SE PINTA NUNCA. Separado el 19/09/2026.
+     notaInterna:       solo la fuente oficial del dato (norma, boletín, fecha).
+                        NO SE PINTA NUNCA. Desde el 23/09/2026 las notas de
+                        trabajo no se publican.
      ----------------------------------------------------------- */
   comunidades: {
     an: { nombre:"Andalucía",
-          subvencion:{ estado:"cerrada", importe:0, nota:"En Andalucía no hay ninguna abierta para poner placas en una vivienda particular: la última convocatoria de autoconsumo cerró el 31 de diciembre de 2023 y no hay otra publicada. Tu dinero está en la deducción estatal del 40 % y en las bonificaciones de IBI e ICIO de tu ayuntamiento.", notaInterna:"VERIFICADA el 18/09/2026 (el 17/09 no se pudo: las tres páginas oficiales bloqueaban el acceso automático). Andalucía NO tiene subvención autonómica abierta para que un particular ponga placas en su casa. La convocatoria de autoconsumo que gestiona la Agencia Andaluza de la Energía es la del Real Decreto 477/2021 (Next Generation): el catálogo de procedimientos de la sede de la Junta, trámite 24726, publica plazo del 02/12/2021 al 31/12/2023, y ese plazo está vencido. Lo único de Andalucía en energía registrado en la BDNS en 2026 es la 899702 (Línea 2 Energía, Espacios productivos, 17/04/2026) y es PARA EMPRESAS, no para viviendas. Al cliente andaluz se le lleva al IBI y al ICIO de su ayuntamiento y a la deducción estatal del 40 %, que es donde está su dinero. Fuente: juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/24726.html, consultado el 18/09/2026." },
+          subvencion:{ estado:"cerrada", importe:0, nota:"En Andalucía no hay ninguna abierta para poner placas en una vivienda particular: la última convocatoria de autoconsumo cerró el 31 de diciembre de 2023 y no hay otra publicada. Tu dinero está en la deducción estatal del 40 % y en las bonificaciones de IBI e ICIO de tu ayuntamiento.", notaInterna:"Fuente: Junta de Andalucía, sede electrónica, procedimiento 24726 (plazo del 02/12/2021 al 31/12/2023); BDNS 899702 (Línea 2 Energía, es para empresas). Consultado el 18/09/2026." },
           deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"Andalucía no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT y en la Ley 5/2021 de Tributos Cedidos (arts. 9 a 22 quater). Sí se aplica la deducción estatal del 40 %." }, foral:false },
 
     ar: { nombre:"Aragón",
-          subvencion:{ estado:"cerrada", importe:0, nota:"En Aragón no hay ninguna abierta para placas en una vivienda particular: la de autoconsumo cerró el 31 de diciembre de 2023. Sí hay una ayuda anual de rehabilitación para mejorar la eficiencia energética, que en 2026 solo estuvo abierta del 13 de enero al 3 de febrero; pide certificado energético antes y después y bajar un 30 % el consumo de energía primaria no renovable (o un 7 % la demanda). Si te interesa, la ventana es enero: el certificado previo hay que tenerlo hecho en diciembre. La convocatoria de 2027 todavía no está publicada.", notaInterna:"VERIFICADA el 18/09/2026 (antes esta nota estaba VACÍA). Aragón NO tiene ahora mismo subvención autonómica abierta para placas en vivienda particular. Comprobado en el tramitador del Gobierno de Aragón: el Programa 4 de autoconsumo renovable en el sector residencial (trámite 6601) figura FUERA DE PLAZO, del 13/12/2021 al 31/12/2023; las ayudas de renovables cofinanciadas con FEDER siguen con la convocatoria de 2021 (Orden ICD/566/2021) y la página se actualizó por última vez el 24/11/2025. LO QUE SÍ TIENE, y conviene saberlo: una convocatoria ANUAL de rehabilitación residencial para mejora de la eficiencia energética (PRTR), Programa 4, actuaciones en viviendas (trámite 11317), que en 2026 estuvo abierta del 13/01/2026 al 03/02/2026 —tres semanas de enero— y exige certificado energético antes y después y reducir un 30 % el consumo de energía primaria no renovable o un 7 % la demanda. Si el cliente aragonés quiere entrar, la ventana es enero: hay que tenerle el certificado previo hecho en diciembre. NO se le promete la convocatoria de 2027 hasta que se publique. Fuente: aragon.es, trámites 6601 y 11317, consultados el 18/09/2026." },
+          subvencion:{ estado:"cerrada", importe:0, nota:"En Aragón no hay ninguna abierta para placas en una vivienda particular: la de autoconsumo cerró el 31 de diciembre de 2023. Sí hay una ayuda anual de rehabilitación para mejorar la eficiencia energética, que en 2026 solo estuvo abierta del 13 de enero al 3 de febrero; pide certificado energético antes y después y bajar un 30 % el consumo de energía primaria no renovable (o un 7 % la demanda). Si te interesa, la ventana es enero: el certificado previo hay que tenerlo hecho en diciembre. La convocatoria de 2027 todavía no está publicada.", notaInterna:"Fuente: Gobierno de Aragón, tramitador, trámites 6601 (del 13/12/2021 al 31/12/2023) y 11317 (abierto del 13/01/2026 al 03/02/2026); Orden ICD/566/2021. Consultado el 18/09/2026." },
           deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"Aragón no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT y en el Decreto Legislativo 1/2005 (arts. 110-2 a 110-22). Sí se aplica la estatal del 40 %." }, foral:false },
 
     as: { nombre:"Asturias",
           subvencion:{ estado:"cerrada", importe:0,
-                       nota:"En Asturias no hay ninguna abierta para vivienda particular. Las ayudas a renovables que convocó el Principado en 2026 son para empresas y para personas físicas con actividad económica, no para un particular que pone placas en su casa, y además su plazo ya venció.", notaInterna:"VERIFICADA el 17/09/2026 (antes esta nota estaba VACÍA). Asturias convocó en 2026 sus ayudas al uso de energías renovables y al ahorro y la eficiencia energética (Consejería de Ciencia, Empresas, Formación y Empleo, 2.500.000 €, BDNS 901221 y 901222), pero NO son para el particular que pone placas en su casa: los beneficiarios son gran empresa y pymes o personas físicas CON actividad económica. Además el plazo era de un mes desde el extracto publicado el 04/05/2026 en el BOPA, así que está cerrado. Para vivienda particular en Asturias: no hay subvención autonómica abierta." },
+                       nota:"En Asturias no hay ninguna abierta para vivienda particular. Las ayudas a renovables que convocó el Principado en 2026 son para empresas y para personas físicas con actividad económica, no para un particular que pone placas en su casa, y además su plazo ya venció.", notaInterna:"Fuente: BDNS 901221 y 901222; extracto en el BOPA del 04/05/2026, plazo de un mes. Consultado el 17/09/2026." },
           deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"Asturias no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT: sus 27 deducciones son de familia, alquiler, despoblamiento y similares. Sí se aplica la estatal del 40 %." }, foral:false },
 
     ib: { nombre:"Baleares",
           subvencion:{ estado:"cerrada", importe:0, unidad:"€/kWp",
-                       nota:"En Baleares la convocatoria de fotovoltaica de 2026 (FOTOPAR2026) cerró el 30 de abril de 2026, y la de 2027 todavía no está publicada. Hay otra ayuda abierta, FACTOR 2026, del 9 de julio de 2026 al 28 de febrero de 2027, pero no cubre fotovoltaica para particulares: solo baterías, aerotermia y recarga. La deducción del 50 % del IRPF balear sí sigue en pie.", notaInterna:"🔴 CORREGIDO el 11/09/2026. Antes aquí ponía «reabre el 26/01/2027», y ESA FECHA NO ESTÁ PUBLICADA: es la fecha en que abrió la convocatoria de 2026 (FOTOPAR2026, cerrada el 30/04/2026), no un anuncio del Govern. La convocatoria de 2027 no está publicada. Baleares sí tiene abierta otra ayuda (FACTOR 2026, del 09/07/2026 al 28/02/2027), pero NO cubre fotovoltaica para particulares: solo baterías, aerotermia y recarga. La deducción del 50 % del IRPF sí sigue en pie." },
+                       nota:"En Baleares la convocatoria de fotovoltaica de 2026 (FOTOPAR2026) cerró el 30 de abril de 2026, y la de 2027 todavía no está publicada. Hay otra ayuda abierta, FACTOR 2026, del 9 de julio de 2026 al 28 de febrero de 2027, pero no cubre fotovoltaica para particulares: solo baterías, aerotermia y recarga. La deducción del 50 % del IRPF balear sí sigue en pie.", notaInterna:"Fuente: convocatorias FOTOPAR2026 (cerrada el 30/04/2026) y FACTOR 2026 (del 09/07/2026 al 28/02/2027) del Govern balear. Revisado el 11/09/2026." },
           deduccion:{ pct:0.50, base:10000, tope:5000,
                       nota:"Hay que subir al menos un nivel la calificación energética. Límite de base imponible: 33.000 € individual / 52.800 € conjunta." },
           foral:false },
 
     cn: { nombre:"Canarias",
-          subvencion:{ estado:"cerrada", importe:0, nota:"Del Gobierno de Canarias no hay ninguna abierta: las dos convocatorias de 2026 cerraron en junio y en agosto, y no hay otra publicada. Por islas: en GRAN CANARIA sí hay una abierta, la del Consejo Insular de la Energía para instalaciones fotovoltaicas en viviendas, hasta el 31 de diciembre de 2026 o hasta que se agote el dinero —la cuantía por vivienda no está publicada, hay que preguntarla—. En LA PALMA, la del Cabildo ya cerró, pero el Ayuntamiento de BREÑA BAJA acaba de abrir la suya para autoconsumo y agua caliente en viviendas, con 30 días naturales de plazo desde el día siguiente a la publicación del extracto en el BOP: solo vale si estás empadronado y tienes vivienda allí. En LANZAROTE el Cabildo tiene una de transición energética con el plazo poco claro: antes de contar con ella hay que llamar a su Área de Energía. El CABILDO DE TENERIFE no tiene ninguna línea propia para viviendas, así que si vives en Tenerife tu dinero está en la bonificación del IBI de tu ayuntamiento y en la deducción.", notaInterna:"Revisado el 16/09/2026. Autonómica: sigue sin haber convocatoria nueva en el BOC; las dos de 2026 cerraron en junio y agosto. INSULARES, una por una: 🟢 GRAN CANARIA ABIERTA — Consejo Insular de la Energía, subvención a instalaciones fotovoltaicas EN VIVIENDAS 2026, 700.000 €, para personas físicas sin actividad económica, abierta hasta el 31/12/2026 o hasta agotar el crédito (BDNS 897819). La cuantía por vivienda no está publicada en la BDNS y la sede del Consejo Insular no deja leerse: preguntar. 🔴 LA PALMA CERRADA — Cabildo, fotovoltaica de autoconsumo para viviendas 2026, 171.316,96 € (BDNS 921227, extracto en el BOP de S/C de Tenerife nº 90 de 29/07/2026); el plazo era de 15 días hábiles y ya venció. ⚠️ LANZAROTE — Cabildo, mitigación del cambio climático y transición energética (BDNS 925135, 500.000 €, BOP de Las Palmas de 19/08/2026): el plazo publicado es «un mes desde la publicación», o sea en torno al 21/09/2026, PERO la BDNS la marca ya como cerrada y el BOP de Las Palmas no deja leerse automáticamente. Contradicción sin resolver: llamar al Área de Energía antes de prometerla. 🔴 CABILDO DE TENERIFE: NO TIENE NINGUNA. Comprobado el 16/09/2026 en la BDNS y en su portal de ayudas: ni abierta, ni cerrada, ni anunciada para 2026 ni 2027. Es el único cabildo sin línea propia para viviendas (La Palma, Gran Canaria, Fuerteventura, La Gomera y Lanzarote sí la tienen). Al cliente de Tenerife se le dice eso, y se le lleva al IBI del ayuntamiento y a la deducción, que es donde está su dinero. Aquí no se pone ningún importe hasta verlo publicado. 🟢 NUEVO EL 18/09/2026, Y ES LA PRIMERA DE PLACAS PARA VIVIENDA EN TODA ESPAÑA EN OCHO SEMANAS: el AYUNTAMIENTO DE BREÑA BAJA (La Palma) ha registrado convocatoria 2026 de subvenciones para instalaciones de producción de energía eléctrica de autoconsumo y agua caliente sanitaria EN VIVIENDAS, 22.400 €, para personas físicas sin actividad económica, 30 días naturales desde el día siguiente a la publicación del extracto en el BOP de S/C de Tenerife (BDNS 929841, registrada el 16/09/2026). Es municipal, no autonómica: solo vale para empadronados con vivienda en Breña Baja." },
+          subvencion:{ estado:"cerrada", importe:0, nota:"Del Gobierno de Canarias no hay ninguna abierta: las dos convocatorias de 2026 cerraron en junio y en agosto, y no hay otra publicada. Por islas: en GRAN CANARIA sí hay una abierta, la del Consejo Insular de la Energía para instalaciones fotovoltaicas en viviendas, hasta el 31 de diciembre de 2026 o hasta que se agote el dinero —la cuantía por vivienda no está publicada, hay que preguntarla—. En LA PALMA, la del Cabildo ya cerró, pero el Ayuntamiento de BREÑA BAJA acaba de abrir la suya para autoconsumo y agua caliente en viviendas, con 30 días naturales de plazo desde el día siguiente a la publicación del extracto en el BOP: solo vale si estás empadronado y tienes vivienda allí. En LANZAROTE el Cabildo tiene una de transición energética con el plazo poco claro: antes de contar con ella hay que llamar a su Área de Energía. El CABILDO DE TENERIFE no tiene ninguna línea propia para viviendas, así que si vives en Tenerife tu dinero está en la bonificación del IBI de tu ayuntamiento y en la deducción.", notaInterna:"Fuente: BOC (convocatorias autonómicas de 2026); BDNS 897819 (Gran Canaria); BDNS 921227 y BOP de S/C de Tenerife nº 90 de 29/07/2026 (La Palma); BDNS 925135 y BOP de Las Palmas de 19/08/2026 (Lanzarote); BDNS 929841, registrada el 16/09/2026 (Breña Baja); Cabildo de Tenerife: sin línea en la BDNS ni en su portal de ayudas. Revisado el 16/09/2026 y el 18/09/2026." },
           deduccion:{ pct:0.12, base:7000, tope:840,
                       nota:"Vivienda habitual en propiedad, pago nunca en efectivo y los dos certificados. Además no puede pasar del 10 % de la cuota autonómica." },
           foral:false },
 
     ct: { nombre:"Cantabria",
           subvencion:{ estado:"cerrada", importe:0,
-                       nota:"En Cantabria no hay ninguna abierta de autoconsumo para particulares: la última cerró el 31 de diciembre de 2023 y no hay convocatoria nueva ni anunciada.", notaInterna:"VERIFICADA el 16/09/2026 (antes ponía «sinVerificar»). Cantabria NO tiene subvención autonómica de autoconsumo para particulares abierta. La última fue el programa 4.2 del RD 477/2021 (BOC de 13/04/2022), que cerró el 31/12/2023. No hay convocatoria nueva ni anunciada en la BDNS. ⚠️ El portal de energía del Gobierno de Cantabria y el BOC estuvieron caídos el 16/09/2026: reconfirmar en dgicc.cantabria.es cuando vuelva." },
+                       nota:"En Cantabria no hay ninguna abierta de autoconsumo para particulares: la última cerró el 31 de diciembre de 2023 y no hay convocatoria nueva ni anunciada.", notaInterna:"Fuente: programa 4.2 del RD 477/2021 (BOC de 13/04/2022), cerrado el 31/12/2023; sin convocatoria nueva en la BDNS. Consultado el 16/09/2026." },
           deduccion:{ pct:0.15, base:0, tope:1000,
-                      nota:"El 15 % de lo que pagues por la obra, con un límite de 1.000 € de deducción en declaración individual y 1.500 € en conjunta (500 € más si hay una discapacidad del 65 % o superior). Ese límite es de la deducción, no de la base: la base no está limitada. Vale para obras en cualquier vivienda de tu propiedad —rehabilitación, eficiencia energética, energías renovables o accesibilidad—, así que la fotovoltaica entra. El pago nunca en efectivo. Lo que no te quepa un año lo aplicas los dos ejercicios siguientes. Es incompatible con la deducción estatal y con subvenciones por las mismas obras. Art. 2.3 del Decreto Legislativo 62/2008 de Cantabria.", notaInterna:"🔴 CORREGIDO EL 16/09/2026, y a favor del cliente: aquí ponía «tope 150 €» y el tope real es 1.000 € en declaración individual y 1.500 € en conjunta (+500 € con discapacidad ≥ 65 %). Casi siete veces más de lo que le estábamos diciendo. Los 1.000 € NO son la base: son el límite de la deducción, la base no está limitada. 15 % de lo pagado en obras en cualquier vivienda de su propiedad —rehabilitación, eficiencia energética, energías renovables, accesibilidad—, así que la fotovoltaica entra. Pago nunca en efectivo. Lo no deducido por pasarse del límite se aplica los dos ejercicios siguientes. Incompatible con la deducción estatal o con subvenciones por las MISMAS obras. Art. 2.3 del Decreto Legislativo 62/2008 de Cantabria, texto consolidado actualizado el 30/04/2026; contrastado en el manual de IRPF de la AEAT." },
+                      nota:"El 15 % de lo que pagues por la obra, con un límite de 1.000 € de deducción en declaración individual y 1.500 € en conjunta (500 € más si hay una discapacidad del 65 % o superior). Ese límite es de la deducción, no de la base: la base no está limitada. Vale para obras en cualquier vivienda de tu propiedad —rehabilitación, eficiencia energética, energías renovables o accesibilidad—, así que la fotovoltaica entra. El pago nunca en efectivo. Lo que no te quepa un año lo aplicas los dos ejercicios siguientes. Es incompatible con la deducción estatal y con subvenciones por las mismas obras. Art. 2.3 del Decreto Legislativo 62/2008 de Cantabria.", notaInterna:"Fuente: art. 2.3 del Decreto Legislativo 62/2008 de Cantabria, texto consolidado actualizado el 30/04/2026, y manual de IRPF de la AEAT. Consultado el 16/09/2026." },
           foral:false },
 
     cm: { nombre:"Castilla-La Mancha",
           subvencion:{ estado:"cerrada", importe:0,
-                       nota:"Para una vivienda individual no hay nada abierto en Castilla-La Mancha. Sí lo hay para edificios: dos convocatorias de ayudas al aprovechamiento de energías renovables abiertas del 9 de septiembre de 2026 al 8 de marzo de 2027, una para comunidades energéticas y otra para comunidades de propietarios. Si la instalación es de todo el edificio, merece la pena mirarlas, que hay plazo hasta marzo de 2027. La cuantía por instalación la fija la Orden 52/2026 y todavía no la tenemos.", notaInterna:"VERIFICADA el 17/09/2026 (antes esta nota estaba VACÍA: decíamos «cerrada» sin haberlo comprobado). Para una VIVIENDA INDIVIDUAL: no hay nada abierto. Pero OJO, que esto sí vale dinero y es nuevo: el 8 de septiembre de 2026 la Dirección General de Transición Energética publicó DOS convocatorias de ayudas al aprovechamiento de energías renovables (Orden 52/2026, de 14 de abril, DOCM de 22/04/2026; extracto en el DOCM de 08/09/2026), con plazo del 09/09/2026 al 08/03/2027: una de 8.534.586,40 € para COMUNIDADES ENERGÉTICAS (personas jurídicas sin actividad económica) y otra de 2.133.654,10 € para COMUNIDADES DE PROPIETARIOS y pymes/personas físicas con actividad económica (BDNS 927466 y 927526). Es decir: al cliente de a pie de Ciudad Real o Toledo se le dice que no hay ayuda para su casa, pero a un EDIFICIO o a una comunidad de propietarios de Castilla-La Mancha SÍ hay que decírselo, y queda plazo hasta marzo de 2027. La cuantía por instalación no se ha leído todavía: está en la Orden 52/2026, pendiente." },
+                       nota:"Para una vivienda individual no hay nada abierto en Castilla-La Mancha. Sí lo hay para edificios: dos convocatorias de ayudas al aprovechamiento de energías renovables abiertas del 9 de septiembre de 2026 al 8 de marzo de 2027, una para comunidades energéticas y otra para comunidades de propietarios. Si la instalación es de todo el edificio, merece la pena mirarlas, que hay plazo hasta marzo de 2027. La cuantía por instalación la fija la Orden 52/2026 y todavía no la tenemos.", notaInterna:"Fuente: Orden 52/2026, de 14 de abril (DOCM de 22/04/2026); extracto en el DOCM de 08/09/2026; BDNS 927466 y 927526. Consultado el 17/09/2026." },
           deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"Castilla-La Mancha no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT (sus 27 deducciones son de familia, guardería, alquiler y zonas rurales). Sí se aplica la estatal del 40 %." }, foral:false },
 
     cl: { nombre:"Castilla y León",
@@ -365,9 +384,9 @@ window.DATOS_IMMOIA = {
           deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"Extremadura no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT y en el Decreto Legislativo 1/2018. Sí se aplica la estatal del 40 %." }, foral:false },
 
     ga: { nombre:"Galicia",
-          subvencion:{ estado:"cerrada", importe:0, nota:"Cerró el 1 de diciembre de 2025. Era de 4.000 €.", notaInterna:"Cerró el 01/12/2025. Era de 4.000 €." },
+          subvencion:{ estado:"cerrada", importe:0, nota:"Cerró el 1 de diciembre de 2025. Era de 4.000 €.", notaInterna:"" },
           deduccion:{ pct:0.15, base:9000, tope:1350,
-                      nota:"Obras de mejora de eficiencia energética: 15 % con base de 9.000 € (hasta 1.350 €). Además, el 100 % de lo que cueste el certificado energético, con tope de 150 €. Hace falta certificado de antes y de después. La puede pedir el propietario —vivienda habitual, segunda, alquilada o vacía—, pero NO el usufructuario ni el inquilino, ni los inmuebles afectos a una actividad. Art. 5.Dieciocho del Decreto Legislativo 1/2011 de Galicia.", notaInterna:"Obras de mejora de eficiencia energética: 15 % con base de 9.000 € (hasta 1.350 €). Además, el 100 % de lo que cueste el certificado energético, con tope de 150 €. Hace falta certificado de antes y de después. La puede pedir el propietario —vivienda habitual, segunda, alquilada o vacía—, pero NO el usufructuario ni el inquilino, ni los inmuebles afectos a una actividad. Art. 5.Dieciocho del Decreto Legislativo 1/2011 de Galicia. Revisado el 11/09/2026." },
+                      nota:"Obras de mejora de eficiencia energética: 15 % con base de 9.000 € (hasta 1.350 €). Además, el 100 % de lo que cueste el certificado energético, con tope de 150 €. Hace falta certificado de antes y de después. La puede pedir el propietario —vivienda habitual, segunda, alquilada o vacía—, pero NO el usufructuario ni el inquilino, ni los inmuebles afectos a una actividad. Art. 5.Dieciocho del Decreto Legislativo 1/2011 de Galicia.", notaInterna:"Fuente: art. 5.Dieciocho del Decreto Legislativo 1/2011 de Galicia. Revisado el 11/09/2026." },
           foral:false },
 
     ma: { nombre:"Madrid",
@@ -382,23 +401,33 @@ window.DATOS_IMMOIA = {
 
     na: { nombre:"Navarra",
           subvencion:{ estado:"cerrada", importe:0,
-                       nota:"En Navarra no hay ninguna abierta de autoconsumo para particulares: la última cerró el 31 de diciembre de 2023. Lo que hay en 2026 son ayudas a comunidades energéticas, y son para personas jurídicas, no para un particular.", notaInterna:"VERIFICADA el 16/09/2026 (antes ponía «sinVerificar»). Navarra NO tiene subvención autonómica de autoconsumo para particulares abierta. La última para personas físicas fue el Programa 4 del RD 477/2021 (Resolución 121E/2021), que cerró el 31/12/2023. En 2026 solo hay ayudas a comunidades energéticas y son para personas jurídicas. Comprobado en la BDNS." },
+                       nota:"En Navarra no hay ninguna abierta de autoconsumo para particulares: la última cerró el 31 de diciembre de 2023. Lo que hay en 2026 son ayudas a comunidades energéticas, y son para personas jurídicas, no para un particular.", notaInterna:"Fuente: Programa 4 del RD 477/2021 (Resolución 121E/2021), cerrado el 31/12/2023; BDNS. Consultado el 16/09/2026." },
           deduccion:{ pct:0.15, base:0, tope:0,
-                      nota:"El 15 % de lo que pagues. Hace falta un informe previo del Departamento de Energía del Gobierno de Navarra, que se pide durante todo el año, y la deducción se aplica en la primera declaración posterior a la fecha de ese informe (art. 62.12.e de la Ley Foral 22/2023). La base máxima y el tope en euros no están publicados, así que aquí no ponemos ninguno. Y si has oído que en Navarra se llega al 30 %, ese 30 % es de otra cosa (hidrógeno renovable): en autoconsumo compartido y comunidades energéticas el techo es el 20 %.", notaInterna:"🔴 CORREGIDO EL 16/09/2026. Aquí ponía «hasta el 30 % con almacenamiento, autoconsumo compartido o comunidades energéticas» y ESO ES FALSO: el 30 % es el techo del hidrógeno renovable en sustitución de gas natural (15 % base + 15 puntos, Ley Foral 36/2022). Para autoconsumo compartido y comunidades energéticas el techo es el 20 %, no el 30 % (Manual Teórico de Renta de la Hacienda Foral). NO prometer el 30 % a nadie. El 15 % base es coherente con la aritmética oficial pero NO se ha podido leer literalmente el art. 62.12 del Decreto Foral Legislativo 4/2008 (navarra.es y bon.navarra.es estuvieron caídos el 16/09/2026): pendiente de cerrar. La base máxima y el tope en euros: no publicada. Lo que SÍ está confirmado es que hace falta INFORME PREVIO del Departamento de Energía del Gobierno de Navarra, que se pide todo el año, y que la deducción se aplica en la primera declaración posterior a la fecha del informe (art. 62.12.e), Ley Foral 22/2023)." },
+                      nota:"El 15 % de lo que pagues. Hace falta un informe previo del Departamento de Energía del Gobierno de Navarra, que se pide durante todo el año, y la deducción se aplica en la primera declaración posterior a la fecha de ese informe (art. 62.12.e de la Ley Foral 22/2023). La base máxima y el tope en euros no están publicados, así que aquí no ponemos ninguno. Y si has oído que en Navarra se llega al 30 %, ese 30 % es de otra cosa (hidrógeno renovable): en autoconsumo compartido y comunidades energéticas el techo es el 20 %.", notaInterna:"Fuente: art. 62.12.e de la Ley Foral 22/2023 (informe previo); Ley Foral 36/2022 y Manual Teórico de Renta de la Hacienda Foral (el techo del 30 % es del hidrógeno; el 20 %, del autoconsumo compartido). Consultado el 16/09/2026." },
           deduccionObras:{ fecha:"2026-09-16", pct20:0.20, base20:5000, pct40:0.40, base40:7500, pct60:0.60, base60:5000, acumulado60:15000,
                       nota:"🟢 NUEVO el 16/09/2026, y es importante porque Navarra es foral y no aplica el IRPF estatal: el Decreto-ley Foral 1/2026, de 15 de abril, prorroga a las cantidades pagadas EN 2026 las tres deducciones forales por obras de mejora energética, con los mismos porcentajes y bases que el Estado (20 % base 5.000 €, 40 % base 7.500 €, 60 % de edificio base 5.000 €/año hasta 15.000 € acumulados). Modifica la disposición adicional 65ª del Texto Refundido del IRPF navarro. BOE-A-2026-10888. Es decir: al navarro NO hay que decirle que se queda sin el 40 % por ser foral; lo tiene por su propia vía." },
           foral:true },
 
     pv: { nombre:"País Vasco",
           subvencion:{ estado:"abierta", importe:600, unidad:"€/kW", hasta:"2026-09-30",
-                       nota:"es la única abierta en España y el plazo acaba el 30 de septiembre de 2026. Ojo, porque corre prisa: el propio EVE avisa en su web de que el presupuesto está próximo a agotarse —más de 7.000 solicitudes sobre 80 M€— y puede cerrarse antes de esa fecha. No te prometemos el dinero: te decimos que está abierta y que hay que darse prisa. El EVE ha anunciado otra convocatoria, pero todavía no está publicada.", notaInterna:"La única abierta en España, hasta el 30/09/2026. 🔴 REVISADO 11/09/2026: el propio EVE avisa en su web de que el presupuesto está próximo a agotarse, y la prensa del sector daba más de 7.000 solicitudes el 07/09/2026 sobre 80 M€. NO se le promete el dinero a nadie: se dice que está abierta y que el presupuesto puede acabarse antes de la fecha. El EVE ha anunciado otra convocatoria para las próximas semanas, pero AÚN NO ESTÁ PUBLICADA." },
+                       nota:"es la única abierta en España y el plazo acaba el 30 de septiembre de 2026. Ojo, porque corre prisa: el propio EVE avisa en su web de que el presupuesto está próximo a agotarse —más de 7.000 solicitudes sobre 80 M€— y puede cerrarse antes de esa fecha. No te prometemos el dinero: te decimos que está abierta y que hay que darse prisa. El EVE ha anunciado otra convocatoria, pero todavía no está publicada.", notaInterna:"Fuente: web del EVE (aviso de presupuesto próximo a agotarse y nueva convocatoria anunciada) y prensa del sector del 07/09/2026 (más de 7.000 solicitudes sobre 80 M€). Revisado el 11/09/2026." },
           deduccion:{ pct:0.15, base:20000, tope:0,
                       nota:"En los tres territorios. Y algo que no pasa en el resto de España: la fotovoltaica da derecho por sí sola, con el certificado de instalación eléctrica y SIN los certificados energéticos." },
           foral:true },
 
     ri: { nombre:"La Rioja",
           subvencion:{ estado:"cerrada", importe:0, nota:"" },
-          deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"La Rioja no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT. OJO con una confusión habitual: su deducción por rehabilitación de vivienda habitual es un régimen transitorio de obras anteriores a 2013 y no tiene nada que ver con la energía. Sí se aplica la estatal del 40 %." }, foral:false }
+          deduccion:null, deduccionComprobada:{ fecha:"2026-09-11", nota:"La Rioja no tiene deducción propia por placas ni por eficiencia energética. COMPROBADO el 11/09/2026 en el manual de IRPF de la AEAT. OJO con una confusión habitual: su deducción por rehabilitación de vivienda habitual es un régimen transitorio de obras anteriores a 2013 y no tiene nada que ver con la energía. Sí se aplica la estatal del 40 %." }, foral:false },
+
+    /* 24/09/2026: Ceuta y Melilla no estaban, y la lista de energia.html enseñaba
+       17 de 19. Entran SIN NINGUNA CIFRA: no se ha revisado nada suyo todavía. */
+    ce: { nombre:"Ceuta",
+          subvencion:{ estado:"sinVerificar", importe:0, nota:"Todavía no hemos revisado si Ceuta tiene alguna ayuda abierta para placas: pregúntalo en la Ciudad Autónoma antes de contar con ella." },
+          deduccion:null, deduccionSinVerificar:true, foral:false },
+
+    me: { nombre:"Melilla",
+          subvencion:{ estado:"sinVerificar", importe:0, nota:"Todavía no hemos revisado si Melilla tiene alguna ayuda abierta para placas: pregúntalo en la Ciudad Autónoma antes de contar con ella." },
+          deduccion:null, deduccionSinVerificar:true, foral:false }
   },
 
   /* -----------------------------------------------------------
@@ -538,7 +567,7 @@ window.DATOS_IMMOIA = {
     gr:  [0.25,  5, 0,   "Solo vivienda habitual, con empadronamiento y contrato de mantenimiento.", "Granadilla de Abona", true],
     st:  [0.20,  3, 0,   "SIN CONFIRMAR que cubra fotovoltaica: la ordenanza publicada habla de solar térmica. Llamar al ayuntamiento.", "Santiago del Teide", false],
     sm:  [0,     0, 0,   "El ayuntamiento anunció un 50 % en 2022. Revisado el 11/09/2026: la ordenanza del IBI consta modificada y en vigor desde el 30/05/2024 (BOP Santa Cruz nº 65, 29/05/2024), pero la sede solo enlaza el PDF del boletín y los años, los requisitos y el tope SIGUEN SIN PUBLICARSE de forma accesible. Aquí va a cero hasta confirmarlo por teléfono.", "San Miguel de Abona", false],
-    ar:  [0,     0, 0,   "Arona no tiene bonificación de IBI ni de ICIO por placas solares.", "Arona", false],
+    ar:  [0,     0, 0,   "Arona: no consta bonificación de IBI ni de ICIO por placas solares. Sin verificar en su ordenanza fiscal: confírmalo en el ayuntamiento antes de contar con ella. Aquí va a cero.", "Arona", false],
     ad:  [0,     0, 0,   "COMPROBADO el 11/09/2026 en las ordenanzas del propio ayuntamiento: Adeje NO tiene bonificación de IBI por placas solares. Su ordenanza del IBI para 2026 es la misma de 2025 y solo bonifica urbanización/construcción, VPO y familia numerosa. Ya no hace falta llamar para esto.", "Adeje", false],
     otro:[0,     0, 0,   "En tu municipio no consta bonificación publicada. Se puede consultar en el Consorcio de Tributos: 922 20 82 00.", "otro municipio de Tenerife", false]
   },
