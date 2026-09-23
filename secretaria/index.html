@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMMO IA · La Secretaria</title>
+<!--
+  ==================================================================
+  IMMO IA · LA SECRETARIA
+  ------------------------------------------------------------------
+  LA APLICACIÓN DE LAS INMOBILIARIAS. No es la de particulares y no
+  comparte nada con ella: ni pantallas, ni ficheros, ni datos.
+
+  Esta página trabaja PARA LA AGENCIA. Por eso está aparte: una
+  secretaria de agencia representa a quien vende, y no puede dar
+  consejo a quien compra. Y por eso los papeles legales son
+  distintos: de los datos de la oficina la responsable es la
+  inmobiliaria, y nosotros solo los custodiamos.
+
+  LO PRIMERO QUE SE VE ES SU MESA (cambiado por el CARRIL 2 el
+  19/09/2026; antes se entraba por las carpetas). Al abrir están sus
+  expedientes, lo que le frena hoy y lo que le vence esta semana.
+  Las carpetas y la voz están a un clic, en la barra de abajo y en
+  los dos botones de arriba de la mesa.
+
+  ESTO CONTRADICE LA DECISIÓN QUE HABÍA TOMADO EL CARRIL 1 («lo
+  primero es el wow»). Se cambia porque el encargo del carril 2 lo
+  pide con esas palabras. Se da la vuelta cambiando una sola línea:
+  casa\casa.js, la constante ENTRA_POR.
+
+  NADA DE LA PARTE DE LAS CARPETAS SALE DE ESTE ORDENADOR.
+  En esta página no hay ni una dirección de internet: ni una fuente
+  de Google, ni un icono de fuera, ni una librería de una CDN, ni
+  un fetch, ni un XHR, ni un WebSocket. Se abre con doble clic y
+  funciona con el cable de red desenchufado.
+
+  QUÉ ES DE QUIÉN (para que no se pierda al tocarlo):
+    · wow/    SALIÓ de SUBIR\EL_WOW_DEL_LUNES\, PERO NO ESTÁ SIN TOCAR.
+              Cuatro de sus ocho ficheros son distintos de los de allí:
+              repaso.js, deduccion.js, ordenes.js y pantalla.js.
+              LOS BUENOS SON LOS DE AQUÍ, y está comprobado a mano:
+              el repaso viejo decía en el titular «en cinco el plazo
+              ya se pasó» y «te frena diez de los 25» mientras abajo
+              solo pintaba cuatro y nueve. El de aquí dice cuatro y
+              nueve, que es lo que se ve en la pantalla.
+              Los otros cuatro (copia_y_deshacer.js, lector_carpeta.js,
+              pdfjs_motor.js, pdfjs_worker.js) sí son idénticos.
+              LA VERSIÓN QUE MANDA ES LA DE ESTA CARPETA.
+    · voz/    viene entero de SUBIR\LA_IDA_Y_VUELTA\ASISTENTE_UNO\
+              · solo se ha cambiado voz/configuracion.js
+    · casa/   lo único escrito aquí: la puerta, la barra de abajo
+              y la mesa
+  ==================================================================
+-->
+<style>
+  :root{
+    --tinta:#14181d; --tinta2:#4a5560; --tinta3:#7a8794;
+    --papel:#f6f7f9; --blanco:#ffffff; --linea:#e2e6ea;
+    --azul:#1d4ed8; --azul-claro:#eef2ff;
+    --rojo:#b91c1c; --rojo-claro:#fef2f2;
+    --ambar:#a16207; --ambar-claro:#fffbeb;
+    --verde:#15803d; --verde-claro:#f0fdf4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--papel); color:var(--tinta);
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    font-size:16px; line-height:1.5;
+  }
+  .ancho{max-width:1080px;margin:0 auto;padding:0 20px}
+  header{background:var(--blanco);border-bottom:1px solid var(--linea);padding:18px 0}
+  header .marca{font-weight:700;letter-spacing:.5px}
+  header .lema{color:var(--tinta3);font-size:14px}
+  h1{font-size:30px;margin:28px 0 6px;line-height:1.2}
+  h2{font-size:20px;margin:34px 0 10px;border-bottom:2px solid var(--tinta);padding-bottom:6px}
+  h3{font-size:16px;margin:22px 0 8px;color:var(--tinta2);text-transform:uppercase;letter-spacing:.6px}
+  h4{font-size:15px;margin:14px 0 6px}
+  p{margin:8px 0}
+  .flojo{color:var(--tinta3);font-size:14px}
+
+  /* ---------- la puerta ---------- */
+  #zona{
+    border:3px dashed #c3ccd6; border-radius:14px; background:var(--blanco);
+    padding:56px 26px; text-align:center; margin:22px 0; transition:.12s;
+  }
+  #zona.encima{border-color:var(--azul);background:var(--azul-claro)}
+  #zona .grande{font-size:26px;font-weight:700;margin-bottom:6px}
+  #zona .chico{color:var(--tinta2);margin-bottom:20px}
+  button{
+    font:inherit; cursor:pointer; border-radius:8px; border:1px solid var(--tinta);
+    background:var(--tinta); color:#fff; padding:11px 18px; font-weight:600;
+  }
+  button.suave{background:var(--blanco);color:var(--tinta);border-color:#c3ccd6}
+  button:hover{opacity:.88}
+  .privacidad{
+    background:var(--verde-claro);border:1px solid #bbf7d0;border-radius:10px;
+    padding:14px 16px;margin:18px 0;color:#14532d
+  }
+  .privacidad b{color:#14532d}
+  #error{background:var(--rojo-claro);border:1px solid #fecaca;color:var(--rojo);
+         padding:12px 14px;border-radius:8px;margin:14px 0;display:none}
+
+  /* ---------- la voz que cuenta ---------- */
+  #voz_caja{background:var(--blanco);border:1px solid var(--linea);border-left:4px solid var(--azul);
+            border-radius:10px;padding:12px 16px;margin:0 0 18px}
+  #voz_cabecera{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  #voz_texto{margin-top:6px}
+  .voz_frase{margin:4px 0}
+
+  /* ---------- trabajando ---------- */
+  #barra{height:10px;background:#e5e9ee;border-radius:99px;overflow:hidden;margin:16px 0}
+  #barra_dentro{height:100%;width:0;background:var(--azul);transition:width .15s}
+  #t_detalle{font-size:13px;color:var(--tinta3);min-height:20px;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- cuentas ---------- */
+  .cuenta{background:var(--blanco);border:1px solid var(--linea);border-left:4px solid var(--tinta3);
+          border-radius:8px;padding:11px 14px;margin:8px 0}
+  .cuenta.bien{border-left-color:var(--verde)}
+  .cuenta.ojo{border-left-color:var(--ambar)}
+  .cuenta_txt{display:block}
+
+  /* ---------- el parte ---------- */
+  #parte_texto{background:var(--blanco);border:1px solid var(--linea);border-radius:12px;
+               padding:20px 24px;margin:10px 0 6px}
+  .parte_linea{font-size:18px;line-height:1.55;margin:0 0 12px}
+  .parte_pregunta{font-size:19px;font-weight:700;margin:16px 0 0}
+
+  /* ---------- avisos ---------- */
+  .bloque{background:var(--blanco);border:1px solid var(--linea);border-radius:12px;padding:6px 16px 14px;margin:8px 0 18px}
+  .aviso{border-left:4px solid var(--tinta3);padding:9px 0 9px 13px;margin:12px 0}
+  .aviso.c_vencido{border-left-color:var(--rojo)}
+  .aviso.c_vence{border-left-color:var(--ambar)}
+  .aviso.c_falta{border-left-color:var(--azul)}
+  .aviso.c_parado{border-left-color:#6b21a8}
+  .aviso.c_choca{border-left-color:#0e7490}
+  .aviso.c_dato{border-left-color:#c3ccd6}
+  .aviso.flojito{opacity:.75}
+  .aviso_donde{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--tinta3)}
+  .aviso_titulo{font-weight:700;margin:2px 0}
+  .aviso_detalle{color:var(--tinta2)}
+  .aviso_fuente{font-size:12.5px;color:var(--tinta3);margin-top:3px;font-style:italic}
+  .nada{color:var(--tinta3);padding:10px 0}
+  .grupo{margin:10px 0 14px}
+  .fila{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px dotted var(--linea)}
+  .fila_que{font-weight:600}
+  .fila_mas{color:var(--tinta3);font-size:14px}
+
+  /* ---------- pruebas ---------- */
+  .pruebas{display:block;margin-top:5px}
+  .boton_prueba{background:none;border:none;color:var(--azul);padding:0;font-size:13px;
+                font-weight:600;text-decoration:underline;cursor:pointer}
+  .boton_prueba.abierto{color:var(--tinta2)}
+  .prueba_caja{background:#f9fafb;border:1px solid var(--linea);border-radius:8px;
+               padding:9px 12px;margin-top:6px;max-height:320px;overflow:auto}
+  .prueba_titulo{font-weight:700;font-size:13px;margin:4px 0 6px}
+  .prueba_fila{font-size:13px;padding:3px 0;border-bottom:1px dotted #e8ecf0;
+               display:flex;gap:10px;justify-content:space-between}
+  .prueba_nombre{font-family:Consolas,"Courier New",monospace;word-break:break-all}
+  .prueba_papel{color:var(--tinta3);text-align:right;flex:0 0 46%}
+
+  /* ---------- los seis órdenes ---------- */
+  #tabs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+  .tab{background:var(--blanco);color:var(--tinta2);border:1px solid var(--linea);
+       padding:9px 13px;font-weight:600;font-size:14px;border-radius:9px;text-align:left}
+  .tab.activa{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+  .sello{display:block;font-size:11px;font-weight:700;color:var(--rojo);margin-top:2px}
+  .tab.activa .sello{color:#fca5a5}
+  #plan{background:var(--blanco);border:1px solid var(--linea);border-radius:12px;padding:16px 18px}
+  #plan_ventaja{background:var(--ambar-claro);border:1px solid #fde68a;color:var(--ambar);
+                padding:9px 12px;border-radius:8px;margin:8px 0;font-size:14.5px}
+  #plan_notas{margin:8px 0 12px;padding-left:20px;color:var(--tinta2);font-size:14.5px}
+  #plan_notas li{margin:4px 0}
+  #arbol{background:#fbfcfd;border:1px solid var(--linea);border-radius:8px;
+         padding:10px;max-height:460px;overflow:auto;font-size:13.5px}
+  .nodo{padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nodo.carpeta{font-weight:700}
+  .icono{color:var(--tinta3);margin-right:4px}
+  .cuantos{color:var(--tinta3);font-weight:400;font-size:12px;margin-left:8px}
+  .nombre_fichero{font-family:Consolas,"Courier New",monospace}
+  .de_donde{color:var(--tinta3);font-size:12px;margin-left:10px}
+  .acciones{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 6px}
+  #estado_copia{margin:8px 0;color:var(--tinta2)}
+  footer{margin:40px 0 60px;color:var(--tinta3);font-size:13px}
+</style>
+<link rel="icon" href="casa/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="casa/casa.css">
+<link rel="stylesheet" href="mesa/la_mesa.css">
+<link rel="stylesheet" href="mesa/meter_y_cambiar.css">  <!-- PESTAÑA 6 -->
+</head>
+<body>
+
+<header><div class="ancho">
+  <div class="marca">IMMO IA · La Secretaria</div>
+  <div class="lema">Tus papeles, mirados todos a la vez. En tu ordenador y sin que salga nada de aquí.</div>
+</div></header>
+
+<!-- ==================================================================
+     LUGAR 1 · LAS CARPETAS. NO es lo primero que se ve: se entra por
+     la mesa (lo decidió el CEO el 20/09/2026) y aquí se llega con el
+     botón grande de arriba de la mesa, o con «Tus carpetas» de la
+     barra de abajo.
+
+     Lo de dentro SALIÓ de EL_WOW_DEL_LUNES, pero cuatro de sus ocho
+     ficheros están cambiados aquí y los que mandan son los de esta
+     carpeta. Está explicado arriba, en la cabecera del fichero.
+     ================================================================== -->
+<div id="lugar_carpetas">
+<main class="ancho">
+
+<!-- ============================ 1 · LA PUERTA ============================ -->
+<section id="p_puerta">
+  <h1>Suelta aquí tu carpeta.</h1>
+  <p class="flojo">Da igual cómo la tengas: una carpeta por expediente, doscientas cosas sueltas
+     en un cajón, o un desastre con copias y nombres raros. Se mira el fichero, no la carpeta.</p>
+
+  <div id="zona">
+    <div class="grande">Arrastra aquí la carpeta entera</div>
+    <div class="chico">o si lo prefieres:</div>
+    <button id="boton_carpeta">Elegir carpeta</button>
+    <div class="chico" id="pista_carpeta">Se abrirá una ventana para que elijas la carpeta.
+      Después pulsa el botón de abajo a la derecha para confirmar. Si te arrepientes, pulsa Escape.</div>
+    <button id="boton_carpeta_real" class="suave" style="display:none">Elegir carpeta sin ventana</button>
+    <input type="file" id="entrada_carpeta" webkitdirectory directory multiple style="display:none">
+  </div>
+
+  <div class="privacidad">
+    <b>Nada de esto sale de tu ordenador.</b> Esta página no tiene ni una dirección de internet dentro.
+    Tus papeles se abren aquí, en esta pestaña, y no se manda ni uno a ningún servidor.
+    Puedes desenchufar el cable de red y funciona igual.
+    <div id="que_sabe" class="flojo" style="margin-top:6px"></div>
+  </div>
+
+  <div id="error"></div>
+</section>
+
+<!-- ============================ 2 · TRABAJANDO ============================ -->
+<section id="p_trabajando" style="display:none">
+  <h1>Mirando tus papeles…</h1>
+  <p id="t_que"></p>
+  <div id="barra"><div id="barra_dentro"></div></div>
+  <p id="t_cuantos" class="flojo"></p>
+  <div id="t_detalle"></div>
+</section>
+
+<!-- ============================ 3 · EL PARTE ============================ -->
+<section id="p_parte" style="display:none">
+
+  <div id="voz_caja">
+    <div id="voz_cabecera">
+      <b>Te lo cuento en alto</b>
+      <button type="button" id="boton_callar" class="suave">Callar la voz</button>
+    </div>
+    <div id="voz_estado" class="flojo"></div>
+    <div id="voz_texto"></div>
+  </div>
+
+  <h2>Lo que he podido leer, y lo que no</h2>
+  <div id="cuentas"></div>
+
+  <h2>Lo que te digo</h2>
+  <div id="parte_texto"></div>
+  <p class="flojo">Esto no lo ha escrito una IA: sale de las fechas de tus propios papeles.
+     Tarda menos de un parpadeo, no gasta nada y no puede inventarse nada.</p>
+
+  <h3>Qué tienes</h3>
+  <div class="bloque" id="b_tienes"></div>
+
+  <h3>Qué se te cae encima</h3>
+  <div class="bloque" id="b_vence"></div>
+
+  <h3>Qué te falta</h3>
+  <div class="bloque" id="b_falta"></div>
+
+  <h3>Qué está parado</h3>
+  <div class="bloque" id="b_parado"></div>
+
+  <h3>Qué no cuadra</h3>
+  <div class="bloque" id="b_raro"></div>
+
+  <h2>Cómo te lo ordenaría</h2>
+  <p class="flojo">Seis maneras. Los dos primeros son los que el Explorador de Windows no sabe hacer.</p>
+  <div id="tabs"></div>
+
+  <div id="plan">
+    <h4 id="plan_titulo"></h4>
+    <p id="plan_sub" class="flojo"></p>
+    <div id="plan_ventaja"></div>
+    <ul id="plan_notas"></ul>
+    <p id="plan_cuenta" class="flojo"></p>
+    <div id="arbol"></div>
+
+    <div class="acciones">
+      <button id="boton_ordenar">Sí, ordénamelo en una copia</button>
+      <button id="boton_descargar_plan" class="suave">Descargar solo el plan</button>
+      <button id="boton_deshacer" class="suave" style="display:none">Deshacer lo último</button>
+      <button id="volver" class="suave">Empezar otra vez</button>
+    </div>
+    <p id="estado_copia"></p>
+    <p class="flojo">Hasta que no le des a «Sí, ordénamelo» no se escribe absolutamente nada.
+       Y cuando se escribe, se escribe una <b>copia</b>: tus carpetas de siempre se quedan como están.
+       Todo lo que se copia queda apuntado en un fichero, y por eso se puede deshacer.</p>
+  </div>
+</section>
+
+<footer class="ancho">
+  IMMO IA · todo ocurre en este ordenador · sin IA, sin internet, sin coste por consulta
+</footer>
+</main>
+</div><!-- /lugar_carpetas -->
+
+<!-- ==================================================================
+     LUGAR 2 · TU MESA. Es lo primero que ve al abrir (CARRIL 2).
+     Todo lo de dentro lo pinta mesa\la_mesa.js. Lo que le frena hoy
+     NO se calcula aquí: se le pide a wow\repaso.js, que ya está
+     examinado, y se pinta tal cual lo devuelve.
+     ================================================================== -->
+<div id="lugar_mesa" class="ancho" style="display:none">
+
+  <!-- la lista: su mesa entera -->
+  <div id="mesa_lista">
+
+    <!-- ==============================================================
+         EL BOTÓN DEL WOW. Va AQUÍ, grande y lo primero de todo, porque
+         es el gesto de la demostración: ella suelta su carpeta y en un
+         segundo ve sus papeles mirados. Decidido por el CEO el
+         20/09/2026: se entra por la mesa, y dentro de la mesa lo
+         primero que se ve es esto.
+         ============================================================== -->
+    <div id="mesa_wow">
+      <div id="mesa_wow_titular">Arrastra aquí tus carpetas</div>
+      <div id="mesa_wow_sub">Como las tengas: una por expediente, todo suelto en un cajón,
+         o un desastre con copias y nombres raros. Se miran todas a la vez, en este
+         ordenador, y no sale ni un papel de aquí.</div>
+      <button type="button" id="ir_a_carpetas">Elegir la carpeta</button>
+    </div>
+
+    <h1>Tu mesa.</h1>
+    <p class="flojo" id="mesa_pie"></p>
+    <div id="la_copia"></div>  <!-- LA COPIA DE SEGURIDAD: aquí se pinta «última copia guardada…», por dónde va y sus botones -->
+
+    <div class="mesa_atajos">
+      <button type="button" id="ir_a_voz">Hablar con ella</button>
+    </div>
+
+    <h2>Lo que te frena hoy</h2>
+    <div id="mesa_frena"></div>
+
+    <h2>Lo que vence esta semana</h2>
+    <div id="mesa_avisos"></div>
+
+    <h2>Tus expedientes</h2>
+    <div id="mesa_semana"></div>
+    <div id="mesa_expedientes"></div>
+  </div>
+
+  <!-- la ficha de uno: se enseña en lugar de la lista, y se vuelve -->
+  <div id="mesa_ficha" style="display:none"></div>
+</div>
+
+<!-- ==================================================================
+     LUGAR 3 · HABLAR. La misma voz de LA_IDA_Y_VUELTA, dentro de esta
+     aplicación. No se carga hasta que se pulsa: mientras ella está en
+     sus carpetas, esta parte no existe y no pide nada.
+     ================================================================== -->
+<div id="lugar_voz" class="ancho" style="display:none">
+  <h1>Hablar con la secretaria.</h1>
+  <p class="flojo" id="voz_pie"></p>
+  <div id="voz_aviso" class="aviso_casa" style="display:none"></div>
+  <div id="voz_marco"></div>
+</div>
+
+<!-- ==================================================================
+     LA BARRA DE ABAJO. Es todo el menú que hay, y está detrás del wow.
+     ================================================================== -->
+<nav id="barra_casa" aria-label="Dónde estás">
+  <div class="ancho barra_dentro_casa">
+    <span class="barra_marca">IMMO IA · La Secretaria</span>
+    <span class="barra_sitios">
+      <button type="button" class="sitio activo" data-lugar="mesa">Tu mesa</button>
+      <button type="button" class="sitio" data-lugar="carpetas">Tus carpetas</button>
+      <button type="button" class="sitio" data-lugar="voz">Hablar</button>
+    </span>
+  </div>
+</nav>
+
+<!-- ==================================================================
+     Las piezas. Todas locales, todas en esta misma carpeta.
+     Las ocho primeras salieron de EL WOW DEL LUNES; cuatro de ellas
+     están cambiadas aquí, y las de aquí son las que mandan.
+     ================================================================== -->
+<script src="wow/pdfjs_worker.js"></script>
+<script src="wow/pdfjs_motor.js"></script>
+<script src="wow/repaso.js"></script>
+<script src="wow/lector_carpeta.js"></script>
+<script src="wow/deduccion.js"></script>
+<script src="wow/ordenes.js"></script>
+<script src="wow/copia_y_deshacer.js"></script>
+<script src="wow/la_voz.js"></script>
+<script src="wow/pantalla.js"></script>
+<script src="casa/los_expedientes.js"></script>
+<script src="casa/el_almacen.js"></script>  <!-- PESTAÑA 6: lo suyo, guardado en este ordenador -->
+<script src="mesa/la_mesa.js"></script>
+<script src="mesa/meter_y_cambiar.js"></script>  <!-- PESTAÑA 6: meter y cambiar -->
+<script src="casa/casa.js"></script>
+<script src="casa/la_copia.js"></script>  <!-- LA COPIA DE SEGURIDAD: arranca y se pinta sola en el hueco #la_copia -->
+</body>
+</html>

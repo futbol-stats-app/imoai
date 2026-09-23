@@ -1,0 +1,178 @@
+/* ==================================================================
+   la_mesa.css · LA PIEL DE LA MESA (CARRIL 2)
+
+   Va encima de casa\casa.css, que no se toca más de lo necesario.
+   Usa los mismos colores de la casa (las variables de
+   LA_SECRETARIA.html): aquí no se inventa ninguna paleta nueva.
+
+   REGLA: la mesa se lee de un vistazo. Lo urgente arriba y con color;
+   lo demás, en gris y callado.
+   ================================================================== */
+
+/* ==================================================================
+   EL BOTÓN DEL WOW · lo primero y lo más grande de la mesa
+   ------------------------------------------------------------------
+   Tiene que verse ENTERO sin bajar la pantalla y tiene que ser lo más
+   grande que hay: es el gesto de la demostración. Por eso el titular
+   va a 30 px (el «Tu mesa.» de debajo baja a 24) y el botón a 19.
+   En móvil (390 px) se encoge, pero sigue siendo lo primero.
+   ================================================================== */
+#mesa_wow {
+  margin: 18px 0 6px; padding: 24px 22px;
+  background: var(--blanco); border: 3px dashed #c3ccd6; border-radius: 14px;
+  text-align: center;
+}
+#mesa_wow_titular { font-size: 30px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; }
+#mesa_wow_sub { color: var(--tinta2); font-size: 15px; max-width: 640px;
+  margin: 0 auto 16px; line-height: 1.45; }
+#mesa_wow button#ir_a_carpetas {
+  font-size: 19px; font-weight: 700; padding: 15px 30px; border-radius: 10px;
+  background: var(--azul); border-color: var(--azul); color: #fff;
+}
+#mesa_wow button#ir_a_carpetas:hover { opacity: .9; }
+@media (max-width: 520px) {
+  #mesa_wow { padding: 16px 12px; }
+  #mesa_wow_titular { font-size: 22px; }
+  #mesa_wow_sub { font-size: 13.5px; margin-bottom: 12px; }
+  #mesa_wow button#ir_a_carpetas { font-size: 16px; padding: 12px 14px; width: 100%; }
+}
+
+/* ---------- el encabezado de la mesa ---------- */
+#lugar_mesa h1 { margin-top: 22px; font-size: 24px; }
+#lugar_mesa h2 {
+  font-size: 20px; margin: 34px 0 10px;
+  border-bottom: 2px solid var(--tinta); padding-bottom: 6px;
+}
+#lugar_mesa h3 { font-size: 15px; margin: 22px 0 8px; color: var(--tinta2);
+  text-transform: uppercase; letter-spacing: .6px; }
+.mesa_sub { font-size: 14px; margin: 16px 0 6px; color: var(--tinta2);
+  text-transform: uppercase; letter-spacing: .6px; }
+.mesa_fecha { color: var(--tinta3); font-size: 13.5px; margin: 6px 0 12px; }
+
+/* ---------- los atajos a los otros dos sitios ---------- */
+.mesa_atajos { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 6px; }
+.mesa_atajos button { background: var(--blanco); color: var(--tinta);
+  border: 1px solid #c3ccd6; font-weight: 600; }
+.mesa_atajos button:hover { background: #f1f4f7; opacity: 1; }
+
+/* ---------- el parte del repaso ---------- */
+.parte_mesa {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: 12px;
+  padding: 18px 22px; margin: 10px 0 14px;
+}
+.parte_linea_mesa { font-size: 17.5px; line-height: 1.55; margin: 0 0 11px; }
+.parte_linea_mesa:last-child { margin-bottom: 0; font-weight: 700; }
+
+/* ---------- un aviso ---------- */
+.aviso_mesa {
+  background: var(--blanco); border: 1px solid var(--linea);
+  border-left: 4px solid var(--tinta3); border-radius: 9px;
+  padding: 10px 14px; margin: 9px 0;
+}
+.aviso_mesa.c_vencido  { border-left-color: var(--rojo); }
+.aviso_mesa.c_vence    { border-left-color: var(--ambar); }
+.aviso_mesa.c_falta    { border-left-color: var(--azul); }
+.aviso_mesa.c_parado   { border-left-color: #6b21a8; }
+.aviso_mesa.c_choca    { border-left-color: #0e7490; }
+.aviso_mesa.c_incompleto { border-left-color: #c3ccd6; }
+.aviso_donde_mesa { font-size: 12px; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--tinta3); }
+.aviso_titulo_mesa { font-weight: 700; margin: 2px 0; }
+.aviso_detalle_mesa { color: var(--tinta2); font-size: 15px; }
+.aviso_fecha_mesa { color: var(--tinta); font-size: 14px; margin-top: 4px; font-weight: 600; }
+.aviso_fuente_mesa { font-size: 12.5px; color: var(--tinta3); margin-top: 3px; font-style: italic; }
+.mesa_enlace {
+  background: none; border: none; color: var(--azul); padding: 0; margin-top: 6px;
+  font-size: 13.5px; font-weight: 600; text-decoration: underline;
+}
+
+/* ---------- la tarjeta de un expediente ---------- */
+.exp_mesa {
+  background: var(--blanco); border: 1px solid var(--linea);
+  border-left: 4px solid var(--tinta3); border-radius: 10px;
+  padding: 13px 17px; margin: 11px 0;
+}
+.exp_que_mesa { color: var(--tinta3); font-size: 12.5px;
+  text-transform: uppercase; letter-spacing: .7px; }
+.exp_donde_mesa { font-weight: 700; font-size: 17.5px; margin: 1px 0 5px; }
+.exp_fase_mesa { margin: 4px 0; color: var(--tinta2); }
+.fase_etiqueta {
+  display: inline-block; background: var(--azul-claro); color: var(--azul);
+  border: 1px solid #c7d2fe; border-radius: 99px;
+  padding: 2px 11px; font-size: 13px; font-weight: 700;
+}
+.exp_porque_mesa { color: var(--tinta3); font-size: 13px; margin: 4px 0; font-style: italic; }
+.exp_cuenta_mesa { color: var(--tinta2); font-size: 14px; margin: 6px 0 2px; }
+.exp_falta_mesa { margin: 6px 0; }
+.exp_falta_tit { font-weight: 600; color: var(--rojo); font-size: 14.5px; }
+.exp_falta_mesa ul { margin: 4px 0 0; padding-left: 20px; }
+.exp_falta_mesa li { font-size: 14.5px; margin: 2px 0; }
+.exp_nada_falta { color: var(--verde); font-size: 14.5px; font-weight: 600; }
+.exp_nolose { color: var(--tinta3); font-size: 14.5px; }
+.exp_plazo_mesa { margin-top: 6px; font-size: 14.5px; font-weight: 600; color: var(--ambar); }
+.exp_ultimo_mesa { margin-top: 6px; color: var(--tinta2); font-size: 14px; }
+.mesa_abrir { margin-top: 11px; }
+
+/* ---------- la ficha de un expediente ---------- */
+#mesa_ficha { margin-top: 10px; }
+.mesa_volver { background: var(--blanco); color: var(--tinta);
+  border: 1px solid #c3ccd6; margin: 6px 0 16px; }
+.ficha_que { color: var(--tinta3); font-size: 12.5px;
+  text-transform: uppercase; letter-spacing: .7px; }
+.ficha_donde { font-size: 25px; margin: 2px 0 4px; border: none; padding: 0; }
+.ficha_id { color: var(--tinta3); font-size: 13px; font-family: Consolas, "Courier New", monospace; }
+.ficha_quien { color: var(--tinta2); margin: 6px 0; }
+.ficha_nolose { color: var(--tinta3); margin: 6px 0; font-style: italic; }
+.ficha_fase { margin: 8px 0 2px; color: var(--tinta2); }
+.ficha_faltan { padding-left: 20px; }
+.ficha_faltan li { margin: 4px 0; }
+
+.papeles { margin: 6px 0; }
+.papel {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: 9px;
+  padding: 10px 14px; margin: 8px 0; border-left: 4px solid var(--linea);
+}
+.papel_esta { border-left-color: var(--verde); }
+.papel_no   { border-left-color: var(--rojo); }
+.papel_cab { display: flex; gap: 10px; align-items: baseline; }
+.papel_marca { font-size: 11.5px; font-weight: 800; letter-spacing: .8px;
+  border-radius: 4px; padding: 1px 7px; }
+.papel_esta .papel_marca { background: var(--verde-claro); color: var(--verde); }
+.papel_no   .papel_marca { background: var(--rojo-claro);  color: var(--rojo); }
+.papel_estado { font-size: 13px; color: var(--tinta3); }
+.papel_cual { font-weight: 700; margin: 4px 0 2px; }
+.papel_literal { color: var(--tinta2); font-size: 14px; }
+.papel_fecha { color: var(--tinta2); font-size: 14px; margin-top: 4px; }
+.papel_fecha_no { color: var(--tinta3); font-size: 13.5px; margin-top: 4px; font-style: italic; }
+.papel_fecha_mala { color: var(--rojo); font-size: 14px; margin-top: 4px; font-weight: 600; }
+.papel_plazo { margin-top: 4px; font-size: 14.5px; font-weight: 600; }
+.papel_plazo.plazo_pasado { color: var(--rojo); }
+.papel_plazo.plazo_cerca  { color: var(--ambar); }
+.papel_plazo_no { margin-top: 4px; font-size: 13px; color: var(--tinta3); font-style: italic; }
+
+/* ---------- las notas de la semana ---------- */
+.semana_caja { margin: 14px 0 22px; }
+.semana_caja > summary { cursor: pointer; color: var(--tinta2); font-weight: 600;
+  padding: 8px 0; }
+.semana_casa {
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: 12px;
+  padding: 14px 18px; margin: 8px 0 0; white-space: pre-wrap;
+  font-size: 15.5px; line-height: 1.6;
+}
+
+/* ---------- cuando algo no se puede ---------- */
+.mesa_roto {
+  background: var(--rojo-claro); border: 1px solid #fecaca; color: var(--rojo);
+  padding: 12px 15px; border-radius: 9px; margin: 10px 0; font-weight: 600;
+}
+.mesa_vacio { color: var(--tinta3); padding: 10px 0; }
+.mesa_nota  { color: var(--tinta2); padding: 8px 0; }
+.mesa_luego > summary { cursor: pointer; color: var(--tinta2); padding: 8px 0; font-weight: 600; }
+
+@media (max-width: 560px) {
+  .ficha_donde { font-size: 21px; }
+  .parte_linea_mesa { font-size: 16px; }
+}
+
+/* el botón del wow, cuando le están soltando una carpeta encima */
+#mesa_wow.encima { border-color: var(--azul); background: var(--azul-claro); }

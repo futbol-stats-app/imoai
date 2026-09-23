@@ -1,0 +1,60 @@
+/* meter_y_cambiar.css · PESTAÑA 6. Usa los colores que ya había en la
+   página (--azul, --rojo, --linea…). No inventa ninguno nuevo. */
+.mc_barra{margin:14px 0 22px;padding:14px;border:1px solid var(--linea,#e2e6ea);border-radius:12px;background:var(--blanco,#fff)}
+.mc_titulo{margin:0 0 8px;font-size:1.15rem}
+.mc_sub{margin:14px 0 6px;font-size:1rem}
+.mc_fila{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.mc_entrada{font:inherit;font-size:16px;padding:10px 12px;border:1px solid #b9c2cc;border-radius:8px;background:#fff;color:inherit;box-sizing:border-box;min-width:0}
+#mc_direccion{flex:1 1 100%;font-size:18px}
+.mc_pequena{width:100%;margin:2px 0 4px;font-size:15px}
+.mc_fecha{width:auto}
+#mc_buscar{flex:1 1 260px}
+.mc_boton{font:inherit;font-size:15px;padding:9px 14px;border-radius:8px;border:1px solid #b9c2cc;background:#fff;cursor:pointer;color:inherit}
+.mc_boton:hover{border-color:var(--azul,#1d4ed8)}
+.mc_boton:disabled{opacity:.5;cursor:not-allowed}
+.mc_principal{background:var(--azul,#1d4ed8);border-color:var(--azul,#1d4ed8);color:#fff;font-weight:600}
+.mc_botones .mc_principal{flex:1 1 150px;font-size:17px;padding:12px}
+.mc_peligro{border-color:var(--rojo,#b91c1c);color:var(--rojo,#b91c1c)}
+.mc_suave{border-color:transparent;background:transparent;text-decoration:underline;padding:6px}
+.mc_enlace{font:inherit;border:0;background:none;color:var(--azul,#1d4ed8);text-decoration:underline;cursor:pointer;padding:0}
+.mc_mensaje{margin:10px 0;padding:10px 12px;border-radius:8px;font-weight:600}
+.mc_bien{background:#ecfdf3;color:#065f46;border:1px solid #a7f3d0}
+.mc_error{background:var(--rojo-claro,#fef2f2);color:var(--rojo,#b91c1c);border:1px solid #fca5a5}
+.mc_info{background:var(--azul-claro,#eef2ff);color:#1e3a8a;border:1px solid #c7d2fe}
+.mc_aviso_fijo{margin:0 0 10px;padding:10px 12px;border-radius:8px;font-weight:600}
+.mc_deshacer{margin-top:6px;background:#fffbeb;border-color:#f59e0b}
+.mc_mas{margin-top:12px}
+.mc_mas summary{cursor:pointer;color:var(--tinta2,#4a5560)}
+.mc_archivado,.mc_fecha_linea,.mc_nota_linea{padding:6px 0;border-bottom:1px solid var(--linea,#e2e6ea)}
+.mc_pasada{color:var(--rojo,#b91c1c)}
+.mc_cerca{font-weight:600}
+.mc_sello{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;margin-bottom:4px}
+.mc_sello_tuyo{background:var(--azul,#1d4ed8);color:#fff}
+.mc_sello_ejemplo{background:#eef0f3;color:#4a5560}
+.mc_panel{margin:16px 0;padding:14px;border:2px solid var(--azul,#1d4ed8);border-radius:12px;background:#fff}
+.mc_bloque{margin:10px 0}
+.mc_papel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--linea,#e2e6ea)}
+.mc_papel_cual{flex:1 1 100%;font-weight:600}
+.mc_nota{width:100%;min-height:70px}
+.mc_nota_texto{white-space:pre-wrap;overflow-wrap:anywhere}
+.mc_nota_ejemplo{margin:0;color:var(--tinta2,#4a5560)}
+.mc_pregunta{font-weight:600;color:var(--rojo,#b91c1c)}
+.mc_borrar_caja{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mc_etiqueta{display:block;margin:6px 0;font-size:.95rem}
+.mc_cerrar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mc_cerrar .mc_sub{flex:1 1 100%}
+.exp_mesa .exp_donde_mesa,.ficha_donde{overflow-wrap:anywhere}
+@media (max-width:480px){
+  .mc_barra{padding:10px}
+  .mc_fila > .mc_entrada{flex:1 1 100%}
+  .mc_papel .mc_entrada{flex:1 1 45%}
+}
+
+/* EL CARTEL DEL ORDEN DE LA FECHA (21/09/2026).
+   Va en su propia línea, debajo de la casilla, y con letra de 13 px:
+   por debajo de 12 no se lee bien, y esto hay que leerlo. */
+.mc_orden_fecha{flex:1 1 100%;display:block;margin:2px 0 0;font-size:13px;line-height:1.35;color:var(--tinta2,#4a5560)}
+.mc_papel .mc_orden_fecha{flex:1 1 100%}
+/* cuando el cartel devuelve lo que ella acaba de escribir, se lee mas
+   fuerte que el aviso de antes: es lo que tiene que comprobar. */
+.mc_orden_eco{flex:1 1 100%;display:block;margin:2px 0 0;font-size:13px;line-height:1.35;font-weight:600;color:var(--tinta,#1b232b)}
