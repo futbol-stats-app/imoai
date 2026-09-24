@@ -2,6 +2,26 @@
 <html lang="es" data-marca="boletin">
 <head>
 <meta charset="utf-8">
+<!-- ══════════════════════════════════════════════════════════════════
+     DATOS DEL TITULAR · AQUÍ Y EN NINGÚN OTRO SITIO
+     Cuando la sociedad esté constituida, se rellenan estos 5 valores y
+     nada más. El MISMO bloque está al principio de privacidad.html:
+     hay que cambiarlo en los dos ficheros, igual.
+
+     MODO SEGURO: mientras denominación, NIF o domicilio estén vacíos,
+     la página NO pinta ningún dato del titular y dice «Datos del titular
+     en trámite de inscripción». Aquí no se pone NUNCA el nombre, el DNI
+     ni la casa de una persona física.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+var TITULAR = {
+  denominacion: "",   /* la razón social tal como sale en la escritura, con «S.L.» */
+  nif:          "",   /* el NIF de la sociedad */
+  domicilio:    "",   /* el domicilio social completo, con código postal y provincia */
+  registro:     "",   /* «Registro Mercantil de …, tomo …, folio …, hoja …, inscripción …» */
+  correo:       "immoai.contacto@gmail.com"   /* el correo de contacto de la sociedad */
+};
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aviso legal · IMMO IA</title>
 <meta name="robots" content="noindex">
@@ -27,21 +47,30 @@ mark{background:#F3E4C7;padding:1px 4px;border-radius:3px}
 .rellenar ol{margin:8px 0 0;padding-left:20px}
 .hueco{background:#FFE9A8;border:1px solid #C9891F;border-radius:4px;padding:2px 7px;
  font-weight:700;color:#6B4A10;font-size:14px}
+[hidden]{display:none!important}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--linea);font-size:13px;color:var(--tinta-2)}
 </style></head><body><div class="e">
 <div class="ref">IMMO IA · Aviso legal</div>
 <h1>Aviso legal</h1>
 <div class="pendiente"><strong>Demostración.</strong>
 IMMO IA no presta ningún servicio ni cobra a nadie: lo que se enseña son servicios que
-se ofrecerían en el futuro. Esta página se revisará con alguien que la firme antes de
-que empiece a haber clientes.</div>
+se ofrecerían en el futuro. Este texto está pendiente de revisión por un abogado antes
+de que empiece a haber clientes.</div>
 
 <h2>1. Quién está detrás de esta web</h2>
-<ul>
-<li><b>Titular:</b> Iván Sincheon Jiménez</li>
-<li><b>NIF:</b> 45706288K</li>
-<li><b>Domicilio:</b> Las Terrazas 520, Playa de las Américas, 38660 Adeje, Santa Cruz de Tenerife</li>
-<li><b>Correo de contacto:</b> immoai.contacto@gmail.com</li>
+<div class="rellenar" id="titular-en-tramite" data-solo-tramite>
+<strong>Datos del titular en trámite de inscripción</strong>
+IMMO IA se está constituyendo como sociedad limitada. En cuanto esté inscrita, aquí
+aparecerán su denominación social, su NIF, su domicilio social y sus datos en el
+Registro Mercantil. Mientras tanto puedes escribirnos a
+<a data-t="correo" data-t-enlace href="mailto:immoai.contacto@gmail.com">immoai.contacto@gmail.com</a>.
+</div>
+<ul id="titular-datos" data-solo-completo hidden>
+<li><b>Titular:</b> <span data-t="denominacion">—</span></li>
+<li><b>NIF:</b> <span data-t="nif">—</span></li>
+<li><b>Domicilio social:</b> <span data-t="domicilio">—</span></li>
+<li><b>Datos registrales:</b> <span data-t="registro">Inscripción en el Registro Mercantil en trámite</span></li>
+<li><b>Correo de contacto:</b> <a data-t="correo" data-t-enlace href="mailto:immoai.contacto@gmail.com">immoai.contacto@gmail.com</a></li>
 <li><b>Nombre comercial:</b> IMMO IA</li>
 </ul>
 <p>Esta información se publica en cumplimiento del artículo 10 de la Ley 34/2002,
@@ -49,36 +78,69 @@ de servicios de la sociedad de la información y de comercio electrónico (LSSI-
 
 <h2>2. Qué es esta web, y qué no es</h2>
 <p><b>IMMO IA es hoy una demostración.</b> No tenemos clientes, no cobramos a nadie y
-no tramitamos ninguna solicitud. Lo que ofrece esta página es información sobre ayudas
+no tramitamos ninguna solicitud. Lo que ofrece esta web es información sobre ayudas
 públicas a la vivienda y un cálculo orientativo de encaje con los requisitos publicados
-de cada convocatoria.</p>
-<p><b>No somos asesores jurídicos ni fiscales</b>, no prestamos servicios de asesoramiento
-legal y no actuamos en nombre de nadie ante ninguna administración. Para eso hay que
-acudir a un profesional.</p>
+de cada convocatoria, además de herramientas de prueba para ordenar papeles.</p>
+<p><b>Lo que ves aquí es información general, no una opinión profesional sobre tu caso.</b>
+No actuamos en nombre de nadie ante ninguna administración. Si tu caso tiene un
+problema de fondo —un pleito, una herencia, una duda fiscal—, consúltalo con un
+abogado o un asesor fiscal colegiado.</p>
 
 <h2>3. Los datos y sus fuentes</h2>
 <p>Cada ayuda que se muestra lleva la norma o el boletín oficial del que sale. Cuando no
 hemos podido verificar un dato, lo decimos: no rellenamos por aproximación.</p>
 <p>Aun así, <b>el resultado es orientativo y no es una promesa de concesión.</b> Las
-convocatorias cambian, los plazos se abren y se cierran, y la única fuente válida es el
-boletín oficial correspondiente. Comprueba siempre en la fuente oficial antes de
+convocatorias cambian y los plazos se abren y se cierran. Lo que vale es lo que diga el
+boletín oficial correspondiente: compruébalo siempre en la fuente oficial antes de
 presentar nada.</p>
 
-<h2>4. Responsabilidad</h2>
-<p>El titular no se hace responsable de las decisiones que se tomen basándose únicamente
-en la información de esta web, ni de los daños derivados de errores u omisiones en los
-datos, ni de las interrupciones del servicio.</p>
+<h2>4. La inteligencia artificial</h2>
+<p>Parte de esta web contesta con un <b>sistema de inteligencia artificial</b>. Cuando
+hablas con él, te lo dice desde el primer mensaje: no es una persona. Puede equivocarse,
+y por eso los importes y los plazos se comprueban en la fuente oficial. Qué se envía y
+a quién está en la <a href="privacidad.html">política de privacidad</a>.</p>
 
-<h2>5. Enlaces a otras webs</h2>
+<h2>5. Responsabilidad</h2>
+<p><span data-t="denominacion">El titular de esta web</span> no se hace responsable de las
+decisiones que se tomen basándose únicamente en la información de esta web, ni de los
+daños derivados de errores u omisiones en los datos, ni de las interrupciones del
+servicio, en la medida en que la ley lo permita.</p>
+
+<h2>6. Enlaces a otras webs</h2>
 <p>Esta página enlaza a boletines oficiales y sedes electrónicas de las administraciones.
 No somos responsables de su contenido ni de su disponibilidad.</p>
 
-<h2>6. Propiedad intelectual</h2>
+<h2>7. Propiedad intelectual</h2>
 <p>El texto de las normas y convocatorias es de dominio público. La forma en que están
-organizados, la selección y el código de esta web son del titular.</p>
+organizados, la selección y el código de esta web pertenecen a su titular.</p>
 
-<h2>7. Ley aplicable</h2>
+<h2>8. Ley aplicable</h2>
 <p>Se aplica la legislación española.</p>
 
-<footer><a href="./">← Volver</a> · Última actualización: 8 de septiembre de 2026</footer>
-</div></body></html>
+<footer><a href="./">← Volver</a> · Última actualización: 24 de septiembre de 2026</footer>
+</div>
+<script>
+/* PINTAR LOS DATOS DEL TITULAR (el bloque TITULAR de arriba).
+   Sin JavaScript se queda en modo seguro, que es lo que trae el HTML. */
+(function(){
+  var T = (typeof TITULAR === "object" && TITULAR) ? TITULAR : {};
+  function v(k){ return (typeof T[k] === "string") ? T[k].trim() : ""; }
+  var completo = !!(v("denominacion") && v("nif") && v("domicilio"));
+  var raiz = document.documentElement;
+  if (raiz && raiz.setAttribute) raiz.setAttribute("data-titular", completo ? "completo" : "en-tramite");
+  var i, el, k, val, lista;
+  lista = document.querySelectorAll("[data-t]");
+  for (i = 0; i < lista.length; i++) {
+    el = lista[i]; k = el.getAttribute("data-t"); val = v(k);
+    /* el correo se pinta siempre que exista; lo demás, solo con los datos completos */
+    if (!val || (k !== "correo" && !completo)) continue;
+    el.textContent = val;
+    if (el.hasAttribute("data-t-enlace")) el.setAttribute("href", "mailto:" + val);
+  }
+  lista = document.querySelectorAll("[data-solo-completo]");
+  for (i = 0; i < lista.length; i++) lista[i].hidden = !completo;
+  lista = document.querySelectorAll("[data-solo-tramite]");
+  for (i = 0; i < lista.length; i++) lista[i].hidden = completo;
+})();
+</script>
+</body></html>

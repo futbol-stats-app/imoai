@@ -2,6 +2,26 @@
 <html lang="es" data-marca="boletin">
 <head>
 <meta charset="utf-8">
+<!-- ══════════════════════════════════════════════════════════════════
+     DATOS DEL TITULAR · AQUÍ Y EN NINGÚN OTRO SITIO
+     Cuando la sociedad esté constituida, se rellenan estos 5 valores y
+     nada más. El MISMO bloque está al principio de privacidad.html:
+     hay que cambiarlo en los dos ficheros, igual.
+
+     MODO SEGURO: mientras denominación, NIF o domicilio estén vacíos,
+     la página NO pinta ningún dato del titular y dice «Datos del titular
+     en trámite de inscripción». Aquí no se pone NUNCA el nombre, el DNI
+     ni la casa de una persona física.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+var TITULAR = {
+  denominacion: "",   /* la razón social tal como sale en la escritura, con «S.L.» */
+  nif:          "",   /* el NIF de la sociedad */
+  domicilio:    "",   /* el domicilio social completo, con código postal y provincia */
+  registro:     "",   /* «Registro Mercantil de …, tomo …, folio …, hoja …, inscripción …» */
+  correo:       "immoai.contacto@gmail.com"   /* el correo de contacto de la sociedad */
+};
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Política de privacidad · IMMO IA</title>
 <meta name="robots" content="noindex">
@@ -29,174 +49,218 @@ mark{background:#F3E4C7;padding:1px 4px;border-radius:3px}
  font-weight:700;color:#6B4A10;font-size:14px}
 .elige{background:#EAF2EE;border-left:4px solid #1F5C46;padding:12px 14px;margin:12px 0;font-size:14.5px}
 .elige b{color:#13342A}
+[hidden]{display:none!important}
+.tabla{border-collapse:collapse;width:100%;font-size:15px;margin:0 0 14px}
+.tabla td{padding:7px 8px 7px 0;vertical-align:top;border-top:1px solid var(--linea)}
+.tabla td:first-child{width:30%}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--linea);font-size:13px;color:var(--tinta-2)}
 </style></head><body><div class="e">
 <div class="ref">IMMO IA · Política de privacidad</div>
 <h1>Política de privacidad</h1>
 <div class="pendiente"><strong>Versión de demostración: no introduzcas datos reales.</strong>
-IMMO IA no presta ningún servicio ni cobra a nadie. Aquí abajo está, tal cual, qué se
-hace con lo que escribes. Si algo de esta página no se sabe con seguridad, no lo afirmamos.</div>
+IMMO IA no presta ningún servicio ni cobra a nadie. Aquí abajo está, parte por parte, qué
+se hace con lo que escribes, contado según lo que hace hoy el código de la web. Lo que no
+sabemos con seguridad lo decimos así. Este texto está pendiente de revisión por un
+abogado.</div>
 
-<h2>1. Quién trata tus datos</h2>
-<ul>
-<li><b>Responsable:</b> Iván Sincheon Jiménez</li>
-<li><b>NIF:</b> 45706288K</li>
-<li><b>Contacto:</b> immoai.contacto@gmail.com</li>
+<h2>1. Quién es el responsable</h2>
+<div class="rellenar" data-solo-tramite>
+<strong>Datos del titular en trámite de inscripción</strong>
+El responsable de tus datos será la sociedad limitada que se está constituyendo para
+IMMO IA. En cuanto esté inscrita, aquí aparecerán su denominación social, su NIF, su
+domicilio social y sus datos en el Registro Mercantil. Mientras tanto, para cualquier
+cosa sobre tus datos escribe a
+<a data-t="correo" data-t-enlace href="mailto:immoai.contacto@gmail.com">immoai.contacto@gmail.com</a>.
+</div>
+<ul data-solo-completo hidden>
+<li><b>Responsable:</b> <span data-t="denominacion">—</span></li>
+<li><b>NIF:</b> <span data-t="nif">—</span></li>
+<li><b>Domicilio social:</b> <span data-t="domicilio">—</span></li>
+<li><b>Datos registrales:</b> <span data-t="registro">Inscripción en el Registro Mercantil en trámite</span></li>
+<li><b>Contacto para todo lo de tus datos:</b> <a data-t="correo" data-t-enlace href="mailto:immoai.contacto@gmail.com">immoai.contacto@gmail.com</a></li>
 </ul>
+<p>No hay designado un delegado de protección de datos.</p>
 
-<h2>2. La calculadora: no recoge nada</h2>
-<p>El cálculo de la calculadora <b>se hace entero en tu navegador</b>. Los cuatro datos
-que introduces —ingresos, edad, código postal y qué quieres hacer— <b>no se envían a
-ningún sitio y no se guardan.</b> No pedimos tu nombre, ni tu DNI, ni tu dirección, ni
-tu teléfono.</p>
-<p>Esta web <b>no usa cookies de análisis ni de publicidad</b>. Si reproduces el vídeo
-de una vivienda, lo sirven YouTube o Vimeo (punto 4).</p>
-
-<h2>3. El asistente: esto sí sale de tu navegador</h2>
-<p>La página tiene además un <b>asistente con el que puedes hablar o escribir</b>. Ese
-funciona distinto que la calculadora, y conviene que lo sepas antes de usarlo:</p>
-<table style="border-collapse:collapse;width:100%;font-size:15px">
-<tr><td style="padding:7px 0;vertical-align:top"><b>Qué se envía</b></td><td style="padding:7px 0">Lo que le escribes o le dictas, y los mensajes anteriores de esa misma conversación, para que entienda el hilo.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Por dónde pasa</b></td><td style="padding:7px 0">Por un servidor propio alojado en <b>Cloudflare</b>, y desde ahí al modelo de lenguaje de <b>Anthropic</b>, que es quien redacta la respuesta. <b>Las dos son empresas de Estados Unidos</b>, así que lo que escribes puede tratarse fuera de la Unión Europea.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Si le hablas</b></td><td style="padding:7px 0">El dictado no lo hacemos nosotros: lo hace tu navegador. <b>En Chrome el audio lo pasa a texto Google, y en Edge, Microsoft.</b> Si no quieres que tu voz salga hacia ellos, escribe en vez de hablar.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Qué se guarda</b></td><td style="padding:7px 0"><b>Nosotros no guardamos la conversación.</b> Se usa para contestarte y no se archiva en ninguna base de datos nuestra. Se lleva una cuenta del número de consultas del día, sin su contenido.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Base legal</b></td><td style="padding:7px 0">Tu consentimiento al usarlo (art. 6.1.a del RGPD). Si no quieres que salga nada de tu navegador, usa solo la calculadora.</td></tr>
+<h2>2. El resumen, parte por parte</h2>
+<table class="tabla">
+<tr><td><b>La calculadora de ayudas</b></td><td>Calcula <b>en tu navegador</b>. Lo que metes no se envía a ningún sitio. Si has encendido la memoria de la portada, se guarda <b>en tu navegador</b> (punto 3).</td></tr>
+<tr><td><b>La portada: tu nombre, tu correo y tus últimas consultas</b></td><td>Se guardan <b>solo en tu navegador</b>. No llegan a nosotros (punto 3).</td></tr>
+<tr><td><b>El chat y la caja «Cuéntanoslo con tus palabras»</b></td><td><b>Sí sale de tu navegador:</b> va a nuestro servidor en <b>Cloudflare</b> y de ahí al modelo de IA de <b>Anthropic</b>, en Estados Unidos (punto 4).</td></tr>
+<tr><td><b>Hablarle por voz</b></td><td>El dictado lo hace tu navegador. <b>En Chrome, el audio lo pasa a texto Google en sus servidores</b> (punto 5).</td></tr>
+<tr><td><b>La página de las placas solares</b></td><td>Tus respuestas se guardan en tu navegador. Tu nombre y tu teléfono o correo solo nos llegan si tú mandas el mensaje (punto 6).</td></tr>
+<tr><td><b>La cuenta de oficina (inmobiliarias)</b></td><td>Lo que guardas va a tu navegador y al <b>almacén de Cloudflare</b>, y el servidor lleva un registro de uso de la cuenta (punto 7).</td></tr>
+<tr><td><b>La Secretaria</b> (la que ordena la carpeta de papeles)</td><td><b>No manda nada a internet.</b> Lee los papeles en tu ordenador y guarda en tu navegador (punto 8).</td></tr>
+<tr><td><b>Vídeos, miniaturas y tipos de letra</b></td><td>Los sirven YouTube, Vimeo y Google, que ven tu dirección IP (punto 9).</td></tr>
 </table>
-<p><b>Por eso te pedimos una cosa: no le escribas datos personales al asistente.</b> Ni tu
-DNI, ni tu dirección, ni tu teléfono, ni datos de salud o de tu familia. No le hacen
-falta para ayudarte, y así no salen de tu ordenador. El asistente tiene además la
-instrucción de no pedírtelos nunca.</p>
-<p>El asistente da información general y <b>se puede equivocar</b>. En la página de las
-ayudas, los importes y los plazos no los da él: los da la calculadora, con la norma oficial al lado.</p>
+<p><b>Esta web no usa cookies de análisis ni de publicidad.</b> Lo que guarda en tu navegador
+está explicado en cada punto y en el punto 10.</p>
 
-<h2>4. Los vídeos de las viviendas</h2>
-<p>Cuando el asistente te enseña el vídeo de una vivienda, ese vídeo se reproduce
-<b>a través de YouTube o de Vimeo</b>. Eso significa que <b>esas empresas ven que
-alguien está reproduciendo el vídeo</b>, con la dirección IP y los datos técnicos
-habituales de una conexión. Nosotros no les damos tu nombre ni tu correo.</p>
-<p>Usamos la versión de YouTube <b>sin cookies de seguimiento</b>
-(<i>youtube-nocookie</i>) y la opción de Vimeo que pide <b>no rastrear</b>, que es
-lo más discreto que permiten. Aun así, si prefieres que no vean nada,
-<b>no le pidas al asistente que te enseñe el vídeo</b>: el resto de la página
-funciona igual.</p>
+<h2>3. La portada y la calculadora</h2>
+<p>El cálculo de la calculadora <b>se hace entero en tu navegador</b>. Los cuatro datos que
+introduces —ingresos, edad, código postal y qué quieres hacer— <b>no se envían a ningún
+sitio</b>. No pedimos tu DNI, ni tu dirección, ni tu teléfono.</p>
+<p><b>Pero sí se pueden quedar guardados en tu navegador.</b> Al entrar en la demostración
+te pedimos el código, tu nombre y tu correo:</p>
+<ul>
+<li><b>El código</b> se guarda solo mientras dure la pestaña, y se olvida al cerrar el navegador.</li>
+<li><b>Tu nombre, tu correo y la fecha</b> se guardan en el almacenamiento de tu navegador para
+saludarte al volver. <b>Escribir tu nombre y pulsar «Entrar» enciende además la memoria de
+consultas.</b></li>
+<li><b>Con la memoria encendida</b>, cada cálculo guarda en tu navegador la fecha,
+<b>tus ingresos, tu edad, tu código postal y tu objetivo</b>, y qué ayudas te salieron.
+Se guardan <b>las 12 últimas</b>, para decirte qué ha cambiado desde la vez anterior.</li>
+<li><b>Si pones una foto</b>, se recorta pequeña y se guarda también en tu navegador. No se sube.</li>
+</ul>
+<p>Nada de eso llega a nosotros: vive en tu ordenador y nosotros no lo vemos. <b>Cuánto
+dura:</b> hasta que lo borres. «Salir» borra tu nombre, <b>pero no el historial</b>; el
+historial se borra con «Borrarlas todas» o quitando la casilla de la memoria. También se
+borra todo al borrar los datos de este sitio en tu navegador.</p>
+<p><b>No hay contraseña de particular.</b> En la portada no se pide ninguna.</p>
+<p>En la página de acceso de las calculadoras («¿Quién eres?») sí hay un formulario con
+nombre, correo y contraseña. <b>Todo se queda en tu navegador</b>: de la contraseña se
+guarda un resumen calculado (no la contraseña tal cual), y se lleva la cuenta de cuántas
+consultas haces por semana. No llega a nosotros. No es seguridad de verdad: quien use tu
+ordenador puede verlo, así que <b>no uses ahí una contraseña que uses en otro sitio</b>.</p>
+<p>El formulario para dejar tu correo y que te avisemos de convocatorias <b>no está activo</b>:
+hoy no se recoge ningún correo por esa vía. Esta página se actualizará antes de activarlo.</p>
 
-<h2>5. Lo único que sí recogemos: tu correo, si nos lo dejas</h2>
-<p><b>Hoy ese formulario no está activo</b>, así que ahora mismo no se recoge ningún
-correo. Esto describe cómo funcionará cuando se active, y esta página se actualizará
-el día que ocurra.</p>
-<table style="border-collapse:collapse;width:100%;font-size:15px">
-<tr><td style="padding:7px 0;vertical-align:top"><b>Qué</b></td><td style="padding:7px 0">Tu dirección de correo y, junto a ella, el perfil que habías introducido (sin ningún dato que te identifique).</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Para qué</b></td><td style="padding:7px 0">Avisarte cuando se publique una convocatoria de ayuda que encaje con ese perfil. Nada más. No mandamos publicidad ni cedemos tu correo a nadie.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Base legal</b></td><td style="padding:7px 0">Tu consentimiento (art. 6.1.a del Reglamento (UE) 2016/679, RGPD), que das marcando la casilla.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Cuánto tiempo</b></td><td style="padding:7px 0">Hasta que pidas que lo borremos, o 2 años sin actividad.</td></tr>
-<tr><td style="padding:7px 0;vertical-align:top"><b>Quién más lo ve</b></td><td style="padding:7px 0">Nadie más. No se comparte con ningún tercero.</td></tr>
+<h2>4. El chat con la IA: esto sí sale de tu navegador</h2>
+<table class="tabla">
+<tr><td><b>Qué se envía</b></td><td>Lo que le escribes o le dictas, y los mensajes anteriores de esa misma conversación, para que entienda el hilo. La página añade además las fichas que la IA necesita para contestar: las ayudas de tu comunidad, el resumen de lo que has contestado en la página de las placas o, en la cuenta de oficina, la ficha del expediente que tienes abierto. Lo que escribes en «Cuéntanoslo con tus palabras» va igual, para sacar de tu frase los cuatro datos de la calculadora.</td></tr>
+<tr><td><b>Por dónde pasa</b></td><td>Por nuestro servidor, alojado en <b>Cloudflare</b>, y desde ahí al modelo de IA de <b>Anthropic</b> (empresa de <b>Estados Unidos</b>), que es quien redacta la respuesta. Lo que escribes <b>se trata fuera de la Unión Europea</b>.</td></tr>
+<tr><td><b>Qué guardamos</b></td><td><b>Nuestro servidor no guarda la conversación</b>: la pasa al modelo, devuelve la respuesta y no la archiva. Lleva una cuenta del número de llamadas del día, sin su contenido. Cloudflare, por su parte, registra datos técnicos de cada petición a nuestro servidor (el registro de la plataforma está activado); qué incluye exactamente y cuánto tiempo lo guarda <b>está pendiente de confirmar</b>. Cuánto tiempo guarda Anthropic lo que recibe lo fijan sus condiciones de servicio, y también <b>está pendiente de confirmar</b>.</td></tr>
+<tr><td><b>Para qué</b></td><td>Solo para contestarte.</td></tr>
+<tr><td><b>Base jurídica</b></td><td>Tu consentimiento al usarlo (art. 6.1.a del Reglamento (UE) 2016/679, RGPD). Si no quieres que salga nada de tu navegador, usa solo la calculadora.</td></tr>
+<tr><td><b>Transferencia fuera de la UE</b></td><td>A Estados Unidos, a Anthropic y a Cloudflare. <b>La garantía que la ampara</b> (por ejemplo, la adhesión del proveedor al Marco de Privacidad de Datos UE-EE. UU. o unas cláusulas contractuales tipo) <b>está pendiente de confirmar por un abogado</b> y se escribirá aquí.</td></tr>
 </table>
+<p><b>Por eso te pedimos una cosa: no le escribas datos personales a la IA.</b> Ni tu DNI, ni
+tu dirección, ni tu teléfono, ni datos de salud o de tu familia. No le hacen falta, y así no
+salen de tu ordenador. La IA tiene además la instrucción de no pedírtelos nunca.</p>
+
+<h2>5. Si le hablas en vez de escribir</h2>
+<p>El micrófono usa <b>el dictado de tu propio navegador</b>, no uno nuestro. <b>En Chrome, el
+audio lo manda el navegador a los servidores de Google</b>, que lo pasan a texto; en otros
+navegadores lo hace quien los fabrica (en Edge, Microsoft). Ese tratamiento es de ellos, con
+sus propias condiciones, y a nosotros solo nos llega el texto, que luego sigue el camino del
+punto 4. <b>Si no quieres que tu voz salga hacia ellos, escribe en vez de hablar.</b></p>
 
 <h2>6. La página de las placas solares</h2>
-<p>En la página de placas te vamos preguntando cosas para calcularte el número: <b>lo que pagas
-de luz, tu municipio, tu comunidad, qué tipo de vivienda es y si pagaste más de 2.500 € de
-IRPF</b>. Esas respuestas <b>se quedan en tu propio navegador</b> para que no tengas que
-repetirlas si vuelves, y <b>no llegan a nosotros</b>. Puedes borrarlas cuando quieras con el
-botón «Empezar de nuevo» del pie de esa página.</p>
+<p>Te vamos preguntando cosas para calcularte el número: <b>lo que pagas de luz, tu
+municipio, tu comunidad, qué tipo de vivienda es y si pagaste más de 2.500 € de IRPF</b>.
+Esas respuestas <b>se quedan en tu navegador</b> para que no tengas que repetirlas si vuelves,
+y <b>no llegan a nosotros</b>. Se borran con el botón «Empezar de nuevo».</p>
+<p><b>Al final te pedimos tu nombre y un teléfono o un correo.</b> No se envían solos y no se
+guardan en tu navegador: al pulsar se abre <b>tu</b> correo o <b>tu</b> WhatsApp con el mensaje
+ya escrito, y lo mandas tú. <b>Solo tenemos tus datos si tú le das a enviar.</b> Entonces los
+usamos para contestarte por lo que nos has pedido y para nada más. <b>Base jurídica:</b> tu
+consentimiento (art. 6.1.a RGPD), que das al enviarnos el mensaje. <b>Cuánto tiempo:</b> hasta
+que nos pidas que los borremos, o 2 años sin que hablemos.</p>
+<p><b>Si le preguntas algo a la IA en esa página</b>, viaja tu pregunta junto con un resumen de
+lo que has contestado (factura, municipio, paneles), por el camino del punto 4.
+<b>Nunca van tu nombre, tu teléfono ni tu correo.</b></p>
+<p><b>Si le enseñas un expediente</b>, el archivo se abre y se lee en tu ordenador, <b>pero el
+texto que lleva dentro sí sale</b>: se le pasa a la IA como si lo hubieras escrito tú, por el
+camino del punto 4, con los nombres, DNI o direcciones que contenga. Por eso, en esta
+demostración, <b>no le enseñes documentos con datos reales</b>.</p>
 
-<p><b>Al final te pedimos tu nombre y un teléfono o un correo.</b> Eso funciona distinto de lo
-que la gente espera, así que lo decimos claro:</p>
+<h2>7. La cuenta de oficina (inmobiliarias)</h2>
+<p><b>En tu navegador</b> quedan el nombre de tu oficina, su identificador y una llave de paso
+que caduca a las 12 horas, además de las fichas de tus expedientes y tu lista de trabajo.
+<b>Tu contraseña no se guarda en el navegador.</b></p>
+<p><b>En nuestro servidor</b> (el almacén de Cloudflare, Workers KV) se guarda:</p>
+<table class="tabla">
+<tr><td><b>La cuenta</b></td><td>El nombre de la cuenta y un resultado calculado a partir de tu contraseña del que no se puede volver atrás (PBKDF2 con SHA-256, con un ingrediente distinto para cada cuenta). La contraseña no se guarda. <b>Hasta que se borre la cuenta.</b></td></tr>
+<tr><td><b>Lo que guardas</b></td><td>Las fichas de los expedientes (la vivienda, sus papeles y fechas, los avisos y lo que apuntes de ese caso), el perfil de la oficina, «Lo que llevas esta semana» y la mesa de trabajo. <b>Hasta que se borre la cuenta</b> o lo borres tú.</td></tr>
+<tr><td><b>Los aparatos con los que entras</b></td><td>La llave de cada entrada (se guarda un resumen, no la llave), la hora y el nombre del aparato: el que pongas o, si no, el comienzo del identificador de tu navegador. <b>Cada entrada caduca a las 12 horas.</b></td></tr>
+<tr><td><b>El registro de la cuenta</b></td><td>Qué se hizo, cuándo, con qué usuario y aparato (entrar, guardar, cerrar una sesión, cambiar la clave…) y cuántas letras se guardaron, <b>sin el contenido</b>. Sirve para poder ver quién ha usado la cuenta. <b>Cada línea se conserva 400 días.</b></td></tr>
+<tr><td><b>Los frenos contra intentos</b></td><td>Si se falla la clave o el código, se cuenta desde qué conexión: la dirección IP <b>no se guarda en claro</b>, sino revuelta con un secreto. Estas cuentas caducan solas en <b>unos 30 minutos</b>. También se cuenta el uso de cada cuenta por horas, y esa cuenta caduca a las <b>2 horas</b>.</td></tr>
+<tr><td><b>Copia al cambiar de sistema de claves</b></td><td>Cuando el servidor pasa una cuenta al sistema de claves nuevo, guarda una copia técnica de la ficha anterior por si hay que deshacerlo. <b>Se borra sola a los 60 días.</b></td></tr>
+</table>
+<p><b>El almacén de Cloudflare puede copiar los datos a centros de datos fuera de la Unión
+Europea</b> (punto 4, transferencia).</p>
+<p><b>El nombre que le pones a cada expediente</b> lo escribes tú y se guarda tal cual.
+<b>Te recomendamos no usar el nombre completo de otra persona.</b> En esta demostración,
+<b>no metas datos reales de personas</b>.</p>
+<p><b>Para qué y con qué base:</b> para darte el servicio de la cuenta que has pedido (art.
+6.1.b RGPD) y, el registro y los frenos, para la seguridad de la cuenta. <b>Borrar la cuenta:</b>
+hoy no hay botón para hacerlo desde la web; escríbenos y la borramos. Al borrarla queda
+reservado el nombre de la cuenta, sin nada dentro, y una línea que dice que se borró.</p>
+<p><b>Esto no es una caja fuerte.</b> Mientras la llave de paso siga valiendo, cualquiera que use
+tu ordenador puede entrar en la cuenta sin saber tu contraseña. <b>No uses aquí una contraseña
+que uses en otro sitio</b> y sal siempre al terminar en un ordenador compartido.</p>
+
+<h2>8. La Secretaria</h2>
+<p>La Secretaria ordena la carpeta de papeles que tú le señales. <b>Lee los ficheros en tu
+propio ordenador y no manda nada a internet</b>: ni los papeles, ni su contenido, ni la lista.
+Lo que apunta (tus expedientes, las copias de seguridad para poder deshacer) se guarda
+<b>en tu navegador</b>, y los papeles ordenados se escriben en la carpeta que tú elijas o se
+descargan en un fichero comprimido. Nosotros no vemos nada de eso. Se borra al borrar los
+datos de este sitio en tu navegador.</p>
+
+<h2>9. Vídeos, miniaturas y tipos de letra</h2>
+<p>Algunas páginas cargan cosas de otras empresas, y <b>esas empresas ven tu dirección IP</b> y
+los datos técnicos habituales de una conexión. Nosotros no les damos tu nombre ni tu correo.</p>
 <ul>
-<li><b>No se envía solo, y no se guarda en tu navegador.</b> Al pulsar se abre <b>tu</b>
-correo o <b>tu</b> WhatsApp con el mensaje ya escrito, y lo mandas tú.</li>
-<li>O sea que <b>solo tenemos tus datos si tú le das a enviar</b>. Llegan a
-immoai.contacto@gmail.com o a nuestro WhatsApp, y los usamos para llamarte por lo que nos has
-pedido y para nada más.</li>
-<li>Los conservamos hasta que nos pidas que los borremos, o 2 años sin que hablemos.</li>
-<li><b>Base legal:</b> tu consentimiento (art. 6.1.a del RGPD), que das al enviarnos el
-mensaje.</li>
+<li><b>Vídeos de viviendas:</b> se reproducen a través de <b>YouTube</b> (en su versión
+<i>youtube-nocookie</i>) o de <b>Vimeo</b> (pidiendo que no rastree). <b>La página de las
+casas pide a YouTube las miniaturas nada más abrirse</b>, aunque no reproduzcas nada.</li>
+<li><b>Tipos de letra:</b> varias páginas, esta incluida, cargan los tipos de letra desde
+<b>Google Fonts</b>.</li>
 </ul>
 
-<p><b>El archivo no se sube.</b> Cuando le enseñas un expediente a la aplicación, el archivo
-<b>se abre y se lee en tu propio ordenador</b>. Pero <b>el texto que lleva dentro sí sale</b>:
-se le pasa al asistente como si lo hubieras escrito tú (hasta 12.000 letras), por el mismo
-camino del punto 3, con los nombres, DNI o direcciones que contenga. Por eso, en esta
-demostración, <b>no le enseñes documentos con datos reales</b>. La página también te dice
-qué papeles harán falta —DNI, declaración de la renta, factura de la luz— <b>para que los
-vayas reuniendo</b>, pero no los recoge por ningún formulario: se piden por el canal que
-toque y con su consentimiento firmado.</p>
+<h2>10. Lo que se guarda en tu navegador</h2>
+<p>Lo que esta web guarda en el almacenamiento de tu navegador (lo de los puntos 3, 6, 7 y 8)
+<b>se queda en tu dispositivo y no lo vemos</b>. Sirve para lo que pides: que te reconozca al
+volver, no repetir respuestas y no perder tu trabajo. Se borra con los botones de cada página
+o borrando los datos de este sitio en tu navegador.</p>
 
-<p><b>Y si le preguntas algo a la IA en esa página</b>, viaja tu pregunta junto con un resumen
-de lo que has contestado (factura, municipio, paneles) al mismo servicio del punto 3.
-<b>Nunca van tu nombre, tu teléfono ni tu correo.</b></p>
+<h2>11. Cuando hablas con una IA</h2>
+<p>La IA de esta web <b>te dice desde su primer mensaje que es una inteligencia artificial y no
+una persona</b>, como pide el Reglamento europeo de inteligencia artificial. Da información
+general, <b>se puede equivocar</b>, y los importes y los plazos se comprueban en la fuente
+oficial. No toma decisiones sobre ti.</p>
 
-<h2>7. Qué guardamos si trabajas con una cuenta de inmobiliaria</h2>
-<p>Para poder decirte cómo va cada caso sin que tengas que contárnoslo otra vez, guardamos
-<b>una ficha por expediente</b>, en tu navegador y, si has entrado con la cuenta de la
-oficina, también en el <b>almacén de Cloudflare</b> (Workers KV), para que la veas en otro
-aparato. <b>Ese almacén puede copiar los datos a centros de datos fuera de la Unión Europea.</b></p>
-<p>En la ficha va lo que se apunta del expediente mientras trabajas: la vivienda, sus papeles
-y sus fechas, los avisos, y los datos que salgan de lo que escribes o le cuentas a la
-secretaria sobre ese caso. <b>Por eso, en esta demostración, no metas datos reales de personas.</b></p>
-
-<p><b>El nombre que tú le pones a cada expediente.</b> Para que puedas distinguirlos, tú le
-pones a cada ficha el nombre que quieras («el de la calle Tal», «el de José»). Ese texto lo
-escribes tú y se guarda tal y como lo escribas. <b>Te recomendamos no usar el nombre completo
-de otra persona.</b> Puedes cambiarlo o borrarlo cuando quieras.</p>
-
-<p><b>Lo que apuntas en «Lo que llevas esta semana».</b> Si escribes o dictas ahí, se guarda
-en el mismo almacén con tu cuenta, para que lo tengas en cualquier aparato. No caduca solo:
-se queda hasta que lo cambies. Junto a esa lista se guarda además, en tu navegador, <b>el
-número del último guardado y su fecha</b>: sirve para saber qué copia es más nueva cuando
-escribes desde dos aparatos y no llevan ningún dato de nadie. <b>La conversación con el
-asistente, en cambio, no la guardamos</b> (punto 3).</p>
-
-<p><b>El registro de la cuenta.</b> El servidor apunta lo que se hace con cada cuenta de
-oficina (cuándo, con qué usuario, desde qué aparato y qué se hizo: entrar, guardar, cerrar
-una sesión, cambiar la clave…), sin el contenido de lo que se guarda. <b>Cada línea se
-conserva 400 días.</b> Sirve para poder ver quién ha usado la cuenta.</p>
-
-<p><b>Por qué podemos guardarlo:</b> porque es lo que hace falta para darte el servicio que
-nos has pedido (art. 6.1.b del RGPD). <b>Cuánto tiempo:</b> mientras uses el servicio, y el
-registro de la cuenta, 400 días. Si quieres que borremos una ficha o todas, escríbenos a
-immoai.contacto@gmail.com.</p>
-
-<h2>8. Tus derechos</h2>
-<p>Puedes pedir en cualquier momento que te digamos qué tenemos tuyo, que lo corrijamos,
-que lo borremos, que lo limitemos, que te lo demos en un fichero, o retirar tu
-consentimiento. <b>Basta con responder a cualquiera de los correos que te mandemos</b>,
-o escribir a immoai.contacto@gmail.com.</p>
-<p>Retirar el consentimiento no afecta a lo que se hizo antes con él. Y si crees que no
-te hemos atendido bien, puedes reclamar ante la
+<h2>12. Tus derechos</h2>
+<p>Puedes pedir en cualquier momento que te digamos qué tenemos tuyo, que lo corrijamos, que
+lo borremos, que limitemos su uso, que te lo demos en un fichero, oponerte a que lo usemos, o
+retirar tu consentimiento. Escribe a
+<a data-t="correo" data-t-enlace href="mailto:immoai.contacto@gmail.com">immoai.contacto@gmail.com</a>
+diciendo qué quieres. Lo que está solo en tu navegador no lo tenemos: eso lo borras tú, como
+se explica arriba.</p>
+<p>Retirar el consentimiento no afecta a lo que se hizo antes con él. Y si crees que no te
+hemos atendido bien, puedes reclamar ante la
 <a href="https://www.aepd.es" target="_blank" rel="noopener">Agencia Española de Protección de Datos</a>.</p>
 
-<h2>9. Almacenamiento en tu navegador</h2>
-<p>Si dejas tu correo, se guarda además una copia en el almacenamiento local de tu propio
-navegador, como respaldo por si falla el envío. Esa copia está solo en tu dispositivo, no
-la vemos nosotros, y desaparece al borrar los datos del navegador.</p>
-<p><b>La página de entrada para particulares no te pide ninguna contraseña.</b> Te pide el
-código de la demostración, tu nombre y tu correo. El nombre y el correo <b>se guardan solo en
-tu navegador</b> y no llegan a nosotros. Verás también un hueco de contraseña, pero está
-<b>apagado y no se puede escribir en él</b>: dice «en la versión final» porque hoy no hay
-contraseña de particular. Así que aquí no guardamos ninguna contraseña, ni entera ni en trozos,
-sencillamente porque no te pedimos ninguna.</p>
-<p><b>La cuenta de la oficina (inmobiliarias) sí tiene contraseña, y así se trata.</b></p>
-<p>Cuando entras, tu contraseña viaja al servidor, <b>se comprueba allí y no se guarda en
-ninguna parte</b>: lo que el servidor conserva no es la contraseña, sino un resultado calculado
-a partir de ella del que no se puede volver atrás, con un ingrediente distinto para cada cuenta
-y repitiendo el cálculo cien mil veces para que probar contraseñas a lo bruto salga carísimo
-(es lo que se llama PBKDF2 con SHA-256).</p>
-<p><b>En tu navegador no queda tu contraseña.</b> Queda el nombre de tu oficina y una llave de
-paso que te da el servidor al entrar, que es lo justo para no pedírtela a cada rato. Esa llave
-<b>caduca sola a las doce horas</b>, se puede anular desde la cuenta, y al pulsar «salir» se
-borra. Cuando caduca, te pedimos la contraseña otra vez: no la tenemos guardada para
-ahorrártelo, y eso es a propósito.</p>
-<p>Aun así, seamos claros: <b>esto no es una caja fuerte.</b> Cualquiera que use tu ordenador
-puede ver que existe esa cuenta y, mientras la llave de paso siga valiendo, puede entrar en
-ella sin saber tu contraseña. Por eso <b>no uses aquí una contraseña que uses en otro sitio</b>,
-sal siempre al terminar en un ordenador compartido, y no metas datos que no quieras tener
-guardados en ese navegador.</p>
-
-<h2>10. Menores</h2>
+<h2>13. Menores</h2>
 <p>Esta web no está dirigida a menores de 14 años y no recogemos sus datos a sabiendas.</p>
 
-<h2>11. Cambios</h2>
-<p>Si cambiamos algo de esta política, se actualizará la fecha del pie.</p>
+<h2>14. Cambios</h2>
+<p>Si cambia lo que hace la web con tus datos, cambiará esta página y la fecha del pie.</p>
 
-<footer><a href="./">← Volver</a> · Última actualización: 18 de septiembre de 2026</footer>
-</div></body></html>
+<footer><a href="./">← Volver</a> · Última actualización: 24 de septiembre de 2026</footer>
+</div>
+<script>
+/* PINTAR LOS DATOS DEL TITULAR (el bloque TITULAR de arriba).
+   Sin JavaScript se queda en modo seguro, que es lo que trae el HTML. */
+(function(){
+  var T = (typeof TITULAR === "object" && TITULAR) ? TITULAR : {};
+  function v(k){ return (typeof T[k] === "string") ? T[k].trim() : ""; }
+  var completo = !!(v("denominacion") && v("nif") && v("domicilio"));
+  var raiz = document.documentElement;
+  if (raiz && raiz.setAttribute) raiz.setAttribute("data-titular", completo ? "completo" : "en-tramite");
+  var i, el, k, val, lista;
+  lista = document.querySelectorAll("[data-t]");
+  for (i = 0; i < lista.length; i++) {
+    el = lista[i]; k = el.getAttribute("data-t"); val = v(k);
+    /* el correo se pinta siempre que exista; lo demás, solo con los datos completos */
+    if (!val || (k !== "correo" && !completo)) continue;
+    el.textContent = val;
+    if (el.hasAttribute("data-t-enlace")) el.setAttribute("href", "mailto:" + val);
+  }
+  lista = document.querySelectorAll("[data-solo-completo]");
+  for (i = 0; i < lista.length; i++) lista[i].hidden = !completo;
+  lista = document.querySelectorAll("[data-solo-tramite]");
+  for (i = 0; i < lista.length; i++) lista[i].hidden = completo;
+})();
+</script>
+</body></html>

@@ -263,7 +263,7 @@
       <div class="field">
         <label for="ingresos">Ingresos brutos al año (€)</label>
         <input type="text" id="ingresos" placeholder="por ejemplo, 32000" inputmode="decimal" autocomplete="off">
-        <span class="hint">Brutos y al año, de cada comprador por separado. No es lo que te queda limpio al mes.</span>
+        <span class="hint">Brutos y al año. Si compráis dos, los de los dos sumados. No es lo que te queda limpio al mes.</span>
       </div>
       <div class="field full">
         <label for="prov">Provincia donde está la vivienda</label>
@@ -447,6 +447,14 @@ var AVAL = (function(){
        revisarla y se deshizo. La prueba lo vigila (68.544 €). */
     var topeRenta = (base + men * POR_MENOR * IPREM) * (d.mono ? 1 + MONOPARENTAL : 1);
     topeRenta = Math.round(topeRenta);
+    /* T23 25/09/2026 · DOS COMPRADORES. La adenda del convenio
+       (BOE-A-2026-14404, BOE nº 160, 02/07/2026) dice de los ingresos que «en
+       conjunto, no podrán superar la suma del límite establecido para cada
+       uno». Antes la calculadora pedía los de cada uno por separado; ahora,
+       con «Compramos dos personas», se ponen los de los dos sumados y el
+       tope es el de uno por dos. La edad y el patrimonio sí son de cada uno. */
+    var topeUno = topeRenta;
+    if (d.dos) topeRenta = topeUno * 2;
 
     var rules = [];
     rules.push({ id:"edad", ok: edad <= EDAD_MAX || men > 0, name:"Edad",
@@ -456,6 +464,7 @@ var AVAL = (function(){
     var d2 = "Tope en " + d.prov + ": " + String(veces).replace(".", ",") + " veces el IPREM, " + eur(base) + " brutos al año por comprador";
     if (men > 0) d2 += " · +" + eur(men * POR_MENOR * IPREM) + " por " + men + " menor" + (men > 1 ? "es" : "");
     if (d.mono) d2 += " · todo ello +70 % por familia monoparental";
+    if (d.dos) d2 += " · compráis dos: entre los dos, hasta " + eur(topeRenta) + " (la suma del tope de cada uno)";
     rules.push({ id:"ingresos", ok: ing <= topeRenta, name:"Ingresos", detail: d2 + ".", val: eur(ing) + " / " + eur(topeRenta) });
     rules.push({ id:"patrimonio", ok: patr <= PATRIMONIO_MAX, name:"Patrimonio neto", detail:"Máximo 150.000 € por comprador.", val: eur(patr) + " / " + eur(PATRIMONIO_MAX) });
     rules.push({ id:"precio", ok: precio <= topePrecio, name:"Precio de la vivienda", detail:"Tope en " + ccaa + ".", val: eur(precio) + " / " + eur(topePrecio) });
@@ -637,7 +646,7 @@ var AVAL = (function(){
       html += '<div class="nota-extra" id="nota-energia"><strong>Si la vivienda tiene certificado energético D o mejor, el aval sube del 20 % al 25 % del préstamo.</strong> Pregunta la letra antes de decidir: puede ser lo que haga que el banco diga que sí.</div>';
     }
     if (r.dos){
-      html += '<div class="nota-extra" id="nota-dos"><strong>Si compráis dos, cada uno tiene que cumplir por separado</strong> la edad (o tener menores a cargo), los ingresos y el patrimonio. Lo que has puesto es de una persona: repite la cuenta con los datos de la otra.</div>';
+      html += '<div class="nota-extra" id="nota-dos"><strong>Si compráis dos, los ingresos se suman y el tope también:</strong> entre los dos no podéis pasar de la suma del tope de cada uno (BOE de 2 de julio de 2026). Lo que sí es de cada uno es la edad (o tener menores a cargo) y el patrimonio: lo que has puesto es de una persona, así que repite la cuenta con la edad y el patrimonio de la otra.</div>';
     }
 
     out.innerHTML = html;

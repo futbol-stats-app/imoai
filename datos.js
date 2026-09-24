@@ -56,7 +56,12 @@ window.DATOS_IMMOIA = {
     costeCertificados: 200,   /* los dos, antes y después · 60-130 € cada uno */
     /* SIN FUENTE: estos 150 € no salen de ninguna ordenanza. La cuenta
        (energia_cuenta.js) solo los resta donde el municipio tiene bonificación
-       del IBI publicada, y en pantalla van marcados «sin verificar». */
+       del IBI publicada, y en pantalla van marcados «sin verificar».
+       24/09/2026: lo leído por municipio está en municipios_todos.js
+       (Santa Cruz: 1,8 % × 90 % = 89,10 € sobre 5.500 €; La Laguna: 95 % con el
+       tipo sin verificar; Adeje: sin bonificación). Para que la cuenta use eso
+       en vez de este 150 hay que cambiar energia_cuenta.js, línea 293.
+       Aquí no se cambia el número para no mover la cuenta sin ese arreglo. */
     icio: 150,
 
     /* Préstamo. Se trabaja con 6,25 % por prudencia: es peor que la mejor
@@ -267,7 +272,10 @@ window.DATOS_IMMOIA = {
       como: "Con la autoliquidacion, dentro del mes siguiente al inicio de la obra",
       apoderamiento: "Hacen falta DOS apoderamientos por cliente: el del ayuntamiento y "
                    + "el de la Gerencia de Urbanismo, que es otra sede (Santa Cruz y La Laguna)",
-      cuantoEs: "Poco: unos 89 € en Santa Cruz y 196 € en La Laguna sobre 5.500 €. "
+      cuantoEs: "Poco. Santa Cruz: tipo 1,8 % y 90 % de bonificacion por energia solar "
+              + "(ordenanza del ICIO, arts. 5.7 y 7 bis.2, leida en la sede el 24/09/2026): "
+              + "unos 89 € sobre 5.500 €. La Laguna: 95 % (Gerencia de Urbanismo, tramite 509, "
+              + "24/09/2026), pero su tipo esta SIN VERIFICAR, asi que no damos euros. "
               + "No sirve de gancho comercial, va dentro del paquete",
       ojo: "La comunicacion previa exige 15 dias habiles antes de empezar la obra"
     },
@@ -411,7 +419,7 @@ window.DATOS_IMMOIA = {
           subvencion:{ estado:"abierta", importe:600, unidad:"€/kW", hasta:"2026-09-30",
                        nota:"es la única abierta en España y el plazo acaba el 30 de septiembre de 2026. Ojo, porque corre prisa: el propio EVE avisa en su web de que el presupuesto está próximo a agotarse —más de 7.000 solicitudes sobre 80 M€— y puede cerrarse antes de esa fecha. No te prometemos el dinero: te decimos que está abierta y que hay que darse prisa. El EVE ha anunciado otra convocatoria, pero todavía no está publicada.", notaInterna:"Fuente: web del EVE (aviso de presupuesto próximo a agotarse y nueva convocatoria anunciada) y prensa del sector del 07/09/2026 (más de 7.000 solicitudes sobre 80 M€). Revisado el 11/09/2026." },
           deduccion:{ pct:0.15, base:20000, tope:0,
-                      nota:"En los tres territorios. Y algo que no pasa en el resto de España: la fotovoltaica da derecho por sí sola, con el certificado de instalación eléctrica y SIN los certificados energéticos." },
+                      nota:"En los tres territorios: 15 %, con base de 20.000 € al año. Los certificados energéticos de antes y después se piden para las obras que bajan el consumo un 30 % o llegan a la letra A o B. Para la fotovoltaica, el texto del artículo que reproducen las bases de datos jurídicas pide el certificado de instalación eléctrica y no los energéticos, pero eso está SIN VERIFICAR en el boletín foral (Bizkaia, art. 91 quater NF 2/2025; Gipuzkoa, art. 90 quater NF 1/2025; Álava, art. 87 ter NF 3/2025): confírmalo con tu hacienda foral." },
           foral:true },
 
     ri: { nombre:"La Rioja",
