@@ -32,7 +32,19 @@
 (function (raiz) {
   "use strict";
 
-  var VERSION = "1.0";
+  var VERSION = "1.1";
+
+  /* REDACTAR (V1 · taller RD · 24/09/2026). Dónde está wow\redactar.js,
+     que se carga la primera vez que se pulsa «Redactar» y no antes. Se
+     saca de dónde se ha cargado ESTE fichero (mesa/la_mesa.js), para
+     que sirva igual con doble clic que desde el servidor de la voz. */
+  var RUTA_REDACTAR = (function () {
+    try {
+      var yo = document.currentScript && document.currentScript.getAttribute("src");
+      if (yo && /mesa\/la_mesa\.js(\?.*)?$/.test(yo)) return yo.replace(/mesa\/la_mesa\.js(\?.*)?$/, "wow/redactar.js");
+    } catch (e) {}
+    return "wow/redactar.js";
+  })();
 
   /* ------------------------------------------------------------------
      0 · UTILIDADES CORTAS
@@ -313,6 +325,61 @@
   }
 
   /* ------------------------------------------------------------------
+     4 bis · REDACTAR  (V1 · taller RD · 24/09/2026)
+     ------------------------------------------------------------------
+     Un botón «Redactar» en cada expediente. Las plantillas están en
+     wow\redactar.js, que se trae de la misma carpeta de la aplicación
+     (un <script> de al lado, no de internet) la primera vez que se
+     pulsa. Aquí solo se pone el botón y el hueco donde sale.
+     NADA SE ENVÍA: redactar.js deja el texto para que lo mande ella.
+     ------------------------------------------------------------------ */
+  var REDACTAR_ESPERANDO = null;
+  function conRedactar(luego) {
+    if (raiz && raiz.IMMOIA_REDACTAR) { luego(raiz.IMMOIA_REDACTAR); return; }
+    if (REDACTAR_ESPERANDO) { REDACTAR_ESPERANDO.push(luego); return; }
+    REDACTAR_ESPERANDO = [luego];
+    function acabar() {
+      var cola = REDACTAR_ESPERANDO || []; REDACTAR_ESPERANDO = null;
+      cola.forEach(function (f) { f(raiz ? raiz.IMMOIA_REDACTAR || null : null); });
+    }
+    try {
+      var s = document.createElement("script");
+      s.setAttribute("src", RUTA_REDACTAR);
+      s.onload = acabar;
+      s.onerror = acabar;
+      (document.head || document.body).appendChild(s);
+    } catch (e) { acabar(); }
+  }
+  function botonRedactar(e, hueco) {
+    var id = String((e && (e.expediente_id || e.id)) || "sin número");
+    var b = crear("button", "mesa_redactar", "Redactar");
+    b.setAttribute("type", "button");
+    b.setAttribute("data-redactar", id);
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", function () {
+      if (hueco.firstChild) {                 /* segunda vez: se cierra */
+        vaciar(hueco); b.setAttribute("aria-expanded", "false"); return;
+      }
+      hueco.appendChild(crear("div", "mesa_nota", "Preparando los textos…"));
+      conRedactar(function (RD) {
+        vaciar(hueco);
+        if (!RD || typeof RD.montar !== "function") {
+          hueco.appendChild(crear("div", "mesa_roto",
+            "No encuentro la pieza de redactar (wow\\redactar.js) al lado de la aplicación. " +
+            "Sin ella no te escribo nada: prefiero no darte un texto a medias."));
+          return;
+        }
+        try { RD.montar(hueco, e, { hoy: E.hoy || hoyDelSistema() }); b.setAttribute("aria-expanded", "true"); }
+        catch (err) {
+          vaciar(hueco);
+          hueco.appendChild(crear("div", "mesa_roto", "No he podido preparar los textos: " + (err && err.message ? err.message : err)));
+        }
+      });
+    });
+    return b;
+  }
+
+  /* ------------------------------------------------------------------
      5 · PINTAR LA MESA
      ------------------------------------------------------------------ */
   function nota(caja, texto, clase) {
@@ -543,6 +610,11 @@
       b.addEventListener("click", function () { abrirExpediente(id); });
       c.appendChild(b);
 
+      /* REDACTAR (taller RD): el botón y, debajo, el hueco donde salen los textos */
+      var hr = crear("div", "mesa_redactar_hueco");
+      c.appendChild(botonRedactar(e, hr));
+      c.appendChild(hr);
+
       caja.appendChild(c);
     });
   }
@@ -720,6 +792,13 @@
     } else {
       suyos.forEach(function (x) { ficha.appendChild(unAviso(x, E.hoy || hoyDelSistema(), false)); });
     }
+
+    /* ---------- redactar (taller RD) ---------- */
+    ficha.appendChild(crear("h3", null, "Redactar"));
+    var hrf = crear("div", "mesa_redactar_hueco");
+    hrf.setAttribute("id", "ficha_redactar");
+    ficha.appendChild(botonRedactar(e, hrf));
+    ficha.appendChild(hrf);
 
     var volver2 = crear("button", "mesa_volver", "Volver a tu mesa");
     volver2.setAttribute("type", "button");

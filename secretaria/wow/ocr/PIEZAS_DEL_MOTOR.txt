@@ -1,0 +1,19 @@
+PIEZAS DEL MOTOR DE LECTURA DE IMÁGENES · puestas por PONER_EL_MOTOR.mjs el 2026-09-24T16:10:45.702Z
+
+  tesseract.js 6.0.1 · licencia Apache-2.0 · LICENSE copiada
+  tesseract.js-core 6.1.2 · licencia Apache-2.0 · LICENSE copiada
+  @tesseract.js-data/spa 1.0.0 · licencia MIT · LICENSE EL PAQUETE NO TRAE FICHERO DE LICENCIA: revisarlo a mano
+
+sha256  bytes  fichero
+10fff78484067759c43028a02a72d76d0b90eb17302bb23b58a9ec5410bc928b       62961  tesseract.min.js
+38645599043239c0eb6db08a6504a92dcdc292200535f3e9339cd77c4443b842      111162  worker.min.js
+775a35df6f2ae100e02609443e6bd5cafcd07983dd6175454ca4a432a7730687     3954181  nucleo/tesseract-core-lstm.wasm.js
+9d7c43fb206dc9f48475228b46bf35f888fa9e6259da2e67d5a75c77049f2dc7     3954569  nucleo/tesseract-core-simd-lstm.wasm.js
+40be52f97b5d4eb7460073dc1f94cd546b27150333c0bf854ed7e7132db6bceb     2100190  idiomas/spa.traineddata.gz
+
+TOTAL: 10183063 bytes = 9.71 MB (lo que se descarga la primera vez que aparece un escaneado;
+       del núcleo solo se descarga UNA de las variantes, la que sabe usar ese navegador)
+
+Direcciones de internet escritas dentro de las piezas (NO se usan: ocr_local.js le da al motor las rutas de la propia web):
+  tesseract.min.js: https://cdn.jsdelivr.net
+  worker.min.js: https://cdn.jsdelivr.net

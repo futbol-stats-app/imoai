@@ -1,0 +1,37 @@
+LICENCIAS · secretaria/wow/ocr/ · el lector de imágenes de La Secretaria
+Escrito el 24/09/2026 (taller S3 · LOS ESCANEADOS).
+
+1. LO NUESTRO
+   ocr_local.js ........ IMMO IA. Código propio. No lleva código de nadie.
+
+2. EL MOTOR (lo pone el montaje con PONER_EL_MOTOR.mjs; HOY NO ESTÁ AQUÍ)
+   En el taller no se pudo descargar: el registro de npm respondió 403
+   (cerrado) tanto desde la nube como desde el ordenador de LEIDY. Por
+   eso aquí NO se escribe ni una versión ni un tamaño que no se haya
+   visto: los apunta PONER_EL_MOTOR.mjs en PIEZAS_DEL_MOTOR.txt, con su
+   sha256 y sus bytes, en el momento de ponerlos.
+
+   Lo que va, y la licencia que declara cada proyecto:
+   · tesseract.js (npm «tesseract.js»): tesseract.min.js y worker.min.js.
+       Licencia Apache 2.0. https://github.com/naptha/tesseract.js
+   · tesseract.js-core (npm «tesseract.js-core»): nucleo/tesseract-core-*lstm.wasm.js.
+       Licencia Apache 2.0. Es Tesseract OCR (Apache 2.0) compilado a
+       WebAssembly junto con Leptonica (licencia propia de Leptonica, tipo
+       BSD de 2 cláusulas) y las librerías de imagen con las que se
+       compile. Antes de publicar, leer el LICENSE que PONER_EL_MOTOR.mjs
+       copia en licencias/ y comprobar que nombra todo lo que va dentro.
+   · Datos del español (npm «@tesseract.js-data/spa»): idiomas/spa.traineddata.gz.
+       Son los modelos de tesseract-ocr/tessdata (Apache 2.0).
+       Si se usa la variante rápida (tesseract-ocr/tessdata_fast, también
+       Apache 2.0), se baja a mano de GitHub y se le pasa con --rapido.
+   · Inglés (opcional, --ingles): «@tesseract.js-data/eng», Apache 2.0.
+
+   La licencia Apache 2.0 pide: conservar el aviso de licencia y de
+   autoría (van en licencias/), decir que se usa, y no usar sus marcas.
+   No pide publicar nuestro código.
+
+3. LO QUE NO VA AQUÍ
+   · pdf.js (wow/pdfjs_motor.js y wow/pdfjs_worker.js) ya estaba en la web
+     y tiene su propio aviso Apache 2.0 dentro del fichero.
+   · El «doble del motor» de las pruebas (pruebas/doble_del_motor/) NO se
+     entrega ni se sube: solo sirve para la prueba del taller.

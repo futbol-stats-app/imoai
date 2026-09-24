@@ -17,29 +17,41 @@
    sale de este ordenador.
 
    ------------------------------------------------------------------
-   QUÉ SE GUARDA: TODAS LAS LLAVES «immoia.», NO SOLO LA DE LA MESA
+   QUÉ SE GUARDA: SOLO LAS LLAVES DE LA SECRETARIA  (cambiado el 24/09)
    ------------------------------------------------------------------
-   Esto es lo que más fácil se hace mal. El trabajo de la agencia no
-   está en una llave, está repartido en varias, y cada parte de la
-   aplicación usa la suya:
+   ANTES se barría TODO lo que empezase por «immoia.». Eso estaba mal
+   (fallo 2 de «LO QUE SABEMOS QUE FALLA HOY»): La Secretaria vive en
+   el mismo dominio que la web de particulares y que la oficina, y el
+   almacén del navegador es UNO por dominio. Barriendo «immoia.» la
+   copia se llevaba también, en texto normal, lo de la web pública
+   (immoia.cuenta.v1, immoia.usuarios.v1, immoia.consultas.v1,
+   immoia.historial.v1…) y la sesión de la oficina
+   (immoia.oficina.cuenta.v1).
 
-     · immoia.secretaria.mis_expedientes.v1   las casas que mete ella
-       (+ .copia_anterior)                    casa\el_almacen.js:38-39
-     · immoia.cartera.v1                      los expedientes de la
-       (+ .de, + .caducada)                   directora   lo_de_ella.js:37
-     · immoia.autonomia.v1                    el expediente activo de
-                                              la bandeja  lo_de_ella.js:38
-     · immoia.mesa.v1                         «lo que llevas esta
-       (+ .sello, + .de)                      semana»     lo_de_ella.js:39
-     · immoia.oficina.cuenta.v1               la cuenta   lo_de_ella.js:40
-     · immoia.lodeella.v1                     la marca    lo_de_ella.js:41
+   QUÉ LLAVES SON DE LA SECRETARIA, MIRADO EN EL CÓDIGO (envío c059133):
+   en toda la carpeta secretaria\ solo se escriben estas dos llaves de
+   trabajo, y las dos las escribe casa\el_almacen.js:
+     · immoia.secretaria.mis_expedientes.v1                (:38)
+     · immoia.secretaria.mis_expedientes.v1.copia_anterior (:39)
+   (más el sondeo immoia.secretaria.mis_expedientes.v1.prueba, que se
+   pone y se quita al momento, y la contabilidad de este fichero,
+   immoia.copia.*, que nunca ha ido dentro de la copia). Las llaves
+   immoia.cartera.v1, immoia.mesa.v1, immoia.autonomia.v1,
+   immoia.lodeella.v1 y immoia.oficina.cuenta.v1 las escriben
+   lo_de_ella.js, cartera.js, inmo.js y oficina.js, que son de la
+   aplicación de la oficina (inmobiliaria.html) y NO se cargan en
+   secretaria\index.html. No son de La Secretaria y ya no se copian.
 
-   Si la copia guardase solo la llave de la mesa, al recuperar se
-   perdería la semana de la directora y su cartera entera. Así que
-   NO se elige a mano ninguna llave: se barre el almacén y se guarda
-   TODO lo que empiece por «immoia.». Lo único que se deja fuera es la
-   contabilidad de este mismo fichero (immoia.copia.*), que no es
-   trabajo de la agencia y que al recuperar solo estorbaría.
+   LA REGLA: se copia lo que empiece por «immoia.secretaria.». Es un
+   prefijo, no una lista de llaves: la llave que La Secretaria añada
+   mañana entra sola en la copia SIEMPRE QUE SE LLAME
+   «immoia.secretaria.…». Esa es la condición, y está escrita aquí y
+   en el INFORME para quien añada una llave nueva.
+
+   Y AL RECUPERAR, LO MISMO: de una copia vieja (de antes de este
+   cambio, que traía todo el dominio) solo se vuelven a poner las
+   llaves de La Secretaria. Las demás se cuentan y se dice que no se
+   han tocado.
 
    ------------------------------------------------------------------
    DÓNDE SE GUARDA: LOS DOS CAMINOS, Y SE DICE CUÁL SE ESTÁ USANDO
@@ -120,6 +132,18 @@
 
   var PREFIJO = "immoia.";
   var PREFIJO_MIO = "immoia.copia.";          /* lo mío no entra en la copia */
+  /* LAS LLAVES DE LA SECRETARIA. Solo esto entra en la copia y solo
+     esto se vuelve a poner al recuperar. Ver la cabecera. */
+  var PREFIJOS_SUYOS = ["immoia.secretaria."];
+  function esLlaveSuya(k) {
+    k = String(k == null ? "" : k);
+    if (k.indexOf(PREFIJO_MIO) === 0) return false;
+    if (/\.prueba$/.test(k)) return false;          /* el sondeo del almacén */
+    for (var i = 0; i < PREFIJOS_SUYOS.length; i++) {
+      if (k.indexOf(PREFIJOS_SUYOS[i]) === 0) return true;
+    }
+    return false;
+  }
   var LLAVE_INDICE = "immoia.copia.indice.v1";
   var LLAVE_PENDIENTE = "immoia.copia.pendiente.v1";
 
@@ -193,11 +217,11 @@
     try { var s = almacen(); if (!s) return false; s.setItem(k, v); return true; } catch (e) { return false; }
   }
 
-  /* TODAS las llaves «immoia.» menos las mías. Se barre el almacén
-     entero: no se escribe a mano ninguna lista de llaves, porque el día
-     que alguien añada una llave nueva nadie se acordaría de tocar esta
-     lista y esa parte del trabajo se quedaría fuera de la copia sin que
-     se note. */
+  /* LAS LLAVES DE LA SECRETARIA (prefijo «immoia.secretaria.»), y
+     nada más. Se barre el almacén entero buscando ese prefijo: así una
+     llave nueva de La Secretaria entra sola, y lo de la web de
+     particulares o la sesión de la oficina, que viven en el mismo
+     almacén porque es el mismo dominio, se queda fuera. */
   function llavesDeLaAgencia() {
     var s = almacen();
     var fuera = {};
@@ -208,9 +232,7 @@
       var k = null;
       try { k = s.key(i); } catch (e) { continue; }
       if (k == null) continue;
-      if (String(k).indexOf(PREFIJO) !== 0) continue;
-      if (String(k).indexOf(PREFIJO_MIO) === 0) continue;
-      if (/\.prueba$/.test(String(k))) continue;      /* el sondeo del almacén */
+      if (!esLlaveSuya(k)) continue;
       var v = null;
       try { v = s.getItem(k); } catch (e) { continue; }
       if (v != null) fuera[k] = v;
@@ -647,9 +669,16 @@
       frase += " OJO: ahora tienes MÁS casas que esa copia. Si sigues, " +
                "lo que hayas hecho después de " + cuando(copia.hecha) + " deja de estar en pantalla.";
     }
+    var ajenas = Object.keys(copia.llaves).filter(function (k) { return !esLlaveSuya(k); });
+    if (ajenas.length) {
+      frase += " Esa copia es de antes del 24/09 y trae también " +
+               (ajenas.length === 1 ? "1 dato" : ajenas.length + " datos") +
+               " que no son de La Secretaria (de la web o de la oficina): esos NO los pongo.";
+    }
     frase += " Antes de tocar nada guardo una copia de lo que tienes ahora mismo, " +
              "así que esto se puede deshacer.";
-    return { ok: true, copia: copia, casas_ahora: ahora, casas_luego: luego, frase: frase };
+    return { ok: true, copia: copia, casas_ahora: ahora, casas_luego: luego, frase: frase,
+             ajenas: ajenas.length };
   }
 
   /* Paso 2: hacerlo. Hace falta la palabra «confirmado», igual que para
@@ -677,14 +706,19 @@
         ESTADO.ultimo_error = t; avisar("error", t);
         return { ok: false, porque: t };
       }
-      var puestas = 0, fallaron = [];
-      Object.keys(copia.llaves).forEach(function (k) {
+      var puestas = 0, fallaron = [], noPuestas = 0;
+      var suyas = Object.keys(copia.llaves).filter(function (k) {
+        if (esLlaveSuya(k)) return true;
+        noPuestas++;
+        return false;
+      });
+      suyas.forEach(function (k) {
         try { s.setItem(k, copia.llaves[k]); puestas++; }
         catch (e) { fallaron.push(k); }
       });
       if (fallaron.length) {
         var t2 = "RECUPERADO A MEDIAS: han entrado " + puestas + " partes de " +
-                 Object.keys(copia.llaves).length + ", y " + fallaron.length +
+                 suyas.length + ", y " + fallaron.length +
                  " no han cabido (el navegador dice que no hay espacio). Mira la pantalla antes de seguir.";
         ESTADO.ultimo_error = t2; avisar("error", t2);
         return { ok: false, porque: t2, puestas: puestas, fallaron: fallaron };
@@ -706,10 +740,12 @@
                " de la copia de " + cuando(copia.hecha) + "." +
                (previa && previa.ok ? " Lo que tenías antes ha quedado guardado en otra copia." :
                 " (No he podido guardar antes una copia de lo que tenías: si te hace falta, dilo.)") +
+               (noPuestas ? " No he puesto " + (noPuestas === 1 ? "1 dato" : noPuestas + " datos") +
+                 " de esa copia que no eran de La Secretaria." : "") +
                " Cierra y vuelve a abrir la aplicación para verlo todo al día.";
       ESTADO.ultimo_error = null;
       avisar("recuperado", t3);
-      return { ok: true, casas: casas, llaves: puestas, texto: t3, releido: releido,
+      return { ok: true, casas: casas, llaves: puestas, no_puestas: noPuestas, texto: t3, releido: releido,
                copia_previa: previa && previa.ok ? previa.nombre : null };
     });
   }
@@ -829,14 +865,26 @@
             traerAMano(repintar);
             return;
           }
-          /* se pregunta ANTES, con la frase exacta de qué va a pasar */
-          queVaAPasarCon(l[0].nombre).then(function (v) {
-            if (!v.ok) { sitio.appendChild(caja(v.porque, true)); return; }
-            if (raiz.confirm(v.frase + "\n\n¿Sigo?")) {
-              recuperarDe(l[0].nombre, "confirmado").then(function (r) {
-                sitio.appendChild(caja(r.ok ? r.texto : r.porque, !r.ok));
-              });
-            }
+          /* LAS TRES ÚLTIMAS, COMO SE PROMETE ARRIBA (C21 de EL_PLANO:
+             antes solo se ofrecía la última). Con una sola, va directa. */
+          function probarCon(nombre) {
+            /* se pregunta ANTES, con la frase exacta de qué va a pasar */
+            queVaAPasarCon(nombre).then(function (v) {
+              if (!v.ok) { sitio.appendChild(caja(v.porque, true)); return; }
+              if (raiz.confirm(v.frase + "\n\n¿Sigo?")) {
+                recuperarDe(nombre, "confirmado").then(function (r) {
+                  sitio.appendChild(caja(r.ok ? r.texto : r.porque, !r.ok));
+                });
+              }
+            });
+          }
+          if (l.length === 1) { probarCon(l[0].nombre); return; }
+          sitio.appendChild(caja("¿Cuál recupero? Estas son las " + l.length + " más recientes; " +
+                                 "las de antes siguen en la carpeta.", false));
+          l.forEach(function (c) {
+            sitio.appendChild(boton("La de " + c.cuando +
+              (c.casas != null ? " (" + c.casas + (c.casas === 1 ? " casa)" : " casas)") : ""),
+              function () { probarCon(c.nombre); }));
           });
         });
       }));
@@ -899,6 +947,8 @@
     laCarpetaEsPosible: laCarpetaEsPosible,
 
     llavesDeLaAgencia: llavesDeLaAgencia,
+    esLlaveSuya: esLlaveSuya,
+    PREFIJOS_SUYOS: PREFIJOS_SUYOS.slice(),
     casasAhora: casasAhora,
     pintarEn: pintarEn,
     alAvisar: function (f) { AVISOS.push(f); },

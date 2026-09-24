@@ -46,8 +46,20 @@
               Los otros cuatro (copia_y_deshacer.js, lector_carpeta.js,
               pdfjs_motor.js, pdfjs_worker.js) sí son idénticos.
               LA VERSIÓN QUE MANDA ES LA DE ESTA CARPETA.
-    · voz/    viene entero de SUBIR\LA_IDA_Y_VUELTA\ASISTENTE_UNO\
-              · solo se ha cambiado voz/configuracion.js
+    · voz/    UNA sola página (voz/index.html), escrita aquí por el
+              taller VZ el 24/09/2026. Antes este comentario decía que
+              voz/ «venía entero de LA_IDA_Y_VUELTA»; esa carpeta NUNCA
+              se publicó y la pestaña «Hablar» se quedaba en blanco.
+              La voz que habla con la IA YA está publicada en /asistente/
+              (es el mismo programa, con su configuración de servidor).
+              voz/index.html dice primero QUÉ SALE Y QUÉ NO, y solo
+              cuando ella pulsa abre /asistente/ en ese mismo recuadro.
+              No se duplican sus 37 ficheros.
+              HAY DOS VOCES Y NO SON LA MISMA:
+                · «Te lo cuento en alto» (wow/la_voz.js): la del
+                  ordenador, lee el repaso. No sale nada.
+                · «Hablar con la IA» (voz/ → /asistente/): lo que ella
+                  dice SÍ sale al servidor. Sus papeles, no.
     · casa/   lo único escrito aquí: la puerta, la barra de abajo
               y la mesa
   ==================================================================
@@ -107,6 +119,14 @@
   #voz_cabecera{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   #voz_texto{margin-top:6px}
   .voz_frase{margin:4px 0}
+  #voz_local_nota{margin:2px 0 0}
+
+  /* ---------- hablar con la IA (VZ · 24/09/2026) ---------- */
+  .que_sale{background:var(--ambar-claro);border:1px solid #fde68a;border-left:4px solid var(--ambar);
+            border-radius:10px;padding:12px 16px;margin:10px 0 16px}
+  .que_sale p{margin:4px 0}
+  .que_sale ul{margin:4px 0;padding-left:20px}
+  /* el recuadro de la voz lo mide casa/casa.css (#voz_marco iframe) */
 
   /* ---------- trabajando ---------- */
   #barra{height:10px;background:#e5e9ee;border-radius:99px;overflow:hidden;margin:16px 0}
@@ -252,6 +272,10 @@
       <b>Te lo cuento en alto</b>
       <button type="button" id="boton_callar" class="suave">Callar la voz</button>
     </div>
+    <!-- LAS DOS VOCES (VZ · 24/09/2026): esta es la del ordenador. Lo dice
+         aquí, al lado, para que no se confunda con «Hablar con la IA». -->
+    <p class="flojo" id="voz_local_nota">Esta voz es la de tu ordenador: lee en alto lo que tienes
+       aquí escrito y no sale nada de aquí. No es la de «Hablar con la IA», que sí habla con el servidor.</p>
     <div id="voz_estado" class="flojo"></div>
     <div id="voz_texto"></div>
   </div>
@@ -341,7 +365,7 @@
     <div id="la_copia"></div>  <!-- LA COPIA DE SEGURIDAD: aquí se pinta «última copia guardada…», por dónde va y sus botones -->
 
     <div class="mesa_atajos">
-      <button type="button" id="ir_a_voz">Hablar con ella</button>
+      <button type="button" id="ir_a_voz">Hablar con la IA</button>
     </div>
 
     <h2>Lo que te frena hoy</h2>
@@ -360,12 +384,27 @@
 </div>
 
 <!-- ==================================================================
-     LUGAR 3 · HABLAR. La misma voz de LA_IDA_Y_VUELTA, dentro de esta
-     aplicación. No se carga hasta que se pulsa: mientras ella está en
-     sus carpetas, esta parte no existe y no pide nada.
+     LUGAR 3 · HABLAR CON LA IA. Es la voz ya publicada en /asistente/.
+     casa\casa.js pone en #voz_marco un recuadro con voz\index.html
+     SOLO cuando ella entra aquí; esa página dice qué sale y qué no, y
+     /asistente/ no se abre hasta que ella pulsa «Empezar».
+     Lo de abajo está escrito en la página y no depende de ningún
+     script: aunque el recuadro fallara, esto se lee igual.
      ================================================================== -->
 <div id="lugar_voz" class="ancho" style="display:none">
-  <h1>Hablar con la secretaria.</h1>
+  <h1>Hablar con la IA.</h1>
+  <div class="que_sale" id="voz_que_sale">
+    <p><b>Esto no es como lo de tus carpetas: aquí sí sale algo de este ordenador.</b></p>
+    <ul>
+      <li><b>Tus papeles no salen.</b> Esta voz no ve tus carpetas, ni tus papeles, ni tu mesa.</li>
+      <li><b>Lo que le dices, sí.</b> Tu voz se pasa a texto con el reconocimiento del navegador
+          (en Chrome lo hace Google; en Edge, Microsoft), y ese texto va al servidor de IMMO IA,
+          que contesta con una inteligencia artificial.</li>
+      <li>No le digas nada que no quieras que salga de este ordenador.</li>
+    </ul>
+    <p class="flojo">La otra voz, la que lee en alto el repaso de tus carpetas, es de tu ordenador
+       y no sale nada: está en «Tus carpetas».</p>
+  </div>
   <p class="flojo" id="voz_pie"></p>
   <div id="voz_aviso" class="aviso_casa" style="display:none"></div>
   <div id="voz_marco"></div>
@@ -380,7 +419,7 @@
     <span class="barra_sitios">
       <button type="button" class="sitio activo" data-lugar="mesa">Tu mesa</button>
       <button type="button" class="sitio" data-lugar="carpetas">Tus carpetas</button>
-      <button type="button" class="sitio" data-lugar="voz">Hablar</button>
+      <button type="button" class="sitio" data-lugar="voz">Hablar con la IA</button>
     </span>
   </div>
 </nav>

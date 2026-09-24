@@ -108,6 +108,16 @@
     { clave: "urbanistico", cual: "certificado urbanístico de compatibilidad",
       pistas: [/urbanistic/, /compatibilidad\s+urbanistica/] },
 
+    /* E1 · LA ENERGÍA (24/09/2026) · el recibo de la luz. Salía como
+       «papel sin identificar» en la carpeta de un cliente de placas, y es
+       uno de los papeles que pide el expediente de energía («0 - EL MVP DE
+       ENERGIA.md», ALCANCE punto 5: certificados, recibo de luz, IBI, DNI).
+       Las pistas piden «recibo»/«factura» delante de «luz»/«electricidad»,
+       o el código CUPS del suministro: «luz» a secas no basta. */
+    { clave: "recibo_luz", cual: "recibo de la luz",
+      pistas: [/recibo\s+(de\s+)?(la\s+)?luz/, /factura\s+(de\s+)?(la\s+)?(luz|electricidad)/,
+               /\bcups\b/, /suministro\s+electric/] },
+
     { clave: "foto", cual: "foto del piso",
       pistas: [] }    /* se pone por la extensión, no por el texto */
   ];
@@ -411,18 +421,34 @@
     while ((m = re.exec(s))) empuja(out, m[3], m[2], m[1], m.index, m[0], incluirImposibles);
     re = /(?<![\d])(\d{4})-(\d{1,2})-(\d{1,2})(?![\d])/g;
     while ((m = re.exec(s))) empuja(out, m[1], m[2], m[3], m.index, m[0], incluirImposibles);
+    /* ARREGLO DEL 24/09/2026 (S2, fallo 7) · «7/11/26». El año con dos
+       cifras se lee SOLO con barras, que es como lo escribe la gente
+       («válido hasta 7/11/26»). Con guiones o puntos no: «1.2.26» o
+       «9-1-25» son números de artículo o de versión tanto como fechas, y
+       una fecha que no es no se inventa. Dos cifras son siempre 20xx. */
+    re = /(?<![\d\/…])(\d{1,2})\/(\d{1,2})\/(\d{2})(?![\d\/…])/g;
+    while ((m = re.exec(s))) empuja(out, "20" + m[3], m[2], m[1], m.index, m[0], incluirImposibles);
     re = new RegExp("(?<![\\d])(\\d{1,2})\\s+de\\s+(" + MESES.join("|") + ")\\s+de\\s+(\\d{4})(?![\\d])", "gi");
     while ((m = re.exec(s))) empuja(out, m[3], MESES.indexOf(m[2].toLowerCase()) + 1, m[1], m.index, m[0], incluirImposibles);
     /* por orden de aparición: la primera fecha del texto es la primera */
     out.sort(function (a, b) { return a.pos - b.pos; });
     return out;
   }
+  /* ARREGLO DEL 24/09/2026 (S2, fallo 12) · EL MES IMPOSIBLE.
+     Antes un mes fuera de 1-12 salía por el primer «return», ANTES de
+     llegar a donde se guardan las imposibles: «2026-13-01» se descartaba
+     en silencio mientras «2026-02-30» sí se avisaba. Ahora las dos van
+     al mismo sitio, y se apunta qué es lo que no existe (el mes o el
+     día) para decir el motivo verdadero. El año sigue igual: fuera de
+     1990-2100 no se toma por fecha, porque puede ser cualquier número. */
   function empuja(out, a, me, d, i, crudo, incluirImposibles) {
     a = Number(a); me = Number(me); d = Number(d);
-    if (!(a >= 1990 && a <= 2100 && me >= 1 && me <= 12 && d >= 1)) return;
-    var existe = d <= diasDelMes(a, me);
-    if (!existe) {
-      if (incluirImposibles) out.push({ iso: null, imposible: true, pos: i, crudo: crudo });
+    if (!(a >= 1990 && a <= 2100 && d >= 1 && d <= 99 && me >= 0 && me <= 99)) return;
+    var que = null;
+    if (me < 1 || me > 12) que = "mes";
+    else if (d > diasDelMes(a, me)) que = "dia";
+    if (que) {
+      if (incluirImposibles) out.push({ iso: null, imposible: true, que_no_existe: que, mes: me, pos: i, crudo: crudo });
       return;
     }
     out.push({ iso: a + "-" + dos(me) + "-" + dos(d), pos: i, crudo: crudo });
@@ -476,7 +502,11 @@
       if (x.imposible && !imposible) imposible = x;
       if (!x.imposible && !buenaEnNombre) buenaEnNombre = x;
     });
-    if (imposible) f.fecha_imposible_en_el_nombre = imposible.crudo;
+    if (imposible) {
+      f.fecha_imposible_en_el_nombre = imposible.crudo;
+      f.fecha_imposible_que = imposible.que_no_existe;      /* «mes» o «dia» */
+      f.fecha_imposible_mes = imposible.mes;
+    }
     if (buenaEnNombre) {
       return { iso: buenaEnNombre.iso, de_donde: "el nombre del fichero",
                frase: "«" + buenaEnNombre.crudo + "» en «" + f.nombre + "»" };
@@ -491,8 +521,18 @@
                  frase: recorte(f.texto, Math.max(0, enTexto[i].pos - 25), enTexto[i].crudo.length + 25) };
       }
     }
-    return { iso: enTexto[0].iso, de_donde: "el texto del papel",
-             frase: recorte(f.texto, enTexto[0].pos, enTexto[0].crudo.length) };
+    /* S2, fallo 7 · si la primera fecha del texto es la de «válido
+       hasta», ésa NO es la del papel: es cuándo deja de valer. Se coge
+       la primera que no sea de caducidad; si todas lo son, el papel se
+       queda sin fecha de emisión (y su caducidad la dirá el repaso,
+       leída del propio papel). */
+    var t0 = String(f.texto || "").slice(0, 4000);
+    for (var j = 0; j < enTexto.length; j++) {
+      if (rotuloDeLaFecha(t0, enTexto[j].pos) === "válido hasta") continue;
+      return { iso: enTexto[j].iso, de_donde: "el texto del papel",
+               frase: recorte(f.texto, enTexto[j].pos, enTexto[j].crudo.length) };
+    }
+    return null;
   }
 
   /* ==================================================================
@@ -592,6 +632,16 @@
 
   function agrupar(ficheros, opciones) {
     opciones = opciones || {};
+    /* ARREGLO DEL 24/09/2026 (S2, fallo 11) · LAS COPIAS, PRIMERO.
+       hacerExpediente() ya se saltaba las copias («if (f.duplicado_de)
+       return»), pero la marca duplicado_de la ponía buscarDuplicados(),
+       que se llamaba AL FINAL, en el «return» de esta función: cuando se
+       montaban los expedientes la marca todavía no existía. Así un papel
+       y su copia contaban como dos papeles, y cada aviso que salía del
+       papel salía dos veces («hay una fecha apuntada que no tiene papel»
+       x2 en el nivel 4). Ahora se buscan antes de repartir nada. */
+    ficheros.forEach(function (f) { if (f) delete f.duplicado_de; });
+    var losDuplicados = buscarDuplicados(ficheros);
     /* --- 4.1 lo que dice cada fichero por sí mismo --- */
     ficheros.forEach(function (f) {
       f.papel = queePapelEs(f);
@@ -837,7 +887,7 @@
     });
 
     return { expedientes: expedientes, sueltos: sueltos,
-             duplicados: buscarDuplicados(ficheros), raiz: raizComun };
+             duplicados: losDuplicados, raiz: raizComun };
   }
 
   function raizDe(ficheros) {
@@ -881,18 +931,119 @@
              por_que: "lo dice «" + pruebas[orden[0]].nombre + "»: aparece «" + pruebas[orden[0]].frase + "»" };
   }
 
+  /* ------------------------------------------------------------------
+     E1 · LA ENERGÍA (24/09/2026) · EL EXPEDIENTE DE ENERGÍA (PLACAS)
+     ------------------------------------------------------------------
+     Un cliente que quiere placas no vende, no alquila y no pone su casa
+     en vacacional. Hasta hoy La Secretaria solo sabía de esas tres, así
+     que a sus carpetas les decía «me falta si es venta, alquiler o
+     vacacional». Ahora lo reconoce por una de dos vías, y dice cuál:
+       1. la CARPETA donde están sus papeles lo dice («PLACAS»,
+          «ENERGÍA», «FOTOVOLTAICA», «AUTOCONSUMO»), en al menos la mitad
+          de ellos. La carpeta raíz que se suelta no cuenta cuando los
+          papeles están en subcarpetas: si alguien suelta «ENERGÍA» con
+          ventas dentro, eso no convierte las ventas en placas.
+       2. LOS PAPELES: certificado energético + recibo de la luz + recibo
+          del IBI, y ninguno dice venta, alquiler ni vacacional.
+     En los dos casos, si hay un papel que es de otra operación sin
+     discusión (arras, contrato de alquiler, fianza, notaría, escritura
+     de compraventa, declaración responsable, registro turístico...), NO
+     es energía: se queda como estaba.
+     No cambia `tipo_operacion` (sigue en null): la pantalla solo sabe
+     pintar venta, alquiler y vacacional, y pantalla.js no es de este
+     taller. Va en `tipo_expediente: "energia"`, que es lo que lee
+     repaso.js para pedirle SUS papeles y no los de una venta.
+     ------------------------------------------------------------------ */
+  var CARPETA_DE_ENERGIA = /\bplacas?\b|\benergia\b|fotovoltaic|autoconsumo|paneles\s+solares/;
+  var PAPEL_DE_OTRA_OPERACION = ["arras", "notaria", "contrato", "fianza", "inventario", "memoria",
+                                 "declaracion", "registro_tur", "urbanistico"];
+  function carpetasPropias(f) {
+    var t = String(f.ruta || "").split("/");
+    t.pop();
+    if (t.length > 1) t.shift();      /* la raíz que se ha soltado no cuenta si hay subcarpetas */
+    return t.join(" / ");
+  }
+  function esDeEnergia(ficheros, op) {
+    var propios = ficheros.filter(function (f) { return !f.duplicado_de; });
+    if (!propios.length) return null;
+    var otra = null;
+    propios.forEach(function (f) {
+      if (otra || !f.papel) return;
+      if (PAPEL_DE_OTRA_OPERACION.indexOf(f.papel.clave) >= 0) otra = f;
+      else if (f.papel.clave === "escritura" &&
+               /compraventa/.test(sinTildes(f.nombre + " " + String(f.texto || "").slice(0, 1500)))) otra = f;
+    });
+    if (otra) return null;
+    var porCarpeta = propios.filter(function (f) { return CARPETA_DE_ENERGIA.test(comoPalabras(carpetasPropias(f))); });
+    if (porCarpeta.length && porCarpeta.length * 2 >= propios.length) {
+      return { via: "carpeta", fichero: porCarpeta[0].id, nombre: porCarpeta[0].nombre,
+               por_que: "lo dice la carpeta donde están sus papeles: «" + carpetasPropias(porCarpeta[0]) + "»" };
+    }
+    if (op && op.tipo) return null;
+    var hay = {};
+    propios.forEach(function (f) { if (f.papel && f.papel.clave) hay[f.papel.clave] = hay[f.papel.clave] || f; });
+    if (hay.energetico && hay.recibo_luz && hay.ibi) {
+      return { via: "papeles", fichero: hay.recibo_luz.id, nombre: hay.recibo_luz.nombre,
+               por_que: "lo dicen sus papeles: certificado energético, recibo de la luz y recibo del IBI, " +
+                        "y ninguno habla de venta, alquiler ni vacacional" };
+    }
+    return null;
+  }
+
+  /* ------------------------------------------------------------------
+     ARREGLO DEL 24/09/2026 (S2, fallo 8) · EL PAPEL QUE HACE CADA NOMBRE
+     ------------------------------------------------------------------
+     En una compraventa con arras el comprador y el vendedor SON dos
+     personas distintas, y en un alquiler el inquilino y el casero. El
+     aviso de «papeles a nombre de 2 personas distintas» salía en toda
+     venta con arras, con un motivo («o es el mismo expediente abierto
+     dos veces») que ahí es falso. La etiqueta que va delante del nombre
+     ya se leía («Comprador:», «Titular registral:»): ahora se usa.
+       · «otra_parte»: comprador, arrendatario. Es la otra parte de la
+         operación: que no se llame como el dueño es lo normal.
+       · «dueno»: titular, propietario, vendedor, arrendador.
+       · «sin_rol»: «a nombre de», «D./Dña.», solicitante, beneficiario.
+         No dicen qué papel hace esa persona, así que se siguen mirando
+         igual que antes: no se calla nada que antes se dijera por ellos.
+     ------------------------------------------------------------------ */
+  function rolDelNombre(etiqueta) {
+    var e = sinTildes(etiqueta || "");
+    if (/^(comprador|arrendatari)/.test(e)) return "otra_parte";
+    if (/^(titular|propietari|vendedor|arrendador)/.test(e)) return "dueno";
+    return "sin_rol";
+  }
+
   function hacerExpediente(id, ficheros, opciones) {
     var dir = null, per = null, ref = null;
     var nombres = {};
+    /* Un papel repetido solo se salta aquí si el papel del que es copia
+       está en ESTE mismo expediente. Si estuviera en otro, saltárselo
+       dejaría a este expediente sin un papel que sí tiene. */
+    var aqui = {};
+    ficheros.forEach(function (f) { aqui[f.id] = true; });
+    function esCopiaDeAqui(f) { return !!(f.duplicado_de && aqui[f.duplicado_de]); }
+    /* Un papel que EXPLICA un cambio de dueño: una escritura (la
+       anterior trae al vendedor de antes) o una herencia o donación. Los
+       nombres que salen de ese papel no se cruzan con el titular de hoy. */
+    function explicaElCambio(f) {
+      if (f.papel && f.papel.clave === "escritura") return true;
+      return /herencia|donacion|adjudicacion hereditaria/.test(sinTildes(f.nombre + " " + String(f.texto || "").slice(0, 2500)));
+    }
     ficheros.forEach(function (f) {
       if (!dir && f.direccion) dir = { d: f.direccion, f: f };
-      if (!per && f.persona) per = { p: f.persona, f: f };
+      if (!per && f.persona && rolDelNombre(f.persona.etiqueta) !== "otra_parte") per = { p: f.persona, f: f };
       if (!ref && f.referencia) ref = { r: f.referencia, f: f };
-      if (f.persona) {
+      if (f.persona && !esCopiaDeAqui(f)) {
+        var rol = rolDelNombre(f.persona.etiqueta);
+        if (rol === "otra_parte" || explicaElCambio(f)) return;
         nombres[f.persona.clave] = nombres[f.persona.clave] ||
-          { nombre: f.persona.nombre, fichero: f.id, ruta: f.ruta, frase: f.persona.frase };
+          { nombre: f.persona.nombre, fichero: f.id, ruta: f.ruta, frase: f.persona.frase,
+            rol: rol, etiqueta: String(f.persona.etiqueta || "").toLowerCase() };
       }
     });
+    /* si ningún nombre es del lado del dueño, el propietario se queda como
+       estaba antes (el primer nombre que salga): no se deja en blanco */
+    if (!per) ficheros.forEach(function (f) { if (!per && f.persona) per = { p: f.persona, f: f }; });
     /* La misma finca con papeles a nombre de dos personas distintas.
        Esto no se ve nunca abriendo un expediente: hay que mirarlos
        todos a la vez. Y no se afirma nada: se señalan los dos papeles.
@@ -914,7 +1065,17 @@
         if (!yaEsta) distintas.push(x);
       });
     var dosNombres = distintas.length > 1 ? distintas : null;
+    /* el motivo, para la pantalla: qué papel hace cada nombre */
+    if (dosNombres) dosNombres.forEach(function (x) {
+      x.como = x.rol === "dueno" ? "como " + (x.etiqueta || "titular") : "sin decir qué papel hace";
+    });
     var op = queOperacionEs(ficheros);
+    /* E1 · energía: si lo es, la operación se queda en null (ver esDeEnergia) */
+    var energia = esDeEnergia(ficheros, op);
+    if (energia && op.tipo) {
+      op = { tipo: null, antes: op.tipo,
+             por_que: "los papeles olían a «" + op.tipo + "», pero " + energia.por_que + " y no hay ningún papel que sea de esa operación sin discusión" };
+    }
 
     /* ----------------------------------------------------------------
        QUÉ LLEVA PARADO: la fecha tiene que salir DE LOS PAPELES
@@ -933,15 +1094,15 @@
        ---------------------------------------------------------------- */
     var masNuevo = null, masViejo = null;
     ficheros.forEach(function (f) {
-      if (f.duplicado_de || !f.fecha_papel) return;
+      if (esCopiaDeAqui(f) || !f.fecha_papel) return;
       if (!masNuevo || f.fecha_papel.iso > masNuevo.fecha_papel.iso) masNuevo = f;
       if (!masViejo || f.fecha_papel.iso < masViejo.fecha_papel.iso) masViejo = f;
     });
-    var sinFechaNinguna = ficheros.filter(function (f) { return !f.duplicado_de && !f.fecha_papel; }).length;
+    var sinFechaNinguna = ficheros.filter(function (f) { return !esCopiaDeAqui(f) && !f.fecha_papel; }).length;
 
     var docs = [];
     ficheros.forEach(function (f) {
-      if (f.duplicado_de) return;                 /* las copias no cuentan como papeles distintos */
+      if (esCopiaDeAqui(f)) return;               /* las copias no cuentan como papeles distintos */
       var literal = f.nombre;
       if (f.fecha_papel) literal += " — " + f.fecha_papel.frase;
       /* las fechas sueltas que menciona el papel: de ahí salen los choques */
@@ -972,6 +1133,10 @@
         fecha: f.fecha_papel ? f.fecha_papel.iso : null,
         literal_en_OT25: literal,
         _fichero: f.id, _nombre: f.nombre, _papel: f.papel, _borrador: borrador || null,
+        /* S2, fallo 9: repaso.js tiene que saber si este papel se ha
+           podido leer, para no decir «pone que...» de uno que no pone nada */
+        _lectura: f.lectura || null, _bytes: f.bytes == null ? null : f.bytes,
+        _motivo_no_leido: f.motivo_no_leido || "",
         _titular_con_pasaporte: titularConPasaporte(f)
       });
     });
@@ -990,6 +1155,8 @@
                     : { via: null, piso: null, municipio: null, direccion_literal: null },
       propietario: { nombre: per ? per.p.nombre : null },
       tipo_operacion: op.tipo,
+      /* E1 · «energia» (placas) o null. repaso.js lo lee para pedirle sus papeles */
+      tipo_expediente: energia ? "energia" : null,
       documentos: docs,
       ultimo_movimiento: masNuevo
         ? { fecha: masNuevo.fecha_papel.iso,
@@ -1004,6 +1171,7 @@
         persona: per ? { fichero: per.f.id, nombre: per.f.nombre, de_donde: per.p.de_donde, frase: per.p.frase } : null,
         referencia: ref ? { fichero: ref.f.id, nombre: ref.f.nombre, de_donde: ref.r.de_donde, frase: ref.r.frase } : null,
         operacion: op,
+        energia: energia,
         ultimo_movimiento: masNuevo ? { fichero: masNuevo.id, nombre: masNuevo.nombre,
                                         frase: masNuevo.fecha_papel.frase } : null
       },
@@ -1025,6 +1193,13 @@
         var x = null;
         ficheros.forEach(function (f) { if (!x && f.sin_repartir) x = f.sin_repartir; });
         return x;
+      })(),
+      /* S2, fallo 10: TODOS sus papeles son papeles que no dicen el piso
+         de un portal donde conozco varios. Esto no es una casa: es un
+         montón apartado. No se le piden papeles como a una casa. */
+      _solo_papeles_sin_piso: (function () {
+        var propios = ficheros.filter(function (f) { return !esCopiaDeAqui(f); });
+        return propios.length > 0 && propios.every(function (f) { return !!f.sin_repartir; });
       })()
     };
   }
@@ -1245,8 +1420,39 @@
     return out;
   }
 
+  /* ==================================================================
+     8. LO QUE NO SE ABRE, CON SU MOTIVO VERDADERO (S2, 24/09/2026)
+     ------------------------------------------------------------------
+     lector_carpeta.js no es de este taller y no se toca. Aquí se corrige
+     encima, antes de contar, lo que dice de dos casos:
+       · un PDF de 0 bytes: el lector de PDF lo daba como «error» con un
+         motivo en inglés («The PDF file is empty...») y se contaba como
+         roto. No está roto: está vacío. Se dice así y en castellano.
+       · un fichero que se llama .pdf y por dentro es un zip (el Word
+         .docx lo es): pareceUnZip() mira los cuatro primeros bytes. Lo
+         demás (leerlo como Word) lo hace la pantalla, que es quien tiene
+         el fichero entero.
+     ================================================================== */
+  function corregirLoQueNoSeAbre(ficheros) {
+    var cambiados = 0;
+    (ficheros || []).forEach(function (f) {
+      if (!f || f.bytes !== 0 || f.lectura === "vacio" || f.lectura === "leido") return;
+      f.lectura = "vacio";
+      f.lectura_antes = f.lectura_antes || "error";
+      f.motivo_no_leido = "el fichero está vacío: pesa 0 bytes, así que dentro no pone nada";
+      cambiados++;
+    });
+    return cambiados;
+  }
+  function pareceUnZip(u8) {
+    return !!(u8 && u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4B && u8[2] === 0x03 && u8[3] === 0x04);
+  }
+
   var API = {
     version: VERSION,
+    corregirLoQueNoSeAbre: corregirLoQueNoSeAbre,
+    pareceUnZip: pareceUnZip,
+    rolDelNombre: rolDelNombre,
     TIPOS: TIPOS,
     colgadoDeUnBorrador: colgadoDeUnBorrador,
     plazoDemasiadoViejo: plazoDemasiadoViejo,
@@ -1270,6 +1476,7 @@
     nombreLimpio: nombreLimpio,
     buscarDuplicados: buscarDuplicados,
     queOperacionEs: queOperacionEs,
+    esDeEnergia: esDeEnergia,
     pruebasDelAviso: pruebasDelAviso,
     aISO: aISO, sinTildes: sinTildes
   };

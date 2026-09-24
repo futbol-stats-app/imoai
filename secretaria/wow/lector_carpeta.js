@@ -15,10 +15,19 @@
      · POR DENTRO, si se puede: PDF con texto (pdf.js empotrado), .txt
        .md .csv .json (texto plano) y .docx (zip + deflate del propio
        navegador).
-     · POR DENTRO, NO SE PUEDE: PDF escaneado (sin capa de texto),
-       fotos (jpg, png, heic...), y cualquier formato que no sea de los
-       de arriba. Eso se cuenta aparte y se dice en pantalla con el
-       número exacto. Nunca se redondea hacia arriba.
+     · POR DENTRO, CON EL LECTOR DE IMÁGENES (desde el 24/09/2026):
+       fotos (jpg, png, webp, gif, bmp, avif) y PDF escaneados (sin
+       capa de texto). Se leen letra a letra DENTRO DEL NAVEGADOR con
+       wow/ocr/ocr_local.js, que se carga SOLO si aparece uno de estos
+       papeles. Lo que sale entra por el mismo camino que el texto de un
+       PDF normal, marcado como «leído de una imagen» y con la seguridad
+       que da el motor. Si no sale nada que se entienda, se dice que no
+       se ha podido leer. No se inventa ni una letra.
+     · POR DENTRO, NO SE PUEDE: lo que el lector de imágenes no consigue
+       leer (o si no ha podido arrancar), las fotos que este navegador no
+       sabe abrir (.heic y .tif en Chrome y Edge), y cualquier formato
+       que no sea de los de arriba. Eso se cuenta aparte y se dice en
+       pantalla con el número exacto. Nunca se redondea hacia arriba.
    ================================================================== */
 (function (raiz) {
   "use strict";
@@ -60,6 +69,41 @@
     if (b == null) return "un tamaño que no sé";
     return (b / 1048576).toFixed(0) + " MB";
   }
+
+  /* ------------------------------------------------------------------
+     EL LECTOR DE IMÁGENES (OCR) · 24/09/2026
+     ------------------------------------------------------------------
+     Un papel escaneado es una foto de un papel. Hasta hoy se contaba y
+     se decía «no lo he podido abrir». Ahora se lee con el lector de
+     imágenes que vive en wow/ocr/, sin que salga nada del ordenador.
+
+     · Se carga PEREZOSO: solo si en la carpeta hay una foto o un PDF sin
+       texto. Una carpeta de PDF con texto no lo descarga nunca.
+     · Va DESPUÉS de todo lo demás: primero se lee lo rápido, y lo lento
+       (letra a letra) se hace al final, uno detrás de otro, en su hilo.
+       La pantalla no se queda congelada y la barra sigue moviéndose.
+     · TOPES: de un PDF escaneado se leen las PAGINAS_OCR primeras
+       páginas, y en una misma pasada se leen como mucho TOPE_OCR papeles
+       así. Lo que queda fuera se dice, papel por papel.
+     · Si lo que sale no llega a texto de verdad (pocas letras, o el
+       motor no se fía), NO se da por leído.
+     ------------------------------------------------------------------ */
+  var PAGINAS_OCR = 3;
+  var TOPE_OCR = 100;
+  var SEGURIDAD_MINIMA_OCR = 45;          /* % de seguridad media del motor */
+  var PALABRAS_MINIMAS_OCR = 5;           /* palabras de verdad (3 letras o más, o números) */
+
+  /* De dónde se ha cargado ESTE fichero, para pedir el lector de
+     imágenes a la misma carpeta de la misma web. Con su misma marca ?v=
+     si el montaje se la ha puesto. */
+  var DE_DONDE_VENGO = (function () {
+    try {
+      var s = raiz && raiz.document && raiz.document.currentScript;
+      if (s && s.src) return { carpeta: s.src.replace(/[?#].*$/, "").replace(/[^\/]*$/, ""),
+                               marca: (s.src.match(/\?[^#]*/) || [""])[0] };
+    } catch (e) { }
+    return null;
+  })();
 
   var EXT_TEXTO = ["txt", "md", "csv", "json", "xml", "htm", "html", "eml"];
   var EXT_FOTO = ["jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "heic", "heif", "webp", "avif"];
@@ -399,11 +443,132 @@
     return new Response(ds.readable).text();
   }
 
+  /* ------------------------------------------------------------------
+     2 bis. LEER LO ESCANEADO (fotos y PDF sin texto)
+     ------------------------------------------------------------------ */
+
+  /* ¿Hay navegador de verdad? Fuera de él (las pruebas en Node) esto no
+     existe, y todo se queda exactamente como estaba antes. */
+  function hayDondeLeerImagenes() {
+    return !!(raiz && raiz.document && typeof raiz.document.createElement === "function");
+  }
+
+  var cargandoOcr = null;
+  function cargarOcr() {
+    if (raiz.IMMOIA_OCR) return Promise.resolve(raiz.IMMOIA_OCR);
+    if (cargandoOcr) return cargandoOcr;
+    if (!DE_DONDE_VENGO) return Promise.reject(new Error("no sé desde dónde se ha cargado la página"));
+    cargandoOcr = new Promise(function (ok, mal) {
+      var d = raiz.document, s = d.createElement("script");
+      s.src = DE_DONDE_VENGO.carpeta + "ocr/ocr_local.js" + DE_DONDE_VENGO.marca;
+      s.async = true;
+      s.onload = function () {
+        if (raiz.IMMOIA_OCR) ok(raiz.IMMOIA_OCR);
+        else mal(new Error("el lector de imágenes no está en su sitio"));
+      };
+      s.onerror = function () { mal(new Error("el lector de imágenes no está en su sitio")); };
+      (d.head || d.documentElement).appendChild(s);
+    });
+    cargandoOcr.catch(function () { cargandoOcr = null; });
+    return cargandoOcr;
+  }
+
+  function esCandidatoOcr(f) {
+    if (f.ext === "pdf") return f.lectura === "sin_texto";
+    return EXT_FOTO.indexOf(f.ext) >= 0 && f.lectura === "no_se_puede";
+  }
+
+  function porciento(n) { return Math.max(0, Math.min(100, Math.round(n))) + " %"; }
+
+  /* Se decide si lo que ha salido es texto de verdad. Si no lo es, el
+     papel se queda como no leído y se dice por qué, con el número. */
+  function apuntarOcr(f, r) {
+    var t = String(r.texto || "").replace(/\s+/g, " ").trim();
+    var sinPuntos = t.replace(/…/g, "").replace(/\s+/g, " ").trim();
+    var util = sinPuntos.length >= MINIMO_PARA_DECIR_QUE_LO_HE_LEIDO &&
+               r.confianza >= SEGURIDAD_MINIMA_OCR &&
+               r.palabras_buenas >= PALABRAS_MINIMAS_OCR;
+    f.ocr = { confianza: r.confianza, palabras: r.palabras, palabras_dudosas_quitadas: r.palabras_quitadas,
+              paginas_leidas: r.paginas_leidas, paginas_total: r.paginas_total,
+              motor: "tesseract.js (" + (raiz.IMMOIA_OCR && raiz.IMMOIA_OCR.idiomas) + "), en este navegador" };
+    if (!util) {
+      f.ocr.sin_resultado = true;
+      var que = f.ext === "pdf" ? "es un PDF escaneado" : "es una foto";
+      f.motivo_no_leido = que + " y lo he intentado leer letra a letra, pero no sale nada que se entienda " +
+        "(seguridad del " + porciento(r.confianza) + "): no me invento lo que pone";
+      return;
+    }
+    f.texto = t.slice(0, 40000);
+    f.lectura = "leido";
+    f.leido_de_imagen = true;
+    f.motivo_no_leido = "";
+    var aviso = "leído de una imagen, con una seguridad del " + porciento(r.confianza) +
+                ": puede haber alguna letra mal leída";
+    if (r.palabras_quitadas) {
+      aviso += "; " + (r.palabras_quitadas === 1 ? "una palabra dudosa la he dejado fuera"
+                                                 : r.palabras_quitadas + " palabras dudosas las he dejado fuera");
+    }
+    if (r.paginas_total > r.paginas_leidas) {
+      aviso += "; de sus " + r.paginas_total + " páginas he leído las " + r.paginas_leidas + " primeras";
+    }
+    f.aviso_de_lectura = aviso;
+  }
+
+  /* avisar(sumaUno, f): cuenta el papel como hecho (o no, si es solo
+     progreso dentro del mismo papel) y se lo dice a la pantalla. */
+  function pasadaOcr(pendientes, avisar) {
+    if (!pendientes.length) return Promise.resolve();
+    function nota(f, porque) {
+      f.ocr_no_arranca = porque;
+      f.motivo_no_leido = f.motivo_no_leido + " (el lector de imágenes no ha podido arrancar: " + porque + ")";
+    }
+    return cargarOcr().then(function (OCR) {
+      var cad = Promise.resolve();
+      pendientes.forEach(function (f, i) {
+        cad = cad.then(function () {
+          if (i >= TOPE_OCR) {
+            f.ocr_fuera_de_tope = true;
+            f.motivo_no_leido += " (en esta carpeta hay más de " + TOPE_OCR + " fotos y escaneados; " +
+                                 "he leído los " + TOPE_OCR + " primeros para no tenerte esperando, y este se ha quedado fuera)";
+            return;
+          }
+          var no = OCR.porQueNoPuedo();
+          if (no) { nota(f, no); return; }
+          var progreso = function (pag, de, p) {
+            avisar(false, { nombre: f.nombre + " · lo estoy leyendo letra a letra" +
+              (de > 1 ? " (página " + pag + " de " + de + ")" : "") + " · " + porciento((p || 0) * 100) });
+          };
+          var leer = f.ext === "pdf" ? OCR.leerPdfEscaneado(f.file, PAGINAS_OCR, progreso)
+                                     : OCR.leerFoto(f.file, progreso);
+          return leer.then(function (r) { apuntarOcr(f, r); }, function (e) {
+            if (e && e.no_se_abre) {
+              f.motivo_no_leido = "es una foto ." + f.ext + " y este navegador no sabe abrirla para leerla" +
+                (f.ext === "heic" || f.ext === "heif" ? " (Chrome y Edge no abren .heic): pásala a .jpg y la leo" : "");
+            } else {
+              f.motivo_no_leido += " (lo he intentado leer como imagen y no ha podido ser: " +
+                                   ((e && e.message) || "error") + ")";
+            }
+          });
+        }).then(function () {
+          avisar(true, f);
+          /* un respiro entre papel y papel, para que la pantalla pinte */
+          return new Promise(function (r) { setTimeout(r, 0); });
+        });
+      });
+      return cad.then(function () { return OCR.terminar(); });
+    }, function (e) {
+      var porque = (e && e.message) || "error";
+      pendientes.forEach(function (f) { nota(f, porque); avisar(true, f); });
+    });
+  }
+
   /* Recorre todos los ficheros. Va de tanda en tanda y suelta el hilo
      entre tanda y tanda, para que la pantalla no se quede congelada y
      la barra de progreso se mueva de verdad. */
   function leerPorDentro(ficheros, avisar) {
     var hechos = 0;
+    var paraLeerComoImagen = [];
+    var conImagenes = hayDondeLeerImagenes();
     function uno(f) {
       var ext = f.ext;
       var p;
@@ -433,6 +598,8 @@
         p = Promise.resolve();
       }
       return p.then(function () {
+        /* lo escaneado se aparta para leerlo al final, con calma */
+        if (conImagenes && esCandidatoOcr(f)) { paraLeerComoImagen.push(f); return; }
         hechos++;
         if (avisar) avisar(hechos, ficheros.length, f);
       });
@@ -442,7 +609,12 @@
       cad = cad.then(function () { return uno(f); });
       if (i % 5 === 4) cad = cad.then(function () { return new Promise(function (r) { setTimeout(r, 0); }); });
     });
-    return cad.then(function () { return cuentaDeLectura(ficheros); });
+    return cad.then(function () {
+      return pasadaOcr(paraLeerComoImagen, function (sumaUno, f) {
+        if (sumaUno) hechos++;
+        if (avisar) avisar(hechos, ficheros.length, f);
+      });
+    }).then(function () { return cuentaDeLectura(ficheros); });
   }
 
   /* ------------------------------------------------------------------
@@ -560,8 +732,20 @@
     var c = { total: ficheros.length, leidos: 0, no_leidos: 0,
               pdf_total: 0, pdf_leidos: 0, pdf_escaneados: 0,
               fotos: 0, otros: 0, vacios: 0, casi_vacios: 0, errores: 0,
-              demasiado_grandes: 0, los_demasiado_grandes: [], por_extension: {} };
+              demasiado_grandes: 0, los_demasiado_grandes: [], por_extension: {},
+              /* el lector de imágenes (24/09/2026): cuántos se han leído así,
+                 con qué seguridad media, y por qué no ha arrancado si no lo ha hecho */
+              leidos_de_imagen: 0, confianza_media_imagen: null, imagenes_sin_resultado: 0,
+              imagenes_fuera_de_tope: 0, lector_de_imagenes_no_arranca: null };
+    var sumaConfianza = 0;
     ficheros.forEach(function (f) {
+      if (f.leido_de_imagen && f.lectura === "leido") {
+        c.leidos_de_imagen++;
+        sumaConfianza += (f.ocr && f.ocr.confianza) || 0;
+      }
+      if (f.ocr && f.ocr.sin_resultado) c.imagenes_sin_resultado++;
+      if (f.ocr_fuera_de_tope) c.imagenes_fuera_de_tope++;
+      if (f.ocr_no_arranca && !c.lector_de_imagenes_no_arranca) c.lector_de_imagenes_no_arranca = f.ocr_no_arranca;
       c.por_extension[f.ext || "(sin extensión)"] = (c.por_extension[f.ext || "(sin extensión)"] || 0) + 1;
       if (f.ext === "pdf") c.pdf_total++;
       if (f.lectura === "leido") {
@@ -581,11 +765,30 @@
         else c.otros++;
       }
     });
+    if (c.leidos_de_imagen) c.confianza_media_imagen = Math.round(sumaConfianza / c.leidos_de_imagen);
     return c;
   }
 
-  /* La frase, con los números de verdad. Ni uno redondeado. */
+  /* La frase, con los números de verdad. Ni uno redondeado. Y si algo
+     se ha leído de una imagen, se dice: esa letra sale de los píxeles y
+     puede tener errores; ella tiene que saberlo antes de fiarse. */
   function frameDeHonradez(c) {
+    var frase = frameSinImagenes(c);
+    var n = c && c.leidos_de_imagen || 0;
+    if (n) {
+      frase += " Ojo: de lo que he leído, " +
+               (n === 1 ? "un papel sale de una imagen (una foto o un escaneado)"
+                        : n + " papeles salen de una imagen (fotos o escaneados)") +
+               ", con una seguridad media del " + porciento(c.confianza_media_imagen || 0) +
+               ": ahí puede haber alguna letra mal leída, míralo antes de fiarte.";
+    }
+    if (c && c.lector_de_imagenes_no_arranca) {
+      frase += " El lector de imágenes no ha podido arrancar: " + c.lector_de_imagenes_no_arranca + ".";
+    }
+    return frase;
+  }
+
+  function frameSinImagenes(c) {
     if (!c.total) return "No he encontrado ningún fichero en lo que me has soltado.";
     var l = c.total === 1
       ? "He podido leer por dentro " + (c.leidos ? "el único fichero que me has dado." : "cero de tus ficheros: el único que me has dado no se deja abrir.")

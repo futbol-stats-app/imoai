@@ -122,6 +122,35 @@
         busca: ["dni", "nie", "nif", "pasaporte", "identific"],
         porque: "sin él no se puede tramitar",
         fuente: "OT-25 · vacacional · art. 3 Ley 10/2010" }
+    ],
+    /* ------------------------------------------------------------------
+       E1 · LA ENERGÍA (24/09/2026) · EL EXPEDIENTE DE PLACAS
+       ------------------------------------------------------------------
+       Los papeles que pide el expediente de energía, tal cual los nombra
+       «0 - EL MVP DE ENERGIA.md» (22/09/2026), ALCANCE punto 5:
+       «Certificados, recibo de luz, IBI, DNI». Ni uno más: la nota simple
+       o la escritura NO están en esa lista, así que aquí no se piden (si
+       la dirección las quiere, es una fila más). No se cita ninguna norma
+       porque el MVP no la cita: la fuente es el MVP, y así se dice.
+       El DNI no busca «identific»: un «papel sin identificar» no es un DNI.
+       ------------------------------------------------------------------ */
+    energia: [
+      { clave: "energetico", cual: "el certificado energético",
+        busca: ["energetic"],
+        porque: "es uno de los papeles que pide el expediente de energía, y su letra dice de dónde parte la casa",
+        fuente: "MVP de energía (22/09/2026) · ALCANCE, punto 5" },
+      { clave: "recibo_luz", cual: "el recibo de la luz",
+        busca: ["recibo de la luz", "factura de la luz", "electricidad"],
+        porque: "es uno de los papeles que pide el expediente de energía: de ahí sale lo que paga hoy de luz",
+        fuente: "MVP de energía (22/09/2026) · ALCANCE, punto 5" },
+      { clave: "ibi", cual: "el recibo del IBI",
+        busca: ["ibi"],
+        porque: "es uno de los papeles que pide el expediente de energía",
+        fuente: "MVP de energía (22/09/2026) · ALCANCE, punto 5" },
+      { clave: "dni", cual: "el DNI o NIE del titular",
+        busca: ["dni", "nie", "nif", "pasaporte"],
+        porque: "es uno de los papeles que pide el expediente de energía",
+        fuente: "MVP de energía (22/09/2026) · ALCANCE, punto 5" }
     ]
   };
 
@@ -283,6 +312,16 @@
     return null;
   }
 
+  /* E1 · un expediente de energía (placas). Lo marca deduccion.js en
+     `tipo_expediente`; si llega de otro sitio (una ficha guardada) con la
+     operación escrita como «energía», «placas» o «fotovoltaica», también. */
+  function esEnergia(e) {
+    if (!e) return false;
+    if (sinTildes(e.tipo_expediente) === "energia") return true;
+    if (queOperacion(e.tipo_operacion)) return false;
+    return /energia|placas|fotovoltaic|autoconsumo/.test(sinTildes(e.tipo_operacion));
+  }
+
   /* «todos», «el resto del expediente»: eso no es un papel, es un hueco */
   function esGenerico(cual) {
     var s = sinTildes(cual).trim();
@@ -376,10 +415,51 @@
     return out;
   }
 
+  /* ------------------------------------------------------------------
+     ARREGLO DEL 24/09/2026 (S2, fallo 7) · LA CADUCIDAD, EN CUALQUIER
+     FORMATO. Lo de arriba solo reconocía «07/11/2026». Con «7-11-2026»,
+     «7/11/26» o «7 de noviembre de 2026» la caducidad que pone el papel
+     no se veía, y se calculaba (diez años desde la emisión) en vez de
+     leerla. Aquí se leen los cuatro formatos, y solo fechas que existen
+     en el calendario. «noviembre de 2026», sin día, NO es una fecha
+     exacta y no se toma: no se inventa el día.
+     Esto se usa SOLO para leer la caducidad del propio papel (5.3). El
+     cruce de fechas sueltas (5.5) sigue con el formato de antes, a
+     propósito: ampliarlo sacaría avisos nuevos que nadie ha medido.
+     ------------------------------------------------------------------ */
+  function fechaQueExiste(a, me, d) {
+    a = Number(a); me = Number(me); d = Number(d);
+    if (!(a >= 1990 && a <= 2100 && me >= 1 && me <= 12 && d >= 1)) return null;
+    var ult = new Date(Date.UTC(a, me, 0)).getUTCDate();
+    if (d > ult) return null;
+    return a + "-" + (me < 10 ? "0" : "") + me + "-" + (d < 10 ? "0" : "") + d;
+  }
+  function fechasEtiquetadasEnCualquierFormato(t) {
+    var s = String(t || ""), out = [], m, re, iso;
+    var formas = [
+      [/(?<![\d…])(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})(?![\d…])/g, function (m) { return fechaQueExiste(m[3], m[2], m[1]); }],
+      [/(?<![\d\/…])(\d{1,2})\/(\d{1,2})\/(\d{2})(?![\d\/…])/g, function (m) { return fechaQueExiste("20" + m[3], m[2], m[1]); }],
+      [/(?<![\d…])(\d{4})-(\d{1,2})-(\d{1,2})(?![\d…])/g, function (m) { return fechaQueExiste(m[1], m[2], m[3]); }],
+      [new RegExp("(?<![\\d…])(\\d{1,2})\\s+de\\s+(" + MESES.join("|") + ")\\s+de\\s+(\\d{4})(?![\\d…])", "gi"),
+        function (m) { return fechaQueExiste(m[3], MESES.indexOf(m[2].toLowerCase()) + 1, m[1]); }]
+    ];
+    formas.forEach(function (par) {
+      re = par[0]; re.lastIndex = 0;
+      while ((m = re.exec(s))) {
+        iso = par[1](m);
+        if (!iso) continue;
+        out.push({ iso: iso, crudo: m[0], pos: m.index,
+                   etiqueta: etiquetaDeLaFecha(s, m.index, m.index + m[0].length) });
+      }
+    });
+    out.sort(function (a, b) { return a.pos - b.pos; });
+    return out;
+  }
+
   /* La fecha de caducidad que el propio papel declara, si la declara. */
   function validezQueDiceElPapel(d) {
     var fuera = null;
-    fechasEtiquetadas(d && d.literal_en_OT25).forEach(function (f) {
+    fechasEtiquetadasEnCualquierFormato(d && d.literal_en_OT25).forEach(function (f) {
       if (!fuera && f.etiqueta === "validez") fuera = f;
     });
     return fuera;
@@ -405,9 +485,11 @@
     var yo = { id: id, donde: donde, huella: huellaDeLaCasa(e),
                propietario: (e && e.propietario && e.propietario.nombre) || null,
                operacion: queOperacion(e && e.tipo_operacion),
-               faltan: [], hallazgos: [], plazos: [] };
+               faltan: [], hallazgos: [], plazos: [], consejos: [] };
+    /* E1 · energía: no es una operación, pero tiene su tabla de papeles */
+    yo.energia = !yo.operacion && esEnergia(e);
     var docs = ((e && e.documentos) || []).filter(function (d) { return d && d.cual; });
-    var carpeta = yo.operacion ? CARPETA[yo.operacion] : null;
+    var carpeta = yo.operacion ? CARPETA[yo.operacion] : yo.energia ? CARPETA.energia : null;
     var h = yo.hallazgos;
 
     /* ------------------------------------------------------------------
@@ -475,7 +557,9 @@
        saliera con un «No sé lo suficiente para repasarlo» encima de un
        repaso completo, que es contradecirse en dos líneas. */
     if (!(e && e.propietario && e.propietario.nombre)) ciego.push("el nombre del propietario");
-    if (!yo.operacion) ciego.push("si es venta, alquiler o vacacional");
+    /* E1 · a un expediente de energía no se le pide que sea venta, alquiler
+       o vacacional: no lo es, y tiene su propia lista de papeles */
+    if (!yo.operacion && !yo.energia) ciego.push("si es venta, alquiler o vacacional");
     /* ------------------------------------------------------------------
        ARREGLO DEL 23/09/2026 · EL MOTIVO DE VERDAD, NO UNO CUALQUIERA
        ------------------------------------------------------------------
@@ -488,6 +572,12 @@
        4ºC. Aquí se dice el motivo de verdad, y el genérico se calla.
        ------------------------------------------------------------------ */
     var sinRepartir = e && e._sin_repartir;
+    /* S2, fallo 10 · si TODOS los papeles de este «expediente» son papeles
+       que no dicen el piso, esto no es una casa: es un montón apartado.
+       No se le piden papeles, ni se dice que lleva parado, ni se cruzan
+       sus fechas con «el resto del expediente», porque no hay expediente.
+       Lo que sí se dice es lo del propio papel (su caducidad). */
+    var montonApartado = !!(e && e._solo_papeles_sin_piso);
     if (sinRepartir) {
       h.push(nuevo(yo, "incompleto", 60,
         "Este papel no dice de qué piso es",
@@ -525,6 +615,8 @@
           "Tu propio expediente dice: «" + String(d.literal_en_OT25 || d.cual) + "». No voy a adivinar cuáles son: "
             + (yo.operacion
                 ? "te pongo abajo los que la tabla pide para una " + (yo.operacion === "venta" ? "venta" : yo.operacion === "alquiler" ? "vivienda en alquiler" : "vivienda vacacional") + "."
+                : yo.energia
+                ? "te pongo abajo los que pide el expediente de energía."
                 : "dime si es venta, alquiler o vacacional y te doy la lista."),
           "lo dice tu expediente"));
         return;
@@ -547,7 +639,7 @@
       h.push(falta1._aviso);
     });
 
-    if (carpeta) {
+    if (carpeta && !montonApartado) {
       carpeta.forEach(function (p) {
         var d = buscaDoc(docs, p);
         if (d) {
@@ -605,9 +697,19 @@
 
         if (!esFecha(d.fecha)) {
           if (vg.desde === "emitido") {
+            /* S2, fallo 9 · «Pone que está vigente» de un papel que no pone
+               nada era falso. Si el papel no se ha podido leer, se dice
+               por qué: vacío, escaneado, roto... con el motivo del lector. */
+            var sinLeer = d._lectura && d._lectura !== "leido";
+            var porQue = !sinLeer ? null
+              : (d._lectura === "vacio" || d._bytes === 0)
+                ? "El fichero está vacío: no pone nada, ni fecha de emisión ni ninguna otra"
+                : "No he podido leerlo por dentro (" + (d._motivo_no_leido || "no se deja abrir") + "), así que no sé qué fecha pone";
             h.push(nuevo(yo, "incompleto", 50,
               "No puedo comprobar si " + conEl(d.cual) + " sigue vigente",
-              "Pone que está vigente, pero no hay fecha de emisión, así que " + vg.dice + " y yo no sé desde cuándo cuenta. Ponme la fecha y te aviso.",
+              (porQue
+                ? porQue + ". Y " + vg.dice + ", así que sin esa fecha no sé si sigue valiendo. Ponme la fecha y te aviso."
+                : "Pone que está vigente, pero no hay fecha de emisión, así que " + vg.dice + " y yo no sé desde cuándo cuenta. Ponme la fecha y te aviso."),
               vg.fuente));
           }
           return;
@@ -753,7 +855,9 @@
 
     /* ---- 5.4 qué lleva parado ---- */
     var mov = (e && e.ultimo_movimiento) || {};
-    if (esFecha(mov.fecha)) {
+    if (montonApartado) {
+      /* nada: un montón apartado no «lleva parado» ni tiene diario */
+    } else if (esFecha(mov.fecha)) {
       var quieto = -entre(mov.fecha, hoy);
       if (quieto >= PARADO) {
         /* parado no es lo mismo que abandonado: si hay algo pedido y sin
@@ -792,6 +896,7 @@
 
     /* ---- 5.5 fechas sueltas: se nombran y no tienen papel ---- */
     docs.forEach(function (d) {
+      if (montonApartado) return;
       fechasEtiquetadas(d.literal_en_OT25).forEach(function (x) {
         var f = x.iso;
         if (f === d.fecha) return;
@@ -812,13 +917,135 @@
       });
     });
 
+    /* ---- 5.6 E1 · el consejo de energía ----
+       No es un fallo ni algo que falte: es un consejo, y va aparte, en
+       `yo.consejos`, para que no cuente en el parte, ni en «lo que te
+       frena», ni ordene carpetas. Sale en CUALQUIER expediente (venta,
+       alquiler, vacacional o energía) con un certificado energético leído
+       que diga letra E, F o G. */
+    if (!montonApartado) {
+      var c = consejoDeEnergia(yo, docs);
+      if (c) yo.consejos.push(c);
+    }
+
+    /* S2, fallo 11 · EL MISMO AVISO, UNA SOLA VEZ. Dos avisos iguales
+       letra por letra en el mismo expediente son uno: pasaba con un papel
+       y su copia. La causa ya está quitada en deduccion.js (las copias se
+       apartan antes); esto es la red de debajo, por si llega de otro sitio.
+       Se quita también su plazo gemelo, para que no cuente doble. */
+    (function () {
+      var vistos = {}, fuera = [];
+      h.forEach(function (x) {
+        var k = x.clase + "|" + x.titulo + "|" + x.detalle + "|" + (x.vence || "");
+        if (vistos[k]) { fuera.push(x); return; }
+        vistos[k] = true;
+      });
+      if (!fuera.length) return;
+      for (var i = h.length - 1; i >= 0; i--) if (fuera.indexOf(h[i]) >= 0) h.splice(i, 1);
+      var pv = {};
+      yo.plazos = yo.plazos.filter(function (z) {
+        var k = z.fecha + "|" + z.que + "|" + z.dias;
+        if (pv[k]) return false; pv[k] = true; return true;
+      });
+    })();
+
     h.sort(function (a, b) { return b.urgencia - a.urgencia; });
     yo.urgencia = h.length ? h[0].urgencia : 0;
     /* «tranquilo» = no le falta ningún papel y no tiene firma a la vista.
        Es justo el expediente que nadie abre, y donde peor sienta un susto. */
     yo.tranquilo = !yo.faltan.some(function (f) { return f.duro || f.pedido; })
                 && !yo.plazos.some(function (z) { return /notaria|firma/.test(sinTildes(z.que)); });
+    /* E1 · no hay tabla de papeles con la que mirarlo (ver 5 ter) */
+    yo.sin_tabla = !carpeta && !montonApartado && docs.length > 0;
     return yo;
+  }
+
+  /* ==================================================================
+     5 bis · E1 · EL CONSEJO DE ENERGÍA (24/09/2026)
+     ------------------------------------------------------------------
+     Si la casa tiene un certificado energético con letra E, F o G, se le
+     da a la agencia un consejo: hablarle de placas, con la cifra de la
+     cuenta ÚNICA de la web (energia_cuenta.js leyendo datos.js), dicha
+     como estimación y con el enlace a la página de Energía para hacerla
+     con los datos de esa casa.
+       · La cifra NO se calcula aquí: la pide a energia_consejo.js, que se
+         la pide a energia_cuenta.js. Si esa cuenta no ha cargado (abierta
+         sin la web al lado, por ejemplo), el consejo sale sin cifra.
+       · En un vacacional no se da cifra: la cuenta depende de los días
+         que esté ocupada, y eso no lo dice ningún papel.
+       · Nunca se promete una ayuda: dependen del municipio y del caso.
+       · «Legible»: la letra tiene que venir del papel. Si el papel no se
+         ha podido leer por dentro, no se da consejo sobre él.
+     ================================================================== */
+  var LETRAS_DEL_CONSEJO = ["E", "F", "G"];
+  var ENLACE_ENERGIA = "../energia.html";
+  function consejoDeEnergia(yo, docs) {
+    var cert = null, letra = null;
+    docs.forEach(function (d) {
+      var m = String(d.cual || "").match(/\(letra ([A-G])\)/);
+      if (!m || !/energetic/.test(sinTildes(d.cual))) return;
+      if (d._lectura && d._lectura !== "leido") return;
+      if (!estaEnLaCarpeta(d)) return;
+      if (!cert || (esFecha(d.fecha) && (!esFecha(cert.fecha) || d.fecha > cert.fecha))) { cert = d; letra = m[1]; }
+    });
+    if (!cert || LETRAS_DEL_CONSEJO.indexOf(letra) < 0) return null;
+    var M = raiz && raiz.IMMOIA_ENERGIA_CONSEJO;
+    var vacacional = yo.operacion === "vacacional";
+    var cifra = null;
+    if (!vacacional && M && typeof M.cifra === "function") {
+      try { cifra = M.cifra(); } catch (err) { cifra = null; }
+    }
+    var detalle = "Lo dice " + conEl(cert.cual) + ". ";
+    if (cifra) {
+      detalle += "Con placas, la cuenta de la web da unos " + cifra.eur + " al año de ahorro en la luz con " +
+        cifra.paneles + " paneles. Es una estimación para Tenerife, con un consumo supuesto y no el de esta casa, " +
+        "y con cifras de la web que todavía no están verificadas. Haz la cuenta con sus datos en la página de Energía.";
+    } else if (vacacional) {
+      detalle += "En una vivienda vacacional lo que se ahorra con placas depende de los días que esté ocupada, " +
+        "y eso no lo dice ningún papel: no te doy cifra. Haz la cuenta con sus datos en la página de Energía.";
+    } else {
+      detalle += "No tengo aquí la cuenta de placas de la web (no se ha podido cargar), así que no te doy " +
+        "ninguna cifra. Haz la cuenta con sus datos en la página de Energía.";
+    }
+    detalle += " Las ayudas no te las prometo: dependen de su municipio y de su caso.";
+    var x = nuevo(yo, "consejo", 5, "La casa tiene letra " + letra + ": puedes hablarle de placas", detalle,
+      cifra ? "consejo, no un fallo · la cifra sale de energia_cuenta.js con datos.js" +
+              (cifra.revisado ? " (revisado el " + cifra.revisado + ")" : "") + " · estimación"
+            : "consejo, no un fallo · la letra la pone el propio certificado");
+    x.letra = letra;
+    x.cifra = cifra;
+    x.enlace = ENLACE_ENERGIA;
+    x.enlace_texto = "Hacer la cuenta en Energía";
+    x.fichero = cert._fichero || null;
+    x.nombre_fichero = cert._nombre || null;
+    x.papel = cert.cual;
+    return x;
+  }
+
+  /* ==================================================================
+     5 ter · E1 · «AQUÍ NO FALTA NINGÚN PAPEL DE LOS QUE PIDE LA TABLA»
+     ------------------------------------------------------------------
+     La pantalla pone esa frase cuando no hay ningún «falta» que pintar.
+     Con un expediente del que no se sabe la operación eso se lee como
+     «está todo», y no es verdad: es que no hay tabla con la que mirarlo.
+     Así que cuando, después de callar lo que se calla, no queda ningún
+     «falta» y hay expedientes sin tabla, se pone en su lugar lo que es
+     verdad. Va con la clase «falta» porque es el hueco donde se lee; no
+     cuenta en el parte (no entra en `faltan`) ni ordena nada.
+     Solo en ese caso: si ya hay «falta» que pintar, la frase no sale.
+     ================================================================== */
+  function sinTablaEnLugarDeLaFrase(unos, todos) {
+    if (todos.some(function (x) { return x.clase === "falta"; })) return;
+    unos.forEach(function (u) {
+      if (!u.sin_tabla) return;
+      var x = { exp: u.id, donde: u.donde, clase: "falta", urgencia: 20,
+                titulo: "No te digo qué papel falta: no sé qué operación es",
+                detalle: "No sé si es venta, alquiler o vacacional, ni si es un cliente de placas, y sin eso no tengo " +
+                         "lista de papeles con la que mirarlo. Que aquí no salga ninguno no quiere decir que esté todo.",
+                fuente: "regla de la casa: sin datos, no se supone", vence: null, _sin_tabla: true };
+      u.hallazgos.push(x);
+      todos.push(x);
+    });
   }
 
   /* ==================================================================
@@ -1043,9 +1270,12 @@
     });
     var todos = [];
     unos.forEach(function (u) { u.hallazgos.forEach(function (x) { todos.push(x); }); });
+    /* E1 · se hace aquí, sobre lo que de verdad se va a pintar */
+    sinTablaEnLugarDeLaFrase(unos, todos);
     todos.sort(function (a, b) { return b.urgencia - a.urgencia; });
     var r2 = { version: r.version, hoy: r.hoy, cuantos: r.cuantos,
-               expedientes: unos, hallazgos: todos, patrones: patrones(unos, r.hoy) };
+               expedientes: unos, hallazgos: todos, patrones: patrones(unos, r.hoy),
+               consejos: juntarConsejos(unos) };
     r2.parte = parte(r2);
     return r2;
   }
@@ -1072,7 +1302,8 @@
 
     var r = { version: VERSION, hoy: hoy, cuantos: unos.length,
               expedientes: unos, hallazgos: todos,
-              patrones: patrones(unos, hoy) };
+              patrones: patrones(unos, hoy),
+              consejos: juntarConsejos(unos) };      /* E1 · aparte: no son avisos */
     r.parte = parte(r);
     return r;
   }
@@ -1100,6 +1331,12 @@
     return repasar(l, hoy);
   }
 
+  function juntarConsejos(unos) {
+    var l = [];
+    (unos || []).forEach(function (u) { (u.consejos || []).forEach(function (c) { l.push(c); }); });
+    return l;
+  }
+
   /* El parte, en texto plano, listo para pegarlo donde sea. */
   function enTexto(r) { return (r && r.parte ? r.parte : parte(r)).join("\n"); }
 
@@ -1111,6 +1348,7 @@
     mirarUno: mirarUno, patrones: patrones,
     fechasEtiquetadas: fechasEtiquetadas, validezQueDiceElPapel: validezQueDiceElPapel,
     soloConLoQueSeDice: soloConLoQueSeDice,
+    esEnergia: esEnergia, consejoDeEnergia: consejoDeEnergia,
     /* por si alguien quiere comprobar la regla de la casa desde fuera */
     papelesQuePuedePedir: function () {
       var out = [];
@@ -1121,4 +1359,34 @@
 
   if (typeof module === "object" && module.exports) module.exports = API;
   if (raiz) raiz.IMMOIA_REPASO = API;
+
+  /* ------------------------------------------------------------------
+     E1 · LA CUENTA DE PLACAS, SIN TOCAR index.html
+     ------------------------------------------------------------------
+     index.html no es de este taller. Así que, cuando la página ya ha
+     cargado sus propios scripts, si nadie ha cargado wow/energia_consejo.js
+     se pone aquí, al lado de este fichero (misma carpeta, mismo dominio).
+     Él a su vez trae ../../datos.js y ../../energia_cuenta.js. Si algo no
+     carga, no pasa nada: el consejo sale sin cifra.
+     ------------------------------------------------------------------ */
+  (function () {
+    if (!raiz || typeof document === "undefined" || !document || typeof document.createElement !== "function") return;
+    var yo = (document.currentScript && document.currentScript.src) || "";
+    var carpeta = yo ? yo.replace(/[?#].*$/, "").replace(/[^\/]*$/, "") : "wow/";
+    function ponerlo() {
+      try {
+        if (raiz.IMMOIA_ENERGIA_CONSEJO || raiz.__E1_CONSEJO_PEDIDO) return;
+        raiz.__E1_CONSEJO_PEDIDO = true;
+        var s = document.createElement("script");
+        s.src = carpeta + "energia_consejo.js";
+        s.async = true;
+        (document.head || document.body || document.documentElement).appendChild(s);
+      } catch (err) { /* sin consejo con cifra: el consejo sale igual, sin cifra */ }
+    }
+    if (document.readyState === "loading" && typeof document.addEventListener === "function") {
+      document.addEventListener("DOMContentLoaded", ponerlo);
+    } else {
+      setTimeout(ponerlo, 0);
+    }
+  })();
 })(typeof window !== "undefined" ? window : null);

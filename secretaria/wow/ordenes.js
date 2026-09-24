@@ -255,8 +255,11 @@
     var nombres = { venta: "1_VENTAS", alquiler: "2_ALQUILERES", vacacional: "3_VACACIONAL" };
     var sinSaber = 0;
     (estado.expedientes || []).forEach(function (e) {
-      var cajon = nombres[e.tipo_operacion] || "4_NO_SE_QUE_OPERACION_ES";
-      if (!nombres[e.tipo_operacion]) sinSaber++;
+      /* E1 · el expediente de energía (placas) tiene su cajón: no es que no
+         se sepa qué es, es que no es venta, alquiler ni vacacional */
+      var esEnergia = !nombres[e.tipo_operacion] && e.tipo_expediente === "energia";
+      var cajon = nombres[e.tipo_operacion] || (esEnergia ? "4_ENERGIA_PLACAS" : "4_NO_SE_QUE_OPERACION_ES");
+      if (!nombres[e.tipo_operacion] && !esEnergia) sinSaber++;
       e._ficheros.forEach(function (f) {
         if (f.duplicado_de) return;
         poner(p, [cajon, e._titulo], f, f.nombre);
@@ -316,7 +319,8 @@
     declaracion: "13_DECLARACIONES_RESPONSABLES",
     registro_tur: "14_REGISTRO_TURISTICO",
     hipoteca: "15_HIPOTECA",
-    foto: "16_FOTOS"
+    foto: "16_FOTOS",
+    recibo_luz: "17_RECIBOS_DE_LA_LUZ"      /* E1 · antes caían en 99_SIN_IDENTIFICAR */
   };
   function porTipoDePapel(estado) {
     var p = nuevoPlan("papel", "Por tipo de papel",
@@ -429,7 +433,7 @@
   ];
 
   function todos(estado) {
-    return LOS_SEIS.map(function (o) {
+    var planes = LOS_SEIS.map(function (o) {
       var p = o.hacer(estado);
       p.carpetas = cuantasCarpetas(p);
       p.cuenta = unaSolaVez(p, estado);
@@ -442,6 +446,15 @@
       }
       return p;
     });
+    /* E1 · el consejo de energía se pinta en su propio hueco, justo
+       después de que la pantalla pinte el parte (pantalla.js llama a
+       todos() y acto seguido pinta). pantalla.js no es de este taller:
+       cuando lo pinte ella misma, energia_consejo.js no lo repite. */
+    try {
+      var C = raiz && raiz.IMMOIA_ENERGIA_CONSEJO;
+      if (C && typeof C.pintarLuego === "function") C.pintarLuego(estado);
+    } catch (err) { /* un consejo que no se pinta no rompe nada */ }
+    return planes;
   }
 
   var API = {

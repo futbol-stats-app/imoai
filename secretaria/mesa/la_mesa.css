@@ -176,3 +176,47 @@
 
 /* el botón del wow, cuando le están soltando una carpeta encima */
 #mesa_wow.encima { border-color: var(--azul); background: var(--azul-claro); }
+
+/* ==================================================================
+   REDACTAR (V1 · taller RD · 24/09/2026)
+   El botón de cada expediente y el cuadro de los textos. Mismos
+   colores de la casa. Los huecos [así] se ven en el texto; debajo se
+   dice en ámbar cuántos quedan.
+   ================================================================== */
+.mesa_redactar { margin: 11px 0 0 8px; background: var(--blanco); color: var(--tinta);
+  border: 1px solid #c3ccd6; font-weight: 600; }
+.mesa_redactar:hover { background: #f1f4f7; opacity: 1; }
+.mesa_redactar_hueco:empty { display: none; }
+.rd_panel { margin-top: 12px; padding: 14px 14px 12px; background: var(--blanco);
+  border: 1px solid var(--linea); border-radius: 12px; }
+#lugar_mesa .rd_panel h3.rd_titulo { margin-top: 0; }
+.rd_nota { font-size: 13.5px; color: var(--tinta2); line-height: 1.45; margin: 4px 0 12px; }
+.rd_ajustes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.rd_entrada { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #c3ccd6;
+  border-radius: 8px; background: #fff; color: var(--tinta); box-sizing: border-box; max-width: 100%; }
+.rd_ajustes .rd_entrada { flex: 1 1 200px; }
+.rd_plantillas { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.rd_opcion { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rd_opcion .rd_elegir { text-align: left; }
+.rd_opcion.rd_no .rd_elegir { opacity: .5; cursor: not-allowed; }
+.rd_porque { font-size: 12.5px; }
+.rd_hoja { border-top: 1px solid var(--linea); padding-top: 10px; }
+.rd_hoja_titulo { margin: 0 0 8px; font-size: 15px; }
+.rd_etiqueta { display: block; font-size: 13px; color: var(--tinta2); margin-bottom: 6px; }
+.rd_etiqueta .rd_entrada { display: block; width: 100%; margin-top: 3px; }
+.rd_cuerpo { display: block; width: 100%; min-height: 260px; line-height: 1.5; resize: vertical;
+  font-family: inherit; white-space: pre-wrap; }
+.rd_huecos { font-size: 13px; margin: 6px 0 8px; }
+.rd_con_huecos { color: var(--ambar); font-weight: 600; }
+.rd_sin_huecos { color: var(--tinta3); }
+.rd_botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd_boton { font-size: 14px; }
+.rd_msg { font-size: 13.5px; margin-top: 8px; }
+.rd_msg:empty { display: none; }
+.rd_bien, .rd_msg_ajustes.rd_bien { color: var(--verde); }
+.rd_error, .rd_msg_ajustes.rd_error { color: var(--rojo); }
+.rd_aviso { color: var(--ambar); }
+@media (max-width: 520px) {
+  .mesa_redactar { margin-left: 0; width: 100%; }
+  .rd_botones .rd_boton { flex: 1 1 100%; }
+}

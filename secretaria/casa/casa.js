@@ -196,6 +196,34 @@
       });
     }
 
+    ponerLasCopiasParaDeshacer();
     ir(ENTRA_POR);
   });
+
+  /* ==================================================================
+     5 · LAS COPIAS ORDENADAS QUE SE PUEDEN DESHACER  (24/09/2026)
+     ------------------------------------------------------------------
+     Antes, «Deshacer lo último» vivía solo en la memoria de la página
+     de las carpetas: al recargar, desaparecía (fallo 4 de «LO QUE
+     SABEMOS QUE FALLA HOY»). Ahora wow\copia_y_deshacer.js recuerda
+     DÓNDE copió y vuelve a leer el registro del disco, y aquí se pone
+     esa lista en su mesa, que es lo primero que ve al abrir. Si no hay
+     nada que deshacer, el hueco no se ve.
+
+     El hueco se crea aquí (no está en el HTML): va justo debajo de la
+     copia de seguridad (#la_copia) si está, o al final de la mesa.
+     ================================================================== */
+  function ponerLasCopiasParaDeshacer() {
+    var C = window.IMMOIA_COPIA;
+    if (!C || typeof C.pintarLasDeshacibles !== "function") return;
+    if ($("copias_para_deshacer")) return;
+    var hueco = crear("div", "copias_para_deshacer");
+    hueco.id = "copias_para_deshacer";
+    hueco.style.display = "none";
+    var laCopia = $("la_copia"), mesa = $("lugar_mesa");
+    if (laCopia && laCopia.parentNode) laCopia.parentNode.insertBefore(hueco, laCopia.nextSibling);
+    else if (mesa) mesa.appendChild(hueco);
+    else return;
+    try { C.pintarLasDeshacibles(hueco); } catch (e) { /* si falla, la mesa sigue igual */ }
+  }
 })();

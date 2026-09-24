@@ -204,6 +204,13 @@
     return window.IMMOIA_LECTOR.leerPorDentro(ficheros, function (hechos, total, f) {
       barra(hechos, total);
       $("t_detalle").textContent = f.nombre;
+    }).then(function () {
+      /* S2 (24/09/2026): antes de contar, lo que no se ha abierto se
+         dice con su motivo verdadero (vacío, o un Word con .pdf), y la
+         cuenta se rehace sobre eso. */
+      return loQueNoSeAbreDichoConVerdad(ficheros).then(function () {
+        return window.IMMOIA_LECTOR.cuentaDeLectura(ficheros);
+      });
     }).then(function (cuenta) {
       E.cuenta = cuenta;
       $("t_que").textContent = "Comparando los papeles entre sí para ver cuáles están repetidos…";
@@ -235,6 +242,54 @@
       pintarParte();
       pantalla("parte");
     }).catch(seRompio);
+  }
+
+  /* ==================================================================
+     LO QUE NO SE ABRE, CON SU MOTIVO VERDADERO · S2, 24/09/2026
+     ------------------------------------------------------------------
+     1. Un PDF de 0 bytes salía como «roto», con el detalle en inglés
+        («The PDF file is empty, i.e. its size is zero bytes.»). No está
+        roto: está vacío. (deduccion.js, corregirLoQueNoSeAbre)
+     2. Un Word al que le han puesto «.pdf» en el nombre salía como
+        roto. Si por dentro es un zip (los cuatro primeros bytes lo dicen)
+        se intenta abrir como Word con el mismo lector de la casa. Si sale
+        el Word, se lee y se dice que era un Word mal nombrado. Si es un
+        zip que no es Word, se dice eso, y no «roto».
+     El nombre del fichero no se toca: solo se dice.
+     ================================================================== */
+  function loQueNoSeAbreDichoConVerdad(ficheros) {
+    var D = window.IMMOIA_DEDUCCION, L = window.IMMOIA_LECTOR;
+    try { if (D && D.corregirLoQueNoSeAbre) D.corregirLoQueNoSeAbre(ficheros); } catch (e) {}
+    var cand = (ficheros || []).filter(function (f) {
+      return f && f.ext === "pdf" && f.lectura === "error" && f.bytes > 0 &&
+             f.file && typeof f.file.slice === "function";
+    });
+    var cad = Promise.resolve();
+    cand.forEach(function (f) {
+      cad = cad.then(function () {
+        return f.file.slice(0, 4).arrayBuffer().then(function (buf) {
+          if (!D || !D.pareceUnZip || !D.pareceUnZip(new Uint8Array(buf))) return;
+          var otro = { id: f.id, nombre: f.nombre, ruta: f.ruta, ext: "docx", bytes: f.bytes,
+                       file: f.file, texto: "", lectura: "sin intentar", motivo_no_leido: "" };
+          return L.leerPorDentro([otro]).then(function () {
+            if (otro.lectura === "leido" || otro.lectura === "vacio" || otro.lectura === "casi_vacio") {
+              f.word_con_nombre_pdf = true;
+              f.lectura = otro.lectura;
+              f.texto = otro.texto || "";
+              if (otro.texto_corto) f.texto_corto = otro.texto_corto;
+              f.motivo_no_leido = otro.lectura === "leido" ? ""
+                : "es un Word (.docx) con el nombre acabado en .pdf, y " + otro.motivo_no_leido;
+            } else {
+              f.zip_con_nombre_pdf = true;
+              f.lectura = "no_se_puede";
+              f.motivo_no_leido = "se llama .pdf, pero por dentro no es un PDF: es un fichero comprimido" +
+                " que no es un Word, y eso no sé abrirlo";
+            }
+          });
+        }).catch(function () { /* si no se deja ni mirar, se queda como estaba */ });
+      });
+    });
+    return cad;
   }
 
   /* ==================================================================
@@ -372,6 +427,19 @@
           return { nombre: g.ruta, papel: g.cuanto };
         })
       }]));
+    }
+
+    /* S2: el Word que venía con el nombre acabado en .pdf, dicho */
+    var words = E.ficheros.filter(function (f) { return f.word_con_nombre_pdf; });
+    if (words.length) {
+      var lw = linea(caja, (words.length === 1
+        ? "Un fichero se llama .pdf y por dentro es un Word (.docx): "
+        : words.length + " ficheros se llaman .pdf y por dentro son un Word (.docx): ") +
+        words.slice(0, 3).map(function (f) { return "«" + f.ruta + "»"; }).join(", ") +
+        (words.length > 3 ? " y " + (words.length - 3) + " más" : "") +
+        ". Lo" + (words.length === 1 ? "" : "s") + " he abierto como Word. El nombre no lo toco.", "ojo");
+      lw.appendChild(botonPruebas("ver cuáles", [{ titulo: "Word con el nombre acabado en .pdf",
+        ficheros: words.map(function (f) { return { nombre: f.ruta, papel: f.lectura === "leido" ? "leído como Word" : f.motivo_no_leido }; }) }]));
     }
 
     var porCarpeta = E.ficheros.filter(function (f) { return f.agrupado_por_la_carpeta; }).length;
@@ -536,10 +604,12 @@
 
     /* QUÉ TIENES */
     var q = $("b_tienes"); vaciar(q);
-    var porOp = { venta: [], alquiler: [], vacacional: [], "": [] };
-    E.expedientes.forEach(function (e) { (porOp[e.tipo_operacion || ""]).push(e); });
+    var porOp = { venta: [], alquiler: [], vacacional: [], energia: [], "": [] };
+    E.expedientes.forEach(function (e) {
+      (porOp[e.tipo_operacion || (e.tipo_expediente === "energia" ? "energia" : "")] || porOp[""]).push(e);
+    });
     [["venta", "en venta"], ["alquiler", "en alquiler"], ["vacacional", "de vacacional"],
-     ["", "sin saber de qué operación son"]].forEach(function (par) {
+     ["energia", "de energía (placas)"], ["", "sin saber de qué operación son"]].forEach(function (par) {
       var l = porOp[par[0]];
       if (!l.length) return;
       var t = crear("div", "grupo");
@@ -713,9 +783,16 @@
       f.appendChild(crear("div", "aviso_donde", e._titulo));
       f.appendChild(crear("div", "aviso_titulo",
         "Aquí hay papeles a nombre de " + e._dos_nombres.length + " personas distintas"));
+      /* S2, fallo 8: el comprador y el inquilino ya no entran aquí (son la
+         otra parte, deduccion.js). Lo que queda son dos nombres del lado
+         del dueño, o sin decir qué papel hacen, y ningún papel que
+         explique el cambio. Se dice cada uno con su papel y su fichero. */
       f.appendChild(crear("div", "aviso_detalle",
-        "En la misma finca aparecen " + e._dos_nombres.map(function (x) { return "«" + x.nombre + "»"; }).join(" y ") +
-        ". O es el mismo expediente abierto dos veces, o uno de los dos papeles no es de aquí. " +
+        "En la misma finca aparecen " + e._dos_nombres.map(function (x) {
+          return "«" + x.nombre + "» (" + (x.como || "sin decir qué papel hace") + ", en «" + String(x.ruta || "").split("/").pop() + "»)";
+        }).join(" y ") +
+        ", y aquí no hay ningún papel que explique un cambio de dueño, como una escritura o una herencia. " +
+        "Puede que sean dos copropietarios, que sea el mismo expediente abierto dos veces o que uno de los papeles no sea de aquí. " +
         "Míralo antes de seguir: esto no se ve nunca abriendo un expediente de uno en uno."));
       f.appendChild(crear("div", "aviso_fuente", "fuente: los propios papeles, cruzados entre sí"));
       f.appendChild(botonPruebas("de dónde lo saco", [{
@@ -739,7 +816,10 @@
         fi.appendChild(crear("div", "aviso_detalle",
           imposibles.map(function (f) {
             return "«" + f.nombre + "» lleva delante la fecha " + f.fecha_imposible_en_el_nombre +
-              ", y ese día no existe en el calendario." +
+              (f.fecha_imposible_que === "mes"
+                ? ", y no hay ningún mes " + f.fecha_imposible_mes +
+                  ": el año tiene doce. Puede que el día y el mes estén del revés, pero no lo supongo."
+                : ", y ese día no existe en el calendario.") +
               (f.fecha_papel
                 ? " La buena es la que pone dentro del papel: " + f.fecha_papel.iso + "."
                 : " Y no puedo mirar dentro para saber la buena, porque este papel no se deja abrir.");
@@ -801,7 +881,9 @@
          A un expediente recién abierto tampoco se le piden: no es que le
          falten, es que acaba de empezar. */
       var esNuevo = window.IMMOIA_DEDUCCION.recienAbierto(e, E.repaso.hoy);
-      (esNuevo ? [] : window.IMMOIA_DEDUCCION.papelesDeAVeces(e)).forEach(function (p) {
+      /* S2, fallo 10: a un montón de papeles que no dicen el piso no se le
+         piden papeles como a una casa, tampoco los de «a veces» */
+      (esNuevo || e._solo_papeles_sin_piso ? [] : window.IMMOIA_DEDUCCION.papelesDeAVeces(e)).forEach(function (p) {
         puestos++;
         var fv = crear("div", "aviso c_falta flojito");
         fv.appendChild(crear("div", "aviso_donde", e._titulo));
@@ -1007,6 +1089,7 @@
         if (!r) return;
         E.ultimoRegistro = r.registro;
         E.ultimoDestino = E.handleDestino;
+        mirarSiSigueEnLaLista(true);
         $("estado_copia").textContent =
           "Hecho: " + nCosas(r.copiados, "fichero copiado", "ficheros copiados") + " en «" + r.carpeta + "»." +
           (r.fallos.length ? " " + r.fallos.length + " no se han podido escribir." : "") +
@@ -1022,24 +1105,90 @@
     $("boton_deshacer").addEventListener("click", function () {
       if (!E.ultimoRegistro || !E.ultimoDestino) return;
       $("estado_copia").textContent = "Deshaciendo…";
+      E.deshaciendoAqui = true;
       window.IMMOIA_COPIA.deshacer(E.ultimoDestino, E.ultimoRegistro, function (a, b) {
         $("estado_copia").textContent = "Deshaciendo… " + a + " de " + b;
       }).then(function (r) {
+        E.deshaciendoAqui = false;
         E.ultimoDeshacer = r;
-        $("estado_copia").textContent =
-          "Deshecho: he quitado " + nCosas(r.borrados.length, "fichero", "ficheros") +
-          (r.carpeta_borrada
-            ? " y la carpeta que había creado. En tu disco no queda nada mío."
-            : ". La carpeta sigue ahí porque dentro hay cosas que yo no puse.") +
-          (r.respetados.length
-            ? " He dejado " + r.respetados.length + " cosas donde estaban: " +
-              r.respetados.slice(0, 3).map(function (x) { return x.a + " (" + x.por_que + ")"; }).join("; ")
-            : "");
+        $("estado_copia").textContent = fraseDelDeshacer(r, E.ultimoRegistro);
         if (r.carpeta_borrada) { E.ultimoRegistro = null; $("boton_deshacer").style.display = "none"; }
       }).catch(function (e) {
+        E.deshaciendoAqui = false;
         $("estado_copia").textContent = "No he podido deshacer: " + ((e && e.message) || e);
       });
     });
+
+    /* LA MESA TAMBIÉN DESHACE (V1 · taller VZ · 24/09/2026, nota 8 de S1).
+       Desde el 24/09 la mesa tiene su propia lista «Copias ordenadas que
+       puedes deshacer». Si ella deshace ESTA copia desde allí, el botón
+       de aquí se quedaba a la vista hasta recargar y, al pulsarlo, decía
+       «No he podido deshacer: …». Ahora escucha los cambios de esa lista
+       y, cuando la copia ya no está en ella, se esconde y lo dice. */
+    if (window.IMMOIA_COPIA && typeof window.IMMOIA_COPIA.alCambiar === "function") {
+      window.IMMOIA_COPIA.alCambiar(function () { mirarSiSigueEnLaLista(false); });
+    }
+  }
+
+  /* ¿Sigue la última copia en la lista de lo que se puede deshacer?
+     Se compara con la misma clave que usa copia_y_deshacer.js
+     (carpeta creada | cuándo empezó). SOLO se esconde el botón si esa
+     copia ESTUVO en la lista y ya no está: si el navegador no deja
+     guardar la lista (IndexedDB bloqueado), nunca ha estado, y el
+     botón se queda, que es como era antes. */
+  function claveDelRegistro(reg) {
+    return String(reg.carpeta_creada) + "|" + String(reg.empezada || reg.cuando || "");
+  }
+  function mirarSiSigueEnLaLista(recienCopiada) {
+    var C = window.IMMOIA_COPIA;
+    var reg = E.ultimoRegistro;
+    if (!reg || !C || typeof C.pendientes !== "function") return Promise.resolve();
+    return C.pendientes().then(function (l) {
+      if (E.ultimoRegistro !== reg) return;            /* entretanto cambió: no es la misma */
+      var clave = claveDelRegistro(reg);
+      var esta = (l || []).some(function (x) {
+        return x && (x.clave === clave || (!x.clave && x.carpeta === reg.carpeta_creada));
+      });
+      if (esta) { E.ultimaEstuvoEnLaLista = reg; return; }
+      if (recienCopiada || E.ultimaEstuvoEnLaLista !== reg || E.deshaciendoAqui) return;
+      E.ultimoRegistro = null;
+      E.ultimaEstuvoEnLaLista = null;
+      $("boton_deshacer").style.display = "none";
+      $("estado_copia").textContent = "La copia «" + reg.carpeta_creada + "» ya la has deshecho desde tu mesa. " +
+        "Aquí ya no queda nada que deshacer.";
+    }, function () {});
+  }
+
+  /* LA FRASE DEL DESHACER (V1 · taller VZ · 24/09/2026, nota de S1).
+     Antes, siempre que la carpeta quedaba, decía «La carpeta sigue ahí
+     porque dentro hay cosas que yo no puse». Eso SOLO es verdad si
+     dentro hay cosas que no figuran en el registro de esta copia. La
+     carpeta también se queda por un papel de la copia que ella ha
+     cambiado después, o uno a medio escribir: esos SÍ los puse yo. El
+     motivo lo da copia_y_deshacer.js en la entrada «carpeta/» de
+     respetados; aquí se lee, no se adivina. */
+  function fraseDelDeshacer(r, reg) {
+    var laCarpeta = reg && reg.carpeta_creada ? reg.carpeta_creada + "/" : null;
+    var deLaCarpeta = null, otros = [];
+    (r.respetados || []).forEach(function (x) {
+      if (laCarpeta && x.a === laCarpeta && !deLaCarpeta) deLaCarpeta = x; else otros.push(x);
+    });
+    var ajenas = !!(deLaCarpeta && /no figuran en el registro/.test(deLaCarpeta.por_que || ""));
+    var t = "Deshecho: he quitado " + nCosas(r.borrados.length, "fichero", "ficheros");
+    if (r.carpeta_borrada) t += " y la carpeta que había creado. En tu disco no queda nada mío.";
+    else if (deLaCarpeta) {
+      var resto = String(deLaCarpeta.por_que || "").replace(/^no he quitado la carpeta porque /, "");
+      if (ajenas) resto = "dentro hay cosas que yo no puse" +
+        resto.replace(/^dentro hay cosas que no figuran en el registro de esta copia/, " (no figuran en el registro de esta copia)");
+      t += ". La carpeta sigue ahí porque " + resto + ".";
+    }
+    else t += ". La carpeta sigue ahí.";
+    if (otros.length) {
+      t += " No he borrado " + nCosas(otros.length, "cosa", "cosas") + ": " +
+           otros.slice(0, 3).map(function (x) { return x.a + " (" + x.por_que + ")"; }).join("; ") +
+           (otros.length > 3 ? " y " + (otros.length - 3) + " más" : "") + ".";
+    }
+    return t;
   }
 
   function hacerZip(p) {
