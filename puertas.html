@@ -262,7 +262,7 @@ section.caja > h3{
 <!-- 19/09/2026: esta página no cargaba datos.js y tenía el 31 de diciembre de
      2026 escrito a mano, dos veces. Ahora la fecha sale de datos.js y de ningún otro
      sitio; si datos.js no carga o no la trae, el aviso del plazo no se escribe. -->
-<script src="datos.js?v=24a"></script>
+<script src="datos.js?v=26b"></script>
 <script>
 (function(){
   "use strict";
@@ -586,8 +586,8 @@ section.caja > h3{
        la acompañaban -el número de ayuntamientos, la fecha de su plan de
        control y los años de inspecciones-, que tampoco tienen boletín. */
     + caja("El plazo: lo que sabemos y lo que no",
-        aviso("La fecha límite NO está publicada en ningún boletín",
-              "Se maneja una fecha, pero se ha buscado en el Boletín Oficial de Canarias y no aparece. Así que aquí no se da ninguna: antes de decidir nada, confírmalo en tu ayuntamiento y en el BOC. Si alguien te da una fecha, pídele el boletín y el artículo.")
+        aviso("La fecha límite: antes del 31 de julio de 2027",
+              "Quien presentó la declaración responsable antes del 13/12/2025 y no ha presentado en el ayuntamiento la comunicación previa de actividad clasificada tiene hasta el 31 de julio de 2027 (Ley 6/2025, disposición transitoria décima, añadida por la Ley 7/2026, BOC nº 163 de 14/08/2026; lo confirma el Gobierno de Canarias el 16/09/2026). Ojo: la CNMC ha cuestionado este trámite y hay un decreto-ley anunciado que puede cambiarlo. No esperes al último día y confírmalo en tu ayuntamiento.")
       + aviso("Lo que sí se sabe",
               "Quien no presente la comunicación previa de actividad clasificada tiene que cesar la actividad turística, y el número de registro caduca: el piso deja de poder comercializarse en las plataformas."))
     + caja("Tus apartamentos", listaPisos(pisos) + leyenda())
@@ -596,7 +596,7 @@ section.caja > h3{
         ["Memoria técnica",                            "Apto. 118 Los Geranios", "hecho",  "Entregada"],
         ["Presentar en el ayuntamiento",               "Apto. 118 Los Geranios", "curso",  "La preparamos"],
         ["Certificado energético",                     "Apto. 3B Playa Honda",   "espera", "Clase F · revisar"],
-        ["Agua caliente con renovables",               "Apto. 3B Playa Honda",   "espera", "Pendiente de mirar"]
+        ["Acuerdo de la comunidad (3/5)",              "Apto. 3B Playa Honda",   "espera", "Pendiente de pedir"]
       ]) + '</div>')
     + caja("Los papeles de cada apartamento", '<div class="envoltorio-tabla">' + tabla([
         ["Certificado energético", "Villa El Duque 7", "hecho", "Clase D · vigente"],

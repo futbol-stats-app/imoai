@@ -43,9 +43,7 @@ window.DATOS_IMMOIA = {
 
     /* Descuento por volumen que se acuerda con el instalador y se le
        descuenta al cliente. Pendiente de cerrarlo por escrito.
-       SUPUESTO SIN FUENTE: desde el 24/09/2026 no se resta en la cuenta principal
-       de ninguna página; solo se nombra, marcado como supuesto, en la fórmula de
-       ceder el sobrante (energia.html). */
+       SUPUESTO SIN FUENTE: no se resta en ninguna página (26/09/2026). */
     descuentoInstalador: 500,
 
     kwpPorPanel: 0.45,
@@ -88,7 +86,7 @@ window.DATOS_IMMOIA = {
     mejorTaePublicada: 0.0491,   /* revisado 11/09/2026: sin cambios */
     mejorTaeQuien: "BBVA, pagina de placas solares · 4,80 % TIN / 4,91 % TAE · 3.000-75.000 € · "
                  + "de 12 meses a 15 anos · SIN comision de apertura NI de cancelacion · "
-                 + "oferta valida hasta el 30/09/2026. "
+                 + "oferta valida hasta el 30/09/2026 y exige tener cuenta en BBVA. Desde el 01/10/2026 se usa sola la de Kutxabank (ver abajo). "
                  + "(Su propia ficha de prestamo dice 2-8 anos: hay contradiccion dentro de la "
                  + "web de BBVA, confirmar por telefono.) "
                  + "Segunda: Kutxabank 5,50 % TIN / 5,64 % TAE, hasta 10 anos. "
@@ -146,13 +144,9 @@ window.DATOS_IMMOIA = {
     /* cuánto de la factura es energía y no términos fijos ni impuestos */
     parteEnergiaFactura: 0.70,
 
-    /* Lo que se cobra por llevar los papeles, segun la opcion que elija el cliente
-       (10/09/2026).
-       Opcion 1 "hazmelo todo": gestion gratis y el excedente es de IMMO IA.
-       Opcion 2 "buscame instalador y llevame los papeles": 200 € y el excedente es suyo.
-       Opcion 3 "solo los papeles": 200 € y el excedente es suyo.
-       ⚠️ 200 € es el precio que fijaron ellos, no un precio de mercado publicado. */
-    precioGestion: 200
+    /* Lo que se cobra por llevar los papeles de las placas, sin IGIC
+       (EL LIBRO DE IMMO IA, cap. 7, 26/09/2026). El sobrante es siempre del cliente. */
+    precioGestion: 349
   },
 
   /* -----------------------------------------------------------
@@ -563,9 +557,9 @@ window.DATOS_IMMOIA = {
      [porcentaje, años, tope anual (0 = sin tope), aviso, nombre, soloViviendaHabitual]
      ----------------------------------------------------------- */
   municipios: {
-    gu:  [0.50, 25, 0,   "", "Güímar", false],
+    gu:  [0.50, 25, 0,   "Con requisitos (Oficina de Transición Energética del Cabildo, actualizada el 11/08/2026): uso residencial en más del 50 % de la superficie y que la instalación sea la fuente principal de suministro energético de la vivienda. La ordenanza no se ha leído en el BOP: confírmalo en el ayuntamiento antes de contar con los 25 años.", "Güímar", false],
     ro:  [0.50, 10, 0,   "", "El Rosario", false],
-    sc:  [0.50,  5, 0,   "Hay que pedirlo antes del 1 de enero, o se pierde el primer año. Novedad confirmada el 11/09/2026: desde el 01/01/2026 la bonificación ya no es solo solar, cubre todas las energías de ambiente (eólica, hidráulica, biomasa).", "Santa Cruz de Tenerife", false],
+    sc:  [0.50,  5, 0,   "Surte efecto a partir del año siguiente al de la solicitud: pedirlo antes del 1 de enero para que cuente ese año. Máximo 5 años, no renovable. Requisitos de la ordenanza del IBI (art. 5 TER, texto consolidado 2026, leído el 26/09/2026): instalación voluntaria de energía SOLAR para autoconsumo, colectores homologados y que sea la fuente principal de energía de la vivienda.", "Santa Cruz de Tenerife", false],
     ll:  [0.50,  5, 0,   "Piden estar al corriente de pagos y tener el IBI domiciliado.", "San Cristóbal de La Laguna", false],
     re:  [0.50,  5, 0,   "", "Los Realejos", false],
     pc:  [0.50,  5, 0,   "", "Puerto de la Cruz", false],
@@ -642,5 +636,20 @@ window.DATOS_IMMOIA = {
     return Math.ceil((fin - new Date()) / 86400000);
   }
 };
+
+/* 25/09/2026. La oferta de BBVA (4,91 % TAE) acaba el 30/09/2026.
+   Para que la web no la siga dando a partir del 1 de octubre sin que nadie se
+   acuerde, desde ese dia la mejor TAE publicada pasa sola a la de Kutxabank
+   (5,50 % TIN / 5,64 % TAE, fijo, hasta 10 anos), que es la segunda apuntada. */
+(function(){
+  var d = new Date();
+  var hoy = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  if (hoy > 20260930) {
+    var n = window.DATOS_IMMOIA.numeros;
+    n.mejorTaePublicada = 0.0564;
+    n.mejorTaeQuien = "Kutxabank · 5,50 % TIN / 5,64 % TAE · prestamo de eficiencia energetica a tipo fijo, hasta 10 anos. "
+                    + "(La oferta de BBVA al 4,91 % TAE termino el 30/09/2026.)";
+  }
+})();
 
 })();

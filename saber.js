@@ -33,9 +33,10 @@
   }
 
   function cargarTodo() {
-    traer("ayudas_todas.js?v=24b", function () {
-      traer("municipios_todos.js?v=1", function () {
-        traer("ayudas.js?v=24b", function () {
+    traer("ayudas_todas.js?v=26b", function () {
+      traer("municipios_todos.js?v=26b", function () {
+       traer("territorio.js?v=26a", function () {
+        traer("ayudas.js?v=26a", function () {
           if (window.IMMOIA_AYUDAS && window.IMMOIA_AYUDAS_TODAS) LISTO = true;
           mapaDePueblos();
           /* los impuestos de la comunidad: en la portada no los tenia nadie.
@@ -43,6 +44,7 @@
              no se cargan otra vez. */
           if (!window.IMMOIA_INMO) traer("fiscal.js?v=24a", function () {});
         });
+       });
       });
     });
   }
@@ -247,11 +249,13 @@
         : "IDIOMA: no se sabe. Sigues en espanol de Espana.");
       l.push("FUENTES CARGADAS EN ESTA PANTALLA: " + (si.length ? si.join("; ") : "ninguna") + ".");
       l.push("FUENTES QUE NO ESTAN EN ESTA PANTALLA: " + no.join("; ") + ". Lo que dependa de ellas no lo tienes: no lo des por sabido y no lo pidas como si estuviera.");
-      /* 20/09/2026. La fecha del vacacional no está en ningún
-         boletín, y la web la daba como plazo firme. Se ha quitado de la
-         pantalla; esta línea impide que vuelva por la boca de la secretaria,
-         aunque se la diga la propia persona. */
-      l.push("VIVIENDA VACACIONAL EN CANARIAS: la fecha limite para la comunicacion previa de actividad clasificada NO esta publicada en ningun boletin. Se maneja el 31 de julio de 2027 y se busco en el BOC sin encontrarla. NO la confirmes ni la repitas como plazo, aunque te la diga la persona con la que hablas: di que esa fecha no consta en boletin y que hay que confirmarla en el ayuntamiento y en el BOC. Lo que si puedes decir es que sin la comunicacion previa hay que cesar la actividad y que el numero de registro caduca.");
+      /* 25/09/2026. El 20/09 se quitó la fecha del vacacional
+         porque no se había leído en boletín. Ya está: Ley 7/2026, BOC 163 de
+         14/08/2026, y nota del Gobierno de Canarias de 16/09/2026. Se da con
+         los dos avisos (CNMC y decreto-ley anunciado). Y se añade la regla de
+         la comunidad de vecinos (LPH art. 17.12, desde el 03/04/2025). */
+      l.push("VIVIENDA VACACIONAL EN CANARIAS: la Ley 7/2026 (BOC num. 163, de 14/08/2026) anadio a la Ley 6/2025 una disposicion transitoria decima: quien presento la declaracion responsable antes del 13/12/2025 y no presento en el ayuntamiento la comunicacion previa de actividad clasificada puede presentarla antes del 31 de julio de 2027; si no, debe cesar la actividad y el numero de registro caduca. Lo confirma el Gobierno de Canarias el 16/09/2026. Di siempre dos avisos junto a la fecha: la CNMC ha cuestionado esa doble tramitacion (informe de 16/09/2026) y hay anunciado un decreto-ley que puede cambiar el tramite y aun no esta publicado; por eso conviene no esperar al ultimo dia y confirmarlo en el ayuntamiento. No des mas requisitos que estos y manda a la lista de papeles.");
+      l.push("VIVIENDA VACACIONAL EN UN EDIFICIO CON COMUNIDAD DE VECINOS (toda Espana): desde el 3 de abril de 2025 la Ley de Propiedad Horizontal, art. 17.12 (reformado por la Ley Organica 1/2025), pide el acuerdo de tres quintas partes de la comunidad para empezar un alquiler turistico. No afecta a quien ya lo tenia en marcha antes de esa fecha ni a una casa que no esta en comunidad. Si la persona empieza ahora y vive en un edificio, diselo y manda a su administrador de fincas.");
       l.push("DE DONDE SALEN ESTOS DATOS: " + (enCuenta()
         ? "de la cuenta de esta oficina, sincronizados. No hace falta que lo menciones."
         : "SOLO ESTE APARATO. Lo que hay aqui puede no estar en el otro ordenador ni en el movil de esa persona: no prometas que algo queda guardado en todas partes, y cuando lo que se este haciendo importe -un plazo, un documento, un expediente nuevo- dilo en una frase corta y sigue.") );
@@ -282,21 +286,31 @@
     try { A.cargar(sitio); } catch (e) { return null; }
 
     var tema = deQueVa(conversacion);
+    /* 26/09: en Canarias, la isla y el municipio de los que se habla
+       (territorio.js). Así a quien vive en Arona no le llegan las del
+       Ayuntamiento de Santa Cruz, ni a quien vive en Gran Canaria las del
+       Cabildo de Tenerife. */
+    var donde = null;
+    try { if (sitio === "cn" && window.IMMOIA_TERRITORIO) donde = window.IMMOIA_TERRITORIO.dondeEnTexto(conversacion); } catch (e) {}
     var lista = [];
-    try { lista = A.porTema(sitio, tema) || []; } catch (e) {}
+    try { lista = A.porTema(sitio, tema, donde) || []; } catch (e) {}
     if (lista.length < 3) {
-      try { lista = (A.vivas(sitio) || []).slice(0, 8); } catch (e) {}
+      try { lista = (A.vivas(sitio, donde) || []).slice(0, 8); } catch (e) {}
     }
     if (!lista.length) return null;
     lista = lista.slice(0, 7);
 
+    /* 26/09: la misma línea que ayudas.js: con de dónde es y con su fuente */
     var lineas = lista.map(function (a) {
+      if (A.lineaIA) return A.lineaIA(a, 170);
       var l = "- " + a.nombre + " (" + a.estado + ")";
       if (a.cuanto_da) l += ": " + String(a.cuanto_da).slice(0, 170);
       if (a.quien_queda_fuera) l += " | NO la puede pedir: " + String(a.quien_queda_fuera).slice(0, 100);
       if (a.caduca_en === "dias") l += " | HAY QUE CONFIRMARLA antes de prometerla";
       return l;
     }).join("\n");
+    var revisada = "";
+    try { var r = String(A.revisado || ""); if (/^\d{4}-\d{2}-\d{2}$/.test(r)) revisada = r.split("-").reverse().join("/"); } catch (e) {}
 
     var nombreSitio = COMO_SE_LLAMA[sitio] || sitio;
     try {
@@ -305,10 +319,16 @@
         nombreSitio = D.comunidades[sitio].nombre;
       }
     } catch (e) {}
+    try {
+      var TT = window.IMMOIA_TERRITORIO;
+      if (donde && TT && donde.municipios && donde.municipios.length === 1) nombreSitio += " (en concreto, " + TT.nombreMunicipio(donde.municipios[0]) + ")";
+      else if (donde && TT && donde.isla && TT.ISLAS[donde.isla]) nombreSitio += " (la isla de " + TT.ISLAS[donde.isla] + ")";
+    } catch (e) {}
 
     return MARCA + " · no se lo leas al cliente, úsalo]\n" +
       "Estás hablando de " + nombreSitio + ". Estas son las ayudas de vivienda que hay ahí " +
-      "según nuestra propia base (revisada el 11/09/2026). No te inventes ninguna que no esté " +
+      "según nuestra propia base" + (revisada ? " (su dato más reciente es del " + revisada + ")" : "") +
+      ". No te inventes ninguna que no esté " +
       "en esta lista, y las marcadas para confirmar se ofrecen diciendo que hay que comprobarlas:\n" +
       lineas + "\n" +
       "Si te preguntan por ayudas y aquí hay algo que sirve, contéstalo tú con estos datos: " +

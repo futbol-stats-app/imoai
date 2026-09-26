@@ -82,9 +82,34 @@
     var regla = global.IMMOIA_NO_ES_AYUDA;
     return typeof regla === "function" ? !!regla(a) : false;
   }
-  function vivas(ccaa) {
-    return para(ccaa).filter(function (a) {
-      return (a.estado === "abierta" || a.estado === "permanente" || a.estado === "pendiente") &&
+  /* 26/09/2026 · DÓNDE, DENTRO DE LA COMUNIDAD. Antes, a quien hablaba de
+     Canarias le llegaban las 24 fichas canarias, también las del Ayuntamiento
+     de Santa Cruz o de La Laguna y las del Cabildo de Tenerife, aunque
+     viviera en Arona o en Gran Canaria, y sin decir de dónde eran.
+     `donde` es opcional: {isla, municipios:[códigos INE]} (lo da
+     IMMOIA_TERRITORIO.dondeEnTexto). Con él se quitan las de otra isla y
+     las de otro ayuntamiento. Sin él, no se quita nada, pero cada línea
+     dice de qué ayuntamiento o de qué Cabildo es (ver `ambito`). */
+  function T() { return global.IMMOIA_TERRITORIO || null; }
+  function enSuSitio(lista, donde) {
+    var t = T();
+    if (!t || !donde || (!donde.isla && !(donde.municipios || []).length)) return lista;
+    return lista.filter(function (a) { return t.llegaDonde(a, donde) !== false; });
+  }
+  function ambito(a) {
+    var ine = String(a.codigo_ine || "").trim(), t = T();
+    if (ine.length === 5) {
+      var n = t ? t.nombreMunicipio(ine) : "";
+      return "SOLO para vecinos de " + (n ? n : "un ayuntamiento concreto (código INE " + ine + ")");
+    }
+    var isla = t ? t.islaDeFicha(a) : null;
+    if (isla) return "SOLO en la isla de " + t.ISLAS[isla] + " (Cabildo)";
+    return "";
+  }
+
+  function vivas(ccaa, donde) {
+    return enSuSitio(para(ccaa), donde).filter(function (a) {
+      return (a.estado === "abierta" || a.estado === "permanente" || a.estado === "pendiente" || a.estado === "sin_confirmar") &&
              !noEsUnaAyuda(a);
     });
   }
@@ -95,7 +120,15 @@
      Si caduca_en es una fecha (AAAA-MM-DD), vale esa fecha tal cual.
      Una ficha vieja NO se borra: se ofrece solo diciendo que hay que confirmarla. */
   var VIDA = { dias: 7, semanas: 42, anos: 365 };
-  function hoyISO() { return new Date().toISOString().slice(0, 10); }
+  /* 26/09: el día de hoy en Canarias (antes, el de Londres: toISOString). */
+  function hoyISO() {
+    try {
+      var f = new Intl.DateTimeFormat("en-CA", { timeZone: "Atlantic/Canary", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return f;
+    } catch (e) {}
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
   function sumaDias(iso, n) {
     var d = new Date(iso + "T00:00:00Z"); if (isNaN(d)) return null;
     d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10);
@@ -143,13 +176,14 @@
     for (var i = 0; i < pistas.length; i++) if (pistas[i].test(texto)) p += 10;
     if (a.estado === "abierta") p += 5;          /* lo que puede pedir hoy, primero */
     if (a.estado === "permanente") p += 3;
+    if (a.estado === "sin_confirmar") p += 1;    /* puede estar abierta: llega, con su aviso */
     if (a.ambito === "municipal") p += 2;        /* lo suyo de cerca vale más */
     return p;
   }
 
-  function porTema(ccaa, tema) {
+  function porTema(ccaa, tema, donde) {
     var cats = TEMAS[tema];
-    var lista = vivas(ccaa);
+    var lista = vivas(ccaa, donde);
     if (cats) {
       var filtrada = lista.filter(function (a) { return cats.indexOf(a.categoria) >= 0; });
       if (filtrada.length) lista = filtrada;
@@ -163,20 +197,34 @@
 
   /* El texto que se le pasa a la IA. Corto a propósito: si se le meten
      veinte fichas enteras, se pierde y contesta peor. */
-  function paraLaIA(ccaa, tema, cuantas) {
-    var lista = porTema(ccaa, tema || "placas").slice(0, cuantas || 6);
+  /* Una línea por ficha, la misma para esta página y para saber.js.
+     26/09: lleva de dónde es (ayuntamiento o Cabildo), la fuente (citar o
+     callar) y, si la cuantía es anterior al Plan 2026-2030, NO la cifra. */
+  function lineaIA(a, largo) {
+    largo = largo || 180;
+    var l = "- " + a.nombre + " (" + a.estado + ")";
+    var amb = ambito(a);
+    if (amb) l += " [" + amb + "]";
+    if (a.cuantia_vieja) l += ": cuantía anterior al Plan 2026-2030, sin comprobar: NO des la cifra";
+    else if (a.cuanto_da) l += ": " + String(a.cuanto_da).slice(0, largo);
+    if (a.quien_queda_fuera) l += " | NO la puede pedir: " + String(a.quien_queda_fuera).slice(0, 120);
+    if (a.fecha_fin) l += " | plazo hasta el " + a.fecha_fin.split("-").reverse().join("/");
+    else if (a.estado === "sin_confirmar") l += " | plazo sin confirmar";
+    if (vieja(a)) l += " | ⚠ DATOS DE HACE TIEMPO (comprobada el " + a.comprobado + "): CONFIRMAR antes de prometerla";
+    else if (a.caduca_en === "dias") l += " | ⚠ CONFIRMAR antes de prometerla";
+    if (a.verificacion && String(a.verificacion).indexOf("a medias") === 0) l += " | ⚠ ficha verificada a medias: di que hay datos por confirmar";
+    var f = String(a.fuente || "").split("|| INCOMPAT:")[0].trim();
+    l += " | Fuente: " + (f ? f.slice(0, 140) : "sin fuente: no des cifras de esta");
+    return l;
+  }
+
+  function paraLaIA(ccaa, tema, cuantas, donde) {
+    var lista = porTema(ccaa, tema || "placas", donde).slice(0, cuantas || 6);
     if (!lista.length) return "";
-    var txt = lista.map(function (a) {
-      var l = "- " + a.nombre + " (" + a.estado + ")";
-      if (a.cuanto_da) l += ": " + String(a.cuanto_da).slice(0, 180);
-      if (a.quien_queda_fuera) l += " | NO la puede pedir: " + String(a.quien_queda_fuera).slice(0, 120);
-      if (vieja(a)) l += " | ⚠ DATOS DE HACE TIEMPO (comprobada el " + a.comprobado + "): CONFIRMAR antes de prometerla";
-      else if (a.caduca_en === "dias") l += " | ⚠ CONFIRMAR antes de prometerla";
-      if (a.verificacion && String(a.verificacion).indexOf("a medias") === 0) l += " | ⚠ ficha verificada a medias: di que hay datos por confirmar";
-      return l;
-    }).join("\n");
+    var txt = lista.map(function (a) { return lineaIA(a); }).join("\n");
     return "Ayudas de vivienda que le pueden servir (no te inventes ninguna que no esté aquí, " +
-           "y las marcadas para confirmar se ofrecen diciendo que hay que comprobarlas):\n" + txt;
+           "las marcadas para confirmar se ofrecen diciendo que hay que comprobarlas, y las que dicen SOLO " +
+           "para un ayuntamiento o una isla no se le ofrecen a quien vive en otro sitio):\n" + txt;
   }
 
   /* Cuántas hay, para poder decirlo sin cargar nada pesado. */
@@ -204,7 +252,7 @@
   global.IMMOIA_AYUDAS = {
     version: "1.1", get revisado() { return revisado(); },
     cargar: cargar, para: para, vivas: vivas, porTema: porTema,
-    porConfirmar: porConfirmar, paraLaIA: paraLaIA, resumen: resumen,
+    porConfirmar: porConfirmar, paraLaIA: paraLaIA, resumen: resumen, lineaIA: lineaIA, ambito: ambito,
     codigo: codigo, vieja: vieja, limite: limite, _cache: cache
   };
 

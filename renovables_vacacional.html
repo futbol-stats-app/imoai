@@ -205,7 +205,7 @@ table.t td.resta{color:var(--verde)}
       <div>
         <label for="muni">¿En qué municipio?</label>
         <select id="muni">
-          <option value="gu">Güímar — 50 % · 25 años</option>
+          <option value="gu">Güímar — 50 % · 25 años (con requisitos)</option>
           <option value="ro">El Rosario — 50 % · 10 años</option>
           <option value="sc">Santa Cruz de Tenerife — 50 % · 5 años</option>
           <option value="ll">San Cristóbal de La Laguna — 50 % · 5 años</option>
@@ -310,20 +310,16 @@ table.t td.resta{color:var(--verde)}
         <p class="precio" id="op-a">—<small>de entrada</small></p>
       </div>
       <div class="op b">
-        <h3>Nos cedes el sobrante</h3>
-        <p class="quien">Opción B · IMMO IA Renovables</p>
+        <h3>Te llevamos los papeles</h3>
+        <p class="quien">Opción B · IMMO IA</p>
         <ul>
-          <li><b>No pones nada de entrada</b></li>
-          <li>Llevamos certificados, licencia, banco y papeleo</li>
-          <li>Tú te sigues ahorrando la luz que gastas</li>
-          <li>El sobrante entero es nuestro durante el plazo que firmemos</li>
+          <li>La instalación la pagas tú, al contado o con el préstamo que elijas</li>
+          <li>Llevamos los papeles: legalización, distribuidora, deducción del IRPF y bonificaciones del IBI y del ICIO</li>
+          <li><b>El sobrante es tuyo</b>… hasta el tope de tu factura</li>
         </ul>
-        <p class="precio">0 €<small>de entrada</small></p>
+        <p class="precio">349 €<small>por la gestión, más IGIC</small></p>
       </div>
     </div>
-    <div class="aviso" style="margin-top:14px"><span class="pun"></span><span>
-      <b>Y te decimos lo que ganamos</b>
-      <span id="v-nuestro">—</span></span></div>
   </section>
 
   <!-- ============ LO QUE HAY QUE SABER ============ -->
@@ -408,7 +404,7 @@ table.t td.resta{color:var(--verde)}
 
 </div>
 
-<script src="datos.js?v=24a"></script>
+<script src="datos.js?v=26b"></script>
 <!-- 24/09/2026: la cuenta ya no vive aquí. Vive en energia_cuenta.js y la
      usan las tres páginas de placas, para que el mismo caso dé la misma cifra. -->
 <script src="energia_cuenta.js?v=24a"></script>
@@ -593,21 +589,10 @@ table.t td.resta{color:var(--verde)}
       $("ojo-tamano-txt").innerHTML =
         "Con " + r.n + " paneles produces mucha más luz de la que tu apartamento puede usar o "
         + "cobrar. <b>" + eur(r.regala) + " al año se van a la red sin que nadie te los pague.</b> "
-        + "O pones menos paneles, o buscas a alguien que te compre ese sobrante. "
-        + "Poner más paneles solo te compensa si el sobrante lo cobra alguien.";
+        + "Te conviene poner menos paneles.";
     } else {
       ojo.hidden = true;
     }
-
-    /* ---------- lo que ganamos nosotros, dicho claro ---------- */
-    $("v-nuestro").textContent = (r.regala > 0.5)
-      ? "El sobrante que nos cedes son " + kwh(r.sobra) + " al año. Vendiéndolo en el mercado a unos "
-        + "0,06 €/kWh son " + eur(r.valorSobra) + " al año para nosotros. Para ti hoy valen "
-        + eur(r.compensa) + ", porque la ley no te deja cobrar más. Esa diferencia de "
-        + eur(r.regala) + " al año es lo que hace que este trato tenga sentido para los dos."
-      : "El sobrante que nos cedes son " + kwh(r.sobra) + " al año, y hoy te lo compensan entero en "
-        + "tu factura: " + eur(r.compensa) + " al año. Con este uso no regalas nada, así que "
-        + "cedérnoslo te costaría esos " + eur(r.compensa) + " al año. Aquí te conviene más la opción A.";
 
     /* la opción A dice lo mismo que la tabla */
     $("op-a").innerHTML = r.alContado

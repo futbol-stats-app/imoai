@@ -124,20 +124,20 @@
       "id": "VACACIONAL-01",
       "tema": "El 31 de julio de 2027 del vacacional",
       "busca_por": ["31/07/2027", "2027 vacacional", "plazo vacacional", "comunicacion previa vacacional", "ley 7/2026"],
-      "estado": "no_confirmado",
-      "dato": "La fecha solo la respalda una nota de la Consejeria de Turismo del 16/09/2026, NO el boletin. La Ley 7/2026 existe pero es una ley de licencias urbanisticas, no de vivienda vacacional; la disposicion transitoria decima es de la Ley 6/2025 y la 7/2026 se la anade.",
-      "comprobado": "2026-09-18",
-      "como_se_dice": "Hay una obligacion en marcha para el vacacional en Canarias, con una fecha anunciada por la Consejeria y pendiente de publicarse en el boletin. Por eso no le doy la fecha como segura: lo que si le digo es que conviene no esperar al ultimo dia.",
-      "aviso": "PROHIBIDO dar esa fecha con cita de boletin hasta que alguien lea el BOC num. 163 de 14/08/2026, anuncio 2922, disposicion final undecima."
+      "estado": "confirmado",
+      "dato": "Plazo: antes del 31/07/2027 para presentar en el ayuntamiento la comunicacion previa de actividad clasificada (quien presento la declaracion responsable antes del 13/12/2025). Norma: Ley 6/2025, disposicion transitoria decima, anadida por la disposicion final undecima de la Ley 7/2026 (BOC num. 163, de 14/08/2026, anuncio 2922). Lo confirma la nota del Gobierno de Canarias de 16/09/2026. La CNMC lo ha cuestionado (informe UM/045/26, 16/09/2026) y hay un decreto-ley anunciado, no publicado.",
+      "comprobado": "2026-09-25",
+      "como_se_dice": "Tiene hasta el 31 de julio de 2027 para presentar la comunicacion previa en su ayuntamiento; si no, tiene que cesar. Dos avisos: la CNMC lo ha cuestionado y hay un decreto-ley anunciado que puede cambiarlo, asi que no conviene esperar al ultimo dia.",
+      "aviso": "Si se publica el decreto-ley anunciado, esta ficha se revisa el mismo dia."
     },
     {
       "id": "VACACIONAL-02",
       "tema": "Minimos tecnicos del vacacional (metros, certificado energetico, agua caliente)",
       "busca_por": ["35 metros", "metros minimos", "clase energetica vacacional", "agua caliente renovables", "dt7"],
       "estado": "no_confirmado",
-      "dato": "Los minimos que se manejan (35 m2 utiles, clase F si es anterior a 2007 y D si es posterior, 70 % del agua caliente con renovables y 90 % si es posterior a 2007) vienen de UNA sola fuente especializada, no del boletin leido.",
-      "comprobado": "2026-09-18",
-      "como_se_dice": "Los minimos tecnicos se los digo de memoria y no se los confirmo: hay que leer la disposicion transitoria septima en el boletin antes de ponerlos en una oferta. Si quiere, se los miro y se los mando con la cita."
+      "dato": "Los minimos que se manejan (35 m2 utiles, clase energetica F si es anterior a 2007 y D si es posterior) vienen de una sola fuente especializada, no del boletin leido. El requisito del 70 %/90 % de agua caliente con renovables ya NO se dice: la Ley 7/2026 lo quito (BITACORA 24/09, Rama 4).",
+      "comprobado": "2026-09-25",
+      "como_se_dice": "Los minimos tecnicos no se los confirmo de memoria: hay que leerlos en el boletin antes de ponerlos en una oferta. Si quiere, se los miro y se los mando con la cita."
     },
     {
       "id": "PLUSVALIA-01",

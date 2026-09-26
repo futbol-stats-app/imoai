@@ -197,7 +197,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
 
 </div>
 
-<script src="datos.js?v=24a"></script>
+<script src="datos.js?v=26b"></script>
 <script src="orden.js?v=18c"></script>
 <!-- 24/09/2026: la cuenta de las placas, la misma para las tres páginas. -->
 <script src="energia_cuenta.js?v=24a"></script>
@@ -208,8 +208,9 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      cliente dice dónde vive, mucho después de que la página haya pintado.
      (El «defer» y
      el propio ayudas_todas.js van juntos.) -->
-<script src="ayudas_todas.js?v=24b" defer></script>
-<script src="ayudas.js?v=24b" defer></script>
+<script src="ayudas_todas.js?v=26b" defer></script>
+<script src="territorio.js?v=26a" defer></script>
+<script src="ayudas.js?v=26a" defer></script>
 <script>
 (function(){
   "use strict";
@@ -1385,10 +1386,6 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
      Todas se calculan con SUS números, no
      con un ejemplo. El cliente elige; no se le empuja a ninguna.
      ========================================================== */
-  /* 24/09/2026: estos 500 € no tienen fuente (datos.js los tiene pendientes de
-     cerrar por escrito con el instalador). Ya no se restan en la cuenta principal; aquí
-     solo se nombran en la fórmula de ceder el sobrante, y marcados como supuesto. */
-  var DESCUENTO_CESION = (window.IMMOIA_ENERGIA_CUENTA ? window.IMMOIA_ENERGIA_CUENTA.parametros().descuentoInstalador : 0);
 
   function formasDePago(){
     var d = calcular();
@@ -1483,46 +1480,7 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       paraQuien: "Si puedes poner algo, bajas la cuota y pagas menos intereses."
     });
 
-    /* --- 5 · sin poner nada, cediéndonos el sobrante --- */
-    var financiaCesion = Math.max(0, d.aPagar - DESCUENTO_CESION);
-    var cc1 = CUENTA.cuota(financiaCesion, 10);
-    var sc = CUENTA.saldoTras(financiaCesion, cc1, d.mesDevolucion);
-    var rc = Math.max(0, sc - d.irpf);
-    var cc2 = rc > 0 ? CUENTA.cuota(rc, (120 - d.mesDevolucion) / 12) : 0;
-    var luzCesion = Math.max(0, d.factura - d.ahorroCede / 12);
-    /* Esta solo se le ofrece SI LE SALE MEJOR que pagarlo él. En una vivienda normal de
-       Tenerife el tope de la compensación no llega a morder, así que el sobrante le vale a
-       él lo mismo que a nosotros y cederlo es perder dinero. Donde sí tiene sentido es en
-       el vacacional. */
-    var refDiez = null;
-    for(var q = 0; q < lista.length; q++){
-      if(lista[q].id === "igual"){ refDiez = lista[q]; break; }
-      if(!refDiez && lista[q].id === "plazos10") refDiez = lista[q];
-    }
-    var mesCesion = luzCesion + cc1;
-    var leSaleMejor = refDiez ? (mesCesion < refDiez.mes - 0.5) : true;
-
-    lista.push({
-      id: "cesion",
-      oculta: !leSaleMejor,
-      loQuePierde: d.compensa,
-      titulo: "Sin entrada, cediéndonos el sobrante",
-      hoy: 0,
-      mes: luzCesion + cc1,
-      mesDespues: luzCesion + cc2,
-      devolucion: d.irpf,
-      sobrante: "nuestro, 30 años",
-      resumen: (DESCUENTO_CESION > 0
-                 ? "Te negociamos el precio con el instalador y <b>el descuento te lo quedas tú</b>: "
-                   + "financias " + eur(DESCUENTO_CESION) + " menos (<b>supuesto</b>: ese descuento todavía "
-                   + "no está cerrado por escrito con ningún instalador), así que la cuota baja a " + eur(cc1) + ". "
-                 : "La cuota es de " + eur(cc1) + ". ")
-             + "A cambio, la luz que te sobra es nuestra durante 30 años — hoy te la compensan "
-             + eur(d.compensa) + " al año, así que eso es lo que dejas de cobrar.",
-      paraQuien: "Es opcional. Si no te convence, cualquiera de las otras vale igual.",
-      esNuestra: true
-    });
-
+    /* 26/09/2026: sin cesión del sobrante. El sobrante es siempre del cliente. */
     return lista;
   }
 
@@ -1557,22 +1515,6 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
     }).join("");
     charla.appendChild(caja);
 
-    /* si hay alguna que no le conviene, se le dice en vez de esconderla sin más */
-    descartadas.forEach(function(o){
-      if(o.id !== "cesion") return;
-      var av = document.createElement("div");
-      av.className = "ojo";
-      av.innerHTML = "<b>Y una que NO te ofrezco, para que sepas que existe:</b> hay una fórmula "
-        + "en la que nosotros te ponemos la instalación y nos quedamos la luz que te sobra. "
-        + "<b>Con tus números no te sale a cuenta</b>: ese sobrante hoy te lo compensan a ti en "
-        + "tu propia factura, unos " + eur(o.loQuePierde) + " al año, y lo que te daríamos a "
-        + "cambio vale menos que eso. Así que págalo tú y quédatelo."
-        + (R.tipo === "vac" ? ""
-           : "<br><br>Donde sí puede tener sentido es en un <b>apartamento vacacional</b>, porque "
-           + "ahí está vacío parte del año y buena parte de esa luz se regala sin que nadie te la pague.");
-      charla.appendChild(av);
-    });
-
     ia("<p>Hoy pagas <b>" + eur(calcular().factura) + " al mes</b> de luz y no te queda nada. "
      + "Compara con eso.</p><p>¿Cuál te encaja?</p>");
 
@@ -1580,14 +1522,8 @@ ul.papeles span{font-size:13.5px;color:var(--tinta2)}
       return { texto: o.titulo, fuerte: !!o.recomendada, hacer: function(){
         R.pago = o.id; guardar();
         yo(o.titulo);
-        if(o.esNuestra){
-          ia("<p>Buena elección, y te digo lo que ganamos nosotros para que lo sepas: esa luz "
-           + "que te sobra la vendemos, y ahí está nuestro negocio. Tú te ahorras la cuota más "
-           + "baja y no pones un duro. <b>Si algún día prefieres quedártela, se habla.</b></p>");
-        } else {
-          ia("<p>Apuntado. <b>El sobrante se queda tuyo</b>, entonces: te lo compensan en tu "
-           + "propia factura.</p>");
-        }
+        ia("<p>Apuntado. <b>El sobrante se queda tuyo</b>: te lo compensan en tu "
+         + "propia factura.</p>");
         setTimeout(paso6, 350);
       }};
     }), true);

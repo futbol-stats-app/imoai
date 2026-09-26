@@ -148,7 +148,7 @@ window.IMMOIA_CHARLA = { version: "2026-09-11+modulos", microfono: "avisa" };  /
                     pagina; en la portada no anade ni una letra.
    Si algun dia molestan, se borran estas lineas y todo vuelve a estar igual. */
 (function(){
-  ["secretaria.js?v=1", "saber.js?v=24b", "papeles.js?v=2", "firma.js?v=1", "secretaria_sabe.js?v=1"].forEach(function(f){
+  ["secretaria.js?v=1", "saber.js?v=26b", "papeles.js?v=2", "firma.js?v=1", "secretaria_sabe.js?v=1"].forEach(function(f){
     var s = document.createElement("script"); s.src = f;
     (document.body || document.documentElement).appendChild(s);
   });

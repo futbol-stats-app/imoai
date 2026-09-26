@@ -1003,7 +1003,7 @@ html.cerrado body>*:not(#cortina){display:none!important}
         <div>
           <label for="ingresos">Ingresos mensuales</label>
           <input type="text" id="ingresos" aria-describedby="pista-ingresos" inputmode="decimal" autocomplete="off" placeholder="1.550" required>
-          <span class="pista" id="pista-ingresos">En euros, lo que te queda limpio al mes</span>
+          <span class="pista" id="pista-ingresos">En euros, lo que te queda limpio al mes. Si vivís dos o más, sumad lo de todos</span>
         </div>
         <div>
           <label for="edad">Edad</label>
@@ -1115,8 +1115,11 @@ html.cerrado body>*:not(#cortina){display:none!important}
 <!-- 24/09 (fallo 58): saber.js pide «ayudas_todas.js» con la misma marca si no encuentra un
      script con data-saber igual. Con esta marca lo encuentra y no lo carga otra vez:
      un solo fichero de ayudas en la portada, el de la marca de caché de arriba. -->
-<script src="ayudas_todas.js?v=24b" data-saber="ayudas_todas.js?v=24b"></script>
+<script src="ayudas_todas.js?v=26b" data-saber="ayudas_todas.js?v=26b"></script>
 <script src="frescura.js?v=18c"></script>
+<!-- 26/09: el mapa de Tenerife (isla y municipio por código postal). Sin él,
+     la portada sigue funcionando como antes, por provincia. -->
+<script src="territorio.js?v=26a" data-saber="territorio.js?v=26a"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
    IMMO IA · calculadora de ayudas — versión 2
@@ -1169,7 +1172,29 @@ const AVISO_SIN_INGRESOS = "Esta ayuda no publica límite de ingresos: compruéb
 const REQUISITOS_EN_LA_CALCULADORA = {
   "es-aval-ico": "Sí tiene tope de ingresos, y va por provincia: de 37.800 € a 63.000 € brutos al año por comprador (tabla del ICO de 19/06/2026). Aquí solo hemos mirado tu edad. Los ingresos, el patrimonio y el precio te los mira la calculadora del aval."
 };
-const AVISO_SIN_EDAD = "Es un programa para jóvenes, pero su convocatoria no publica límite de edad: compruébalo en ella antes de pedirla.";
+/* 26/09/2026 · LOS INGRESOS. La portada pregunta lo que queda limpio al mes
+   y las convocatorias publican un tope al año que casi siempre es de toda la
+   casa y sale de la declaración de la renta. Se cruza igual (mes × 12), pero
+   se dice qué se ha cruzado. */
+const AVISO_COMO_SE_CUENTAN = "Mira en la convocatoria cómo cuenta los ingresos: muchas suman los de todos los que viven en casa y usan la declaración de la renta, no lo que te queda limpio.";
+/* El tope de ingresos de una ficha que solo vale para UNA de sus partes, dicho
+   por la propia ficha. Quien pasa del tope no pierde las demás partes. */
+const TOPE_DE_UNA_PARTE = {
+  "sc-icio": "El tope de ingresos de esta ficha (8,5 veces el IPREM) es, según su propio texto, solo de la bonificación por accesibilidad: con tus ingresos esa parte no te entraría. La de energía solar (art. 7 bis.2 de la ordenanza) no lo pide. Confírmalo en la ordenanza antes de contar con ella."
+};
+/* 26/09/2026 · TOPES QUE SUBEN. Muchas convocatorias publican un tope básico
+   (el que guarda la ficha) y otro más alto para familia numerosa,
+   discapacidad, menores a cargo… Eso aquí no se pregunta. Antes, quien pasaba
+   del básico desaparecía («tope por debajo del tuyo»): era decirle «no tienes
+   derecho» sin haberlo mirado. Ahora, si la propia ficha dice que el tope
+   sube, se enseña aparte diciendo de qué depende. */
+const RE_OTRO_TOPE = /\b\d+(?:,\d+)?\s*(?:veces|×)|\(\s*\d+(?:,\d+)?\s+con\b/gi;
+const RE_TOPE_SUBE = /ampliable a [\d,]+ (?:o [\d,]+ )?veces|con incrementos|m[aá]s 0,\d+ por hijo|monoparental|prelaci[óo]n por ingresos/i;
+function elTopeSube(a){
+  const q = String(a.quien_puede || "");
+  return RE_TOPE_SUBE.test(q) || (q.match(RE_OTRO_TOPE) || []).length >= 2;
+}
+const AVISO_SIN_EDAD ="Es un programa para jóvenes, pero su convocatoria no publica límite de edad: compruébalo en ella antes de pedirla.";
 const AVISO_SOLO_TERRITORIO = "Esta convocatoria no publica ni límite de edad ni tope de ingresos, así que con tus datos solo hemos podido cruzar dónde vives y qué quieres hacer. Los requisitos, compruébalos tú en la convocatoria.";
 
 /* La fecha que se enseña arriba es la del DATO, no la de hoy. Antes ponía
@@ -1219,8 +1244,11 @@ const ESTADOS = {
   abierta:    {clase:"si",  texto:"Se puede pedir hoy"},
   permanente: {clase:"si",  texto:"Programa permanente · abierto todo el año"},
   pendiente:  {clase:"no",  texto:"Aprobada · todavía no se puede pedir"},
+  sin_confirmar: {clase:"no", texto:"Puede estar abierta · plazo sin confirmar: míralo en su convocatoria"},
   derivacion: {clase:"no",  texto:"Se tramita en otra ventanilla"},
-  cerrada:    {clase:"fin", texto:"Plazo cerrado · suele reabrir"},
+  /* 26/09: quitado «suele reabrir». Eso no lo dice ninguna fuente para todas
+     (el Bono de 2022 está en extinción; el PRTR, cerrado). */
+  cerrada:    {clase:"fin", texto:"Plazo cerrado · hoy no se puede pedir"},
 };
 
 function alcanzaTerritorio(ine, cp){
@@ -1232,8 +1260,28 @@ function alcanzaTerritorio(ine, cp){
   if(NOMBRE_CCAA[ine] !== undefined) return ine===ccaa;
   return ine===prov;
 }
+/* 26/09/2026 · ISLA Y MUNICIPIO. alcanzaTerritorio mira comunidad y
+   provincia; con eso a un vecino de Adeje le salían las ayudas del
+   Ayuntamiento de Santa Cruz, y a uno de La Palma las del Cabildo de
+   Tenerife (las dos islas son la provincia 38). territorio.js sabe la isla
+   por el código postal y, en Tenerife, el municipio. Devuelve true, false
+   o "duda" (municipal de su provincia, pero de su código postal no sabemos
+   el municipio: se enseña diciendo que mire). Sin territorio.js, como antes. */
+function llegaA(a, cp){
+  if(!alcanzaTerritorio(a.ine, cp)) return false;
+  const T = (typeof window !== "undefined") ? window.IMMOIA_TERRITORIO : null;
+  if(!T) return (a.ine || "").trim().length === 5 ? "duda" : true;
+  return T.llega({codigo_ine: a.ine, fuente: a.f, quien_puede: a.quien_puede, nombre: a.n}, cp);
+}
+function nombreMunicipioDe(ine){
+  const T = (typeof window !== "undefined") ? window.IMMOIA_TERRITORIO : null;
+  return T ? T.nombreMunicipio(ine) : "";
+}
+const eurES = (x) => Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " €";
+
 function nombreAmbito(ine){
   if(!ine) return "";
+  if((ine||"").trim().length === 5 && nombreMunicipioDe(ine)) return nombreMunicipioDe(ine) + " (su ayuntamiento)";
   if(NOMBRE_CCAA[ine]) return NOMBRE_CCAA[ine];
   const c = PROV_CCAA[ine.slice(0,2)];
   return c ? NOMBRE_CCAA[c] : "";
@@ -1246,7 +1294,8 @@ function nombreAmbito(ine){
    que compra — así que ahí se mira el territorio, la edad y los ingresos,
    pero no el objetivo. */
 function evaluar(a, perfil, mirarObjetivo = true){
-  if(!alcanzaTerritorio(a.ine, perfil.cp)) return null;
+  const llega = llegaA(a, perfil.cp);
+  if(!llega) return null;
   if(mirarObjetivo && a.obj.length && !a.obj.includes(objetivoDelMotor(perfil.objetivo))) return null;
 
   const porques = [], avisos = [];
@@ -1272,11 +1321,21 @@ function evaluar(a, perfil, mirarObjetivo = true){
     cumplidos++;
     porques.push(`Tienes la edad mínima (${a.emin} años)`);
   }
-  if(a.imax !== null){
+  if(a.imax !== null && TOPE_DE_UNA_PARTE[a.id] && perfil.ingresos*12 > a.imax){
+    /* 26/09: el tope solo es de una parte de la ficha (lo dice ella): no se
+       le quita la otra parte a quien pasa del tope. */
+    avisos.push(TOPE_DE_UNA_PARTE[a.id]);
+  } else if(a.imax !== null){
     publicados++;
     if(perfil.ingresos*12 > a.imax) return null;
     cumplidos++;
-    porques.push("Estás por debajo del tope de ingresos publicado");
+    /* 26/09: antes decía «Estás por debajo del tope» sin más. Lo que se ha
+       cruzado es lo que la persona pone (limpio al mes × 12) con el tope
+       publicado (al año), y eso se dice con las dos cifras. */
+    porques.push(`Con lo que has puesto (${eurES(perfil.ingresos*12)} al año) no pasas del tope publicado: ${eurES(a.imax)} al año`);
+    avisos.push(AVISO_COMO_SE_CUENTAN);
+    if(perfil.ingresos*14 > a.imax)
+      avisos.push(`Si cobras pagas extra, cuéntalas: con 14 pagas serían ${eurES(perfil.ingresos*14)} al año y pasarías del tope`);
   } else if(REQUISITOS_EN_LA_CALCULADORA[a.id]){
     avisos.push(REQUISITOS_EN_LA_CALCULADORA[a.id]);
   } else {
@@ -1284,7 +1343,11 @@ function evaluar(a, perfil, mirarObjetivo = true){
   }
   /* El territorio NO se cuenta como requisito: no es algo que publique la
      convocatoria, es cómo hemos filtrado nosotros. Se dice, pero no suma. */
-  porques.push(`Es una ayuda de ${nombreAmbito(a.ine) || "tu zona"}`);
+  const islaCabildo = (a.ine === "38" && typeof window !== "undefined" && window.IMMOIA_TERRITORIO)
+    ? window.IMMOIA_TERRITORIO.islaDeFicha({codigo_ine:a.ine, fuente:a.f, quien_puede:a.quien_puede, nombre:a.n}) : null;
+  porques.push(islaCabildo
+    ? `Es una ayuda del Cabildo de ${window.IMMOIA_TERRITORIO.ISLAS[islaCabildo]}`
+    : `Es una ayuda de ${nombreAmbito(a.ine) || "tu zona"}`);
 
   /* 231 de las 293 no publican ni edad ni ingresos. Con esas, lo único que
      hemos cruzado con sus datos es el territorio y lo que quiere hacer, y eso
@@ -1292,11 +1355,12 @@ function evaluar(a, perfil, mirarObjetivo = true){
      el caso. */
   if(publicados === 0) avisos.push(AVISO_SOLO_TERRITORIO);
 
-  return {...a, publicados, cumplidos, porques, avisos};
+  const muni = (a.ine || "").trim().length === 5 ? nombreMunicipioDe(a.ine) : "";
+  return {...a, publicados, cumplidos, porques, avisos, muni, dudaMuni: llega === "duda"};
 }
 
 function orden(a){
-  return ({abierta:0, permanente:1, derivacion:2, pendiente:3, cerrada:4})[a.e] ?? 5;
+  return ({abierta:0, permanente:1, derivacion:2, sin_confirmar:3, pendiente:3, cerrada:4})[a.e] ?? 5;
 }
 
 /* ══ LO QUE NO ES UNA AYUDA PARA ESTA PERSONA · 24/09/2026 ══════════════
@@ -1340,7 +1404,7 @@ const DEPENDE_DE_LO_QUE_NO_PREGUNTAMOS = {
     if(a.emax !== null && perfil.edad > a.emax)
       return `Por la edad no entras (el límite son ${a.emax} años), salvo que tengas menores a cargo: entonces no hay límite de edad. Aquí no te lo hemos preguntado.`;
     if(perfil.ingresos*12 > 63000)
-      return "Con los ingresos que has puesto lo más probable es que no entres: el tope más alto de la tabla del ICO son 63.000 € brutos al año por comprador (sube si compráis dos, con menores a cargo o en familia monoparental). Aquí no lo podemos cruzar.";
+      return "Si compras tú solo, con los ingresos que has puesto lo más probable es que no entres: el tope más alto de la tabla del ICO son 63.000 € brutos al año por comprador (sube con menores a cargo o en familia monoparental). Si compráis dos, el tope es la suma del de cada uno. Aquí no lo podemos cruzar.";
     return null;
   }
 };
@@ -1355,33 +1419,48 @@ function calcularLocal(perfil){
   const esMunicipal = (a) => (a.ine || "").trim().length === 5;
   const directas = [], fiscales = [], municipales = [], derivaciones = [], dudosas = [];
   for(const a of AYUDAS){
-    if(!alcanzaTerritorio(a.ine, perfil.cp)){ descartes.territorio++; continue; }
+    /* 26/09: también la isla y, en Tenerife, el municipio (territorio.js) */
+    const llega = llegaA(a, perfil.cp);
+    if(!llega){ descartes.territorio++; continue; }
     if(a.obj.length && !a.obj.includes(objMotor)){ descartes.objetivo++; continue; }
     if(noEsUnaAyuda(a)){ descartes.noAyuda++; continue; }
     if(esDelPropietario(a, perfil)){ descartes.propietario++; continue; }
     const depende = DEPENDE_DE_LO_QUE_NO_PREGUNTAMOS[a.id];
     const falta = depende ? depende(a, perfil) : null;
     if(falta){ dudosas.push({...a, falta}); continue; }
+    const fueraPorEdad = (a.emax !== null && perfil.edad > a.emax) || (a.emin !== null && perfil.edad < a.emin);
+    /* 26/09: pasa del tope básico, pero la ficha dice que el tope sube en
+       casos que aquí no se preguntan: no se descarta, se enseña aparte. */
+    if(!fueraPorEdad && a.imax !== null && perfil.ingresos*12 > a.imax && !TOPE_DE_UNA_PARTE[a.id] && elTopeSube(a)){
+      dudosas.push({...a, falta: `Con lo que has puesto (${eurES(perfil.ingresos*12)} al año) pasas del tope básico, ${eurES(a.imax)} al año, pero su propio texto dice que ese tope no vale igual para todos (sube con familia numerosa, discapacidad, menores a cargo… o solo sirve para ordenar las solicitudes), y eso aquí no te lo preguntamos. Míralo en la convocatoria antes de descartarla.`});
+      continue;
+    }
     const ev = evaluar(a, perfil);
     if(!ev){
       /* Sin el tope inventado de 45: solo se descarta por la edad que la
          convocatoria publica de verdad. */
-      if((a.emax !== null && perfil.edad > a.emax) || (a.emin !== null && perfil.edad < a.emin)) descartes.edad++;
+      if(fueraPorEdad) descartes.edad++;
       else descartes.ingresos++;
       continue;
     }
-    /* Las municipales van APARTE. Del código postal sabemos la provincia, no
-       el municipio: se enseñan las de su provincia diciendo que mire si el
-       ayuntamiento es el suyo. Van todas, también las de impuestos: antes
-       esas se perdían sin salir en ningún sitio. */
+    /* Las municipales van APARTE. En Tenerife, el código postal dice el
+       municipio (territorio.js) y solo salen las del suyo; si el código lo
+       comparten dos municipios, las de los dos, y se dice. Fuera de
+       Tenerife (o con un código que no está en la lista) se enseñan las de
+       su provincia diciendo que mire si el ayuntamiento es el suyo. */
     if(esMunicipal(ev)) municipales.push(ev);
     else if(ev.e === "derivacion") derivaciones.push(ev);   /* fallo 4: una ventanilla no es una ayuda */
     else if(esFiscal(ev)) fiscales.push(ev);
     else directas.push(ev);
   }
   directas.sort((x,y)=>orden(x)-orden(y));
+  municipales.sort((x,y)=>orden(x)-orden(y));
+  /* Lo que ya sale arriba no se repite en «Y además» (antes salía dos veces) */
+  const yaSalen = new Set([...directas, ...fiscales, ...municipales, ...derivaciones, ...dudosas].map(a=>a.id));
+  const T = (typeof window !== "undefined") ? window.IMMOIA_TERRITORIO : null;
+  const suMunicipio = T ? T.municipiosDeCP(perfil.cp).map(i => T.nombreMunicipio(i)) : [];
   return {directas, fiscales, municipales, derivaciones, dudosas, descartes, total:AYUDAS.length,
-          extras: calcularExtras(perfil)};
+          suMunicipio, extras: calcularExtras(perfil, yaSalen)};
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1405,11 +1484,14 @@ const BLOQUES_EXTRA = [
    d:"Lo que cambia cuando la casa viene de una herencia. Aquí tenemos muy poco todavía y preferimos decirlo."},
 ];
 
-function calcularExtras(perfil){
+function calcularExtras(perfil, yaSalen = new Set()){
   const salida = {};
   for(const b of BLOQUES_EXTRA){
+    /* 26/09: con la misma regla que el resultado: lo que no es una ayuda que
+       se pida no entra, y lo que ya sale arriba no se repite. El territorio
+       (isla y municipio) lo mira evaluar. */
     const lista = AYUDAS
-      .filter(a => (a.x||[]).includes(b.k))
+      .filter(a => (a.x||[]).includes(b.k) && !noEsUnaAyuda(a) && !yaSalen.has(a.id))
       .map(a => evaluar(a, perfil, false))   /* sin mirar el objetivo: son transversales */
       .filter(Boolean)
       .sort((x,y)=>orden(x)-orden(y));
@@ -1434,7 +1516,9 @@ function htmlExtras(extras){
       <p class="res-sub">${esc(b.d)}</p>
       <ul>${extras[b.k].map(a=>{
         const {fuente} = limpiarFuente(a.f);
-        return `<li><b>${esc(a.n)}</b>
+        const est = ESTADOS[a.e] || {texto:a.e || ""};
+        const donde = a.muni ? ` · Ayuntamiento de ${esc(a.muni)}` : "";
+        return `<li><b>${esc(a.n)}</b>${donde} · <em>${esc(est.texto)}</em>
           ${a.vieja
             ? `<em>Cifra anterior al Plan 2026-2030: no la enseñamos hasta comprobarla.</em>`
             : esc(sinNotasInternas(a.da) || "Cuantía no publicada.")}
@@ -1590,7 +1674,52 @@ function sinNotasInternas(t){
    pedir hoy se enseñan SIEMPRE, sean las que sean (fallo 2). */
 const A_LA_VISTA = 4;
 
-function pintar({directas, fiscales = [], municipales = [], derivaciones = [], dudosas = [], descartes, total, extras = {}}, perfil){
+/* 26/09/2026 · LO DEL AYUNTAMIENTO. En Tenerife se sabe el municipio por el
+   código postal y solo salen las suyas, con el nombre del ayuntamiento al
+   lado (antes salían las de toda la provincia, algunas sin decir de dónde
+   eran: «IBI: familia numerosa» era de Santa Cruz). Si de su ayuntamiento no
+   tenemos nada, se dice y se le manda a preguntar: no «no hay». */
+function htmlMunicipales(municipales, suMunicipio = []){
+  const OJO = `<p class="ojo">Y ojo con esto: <b>no se aplican solas.</b> Hay que pedirlas, no son
+      retroactivas, y cada ayuntamiento tiene su plazo — alguno vence en diciembre del año
+      anterior a la obra.</p>`;
+  const linea = (a) => {
+    const nom = (a.n||"").split(" — ")[0];
+    const est = ESTADOS[a.e] ? ESTADOS[a.e].texto : "";
+    const de = a.muni && nom.indexOf(a.muni) < 0 ? `Ayuntamiento de ${esc(a.muni)} · ` : "";
+    return `<li>${de}<b>${esc(nom)}</b> · ${esc(sinNotasInternas(a.da) || "sin cuantía publicada")}${est ? ` <em>(${esc(est)})</em>` : ""}</li>`;
+  };
+  if(suMunicipio.length === 1){
+    if(!municipales.length)
+      return `<div class="aparte municipales" data-municipio="${esc(suMunicipio[0])}"><b>Tu ayuntamiento: ${esc(suMunicipio[0])}</b>
+        — de él todavía no tenemos ninguna ayuda ni bonificación comprobada para lo que buscas.
+        Eso no quiere decir que no la haya: <b>hay que mirarlo en tu ayuntamiento</b>.</div>`;
+    return `<div class="aparte municipales" data-municipio="${esc(suMunicipio[0])}">
+      <b>Lo de tu ayuntamiento, ${esc(suMunicipio[0])} (${municipales.length})</b>
+      — por tu código postal. Cuando pone que no existe, también sirve: te ahorra la llamada.
+      <ul>${municipales.map(linea).join("")}</ul>${OJO}</div>`;
+  }
+  if(!municipales.length && suMunicipio.length > 1)
+    return `<div class="aparte municipales" data-municipio="${esc(suMunicipio.join(" / "))}"><b>Tu ayuntamiento</b>
+      — tu código postal lo comparten ${esc(suMunicipio.join(" y "))}, y de ninguno de los dos tenemos
+      todavía una ayuda o bonificación comprobada para lo que buscas. Eso no quiere decir que no la haya:
+      <b>hay que mirarlo en tu ayuntamiento</b>.</div>`;
+  if(!municipales.length) return "";
+  if(suMunicipio.length > 1){
+    return `<div class="aparte municipales" data-municipio="${esc(suMunicipio.join(" / "))}">
+      <b>Lo de tu ayuntamiento (${municipales.length})</b> — tu código postal lo comparten
+      ${esc(suMunicipio.join(" y "))}: <b>mira cuál es el tuyo</b>, porque esto solo vale en el suyo.
+      <ul>${municipales.map(linea).join("")}</ul>${OJO}</div>`;
+  }
+  return `<div class="aparte municipales">
+      <b>Lo que hay en ayuntamientos de tu provincia (${municipales.length})</b>
+      — <b>mira si el tuyo está</b>: por el código postal sabemos tu provincia, pero no tu
+      municipio, y esto solo vale en el suyo. Cuando pone que no existe, también sirve:
+      te ahorra la llamada.
+      <ul>${municipales.map(linea).join("")}</ul>${OJO}</div>`;
+}
+
+function pintar({directas, fiscales = [], municipales = [], derivaciones = [], dudosas = [], descartes, total, extras = {}, suMunicipio = []}, perfil){
   const caja = $("#resultados");
   caja.classList.remove("oculto");
   const ccaa = NOMBRE_CCAA[PROV_CCAA[perfil.cp.slice(0,2)]] || "tu zona";
@@ -1629,7 +1758,7 @@ function pintar({directas, fiscales = [], municipales = [], derivaciones = [], d
   if(dudosas.length){
     html += `<div class="aparte dudosas"><b>${plural(dudosas.length, "Esta depende", `Estas ${dudosas.length} dependen`)} de algo que aquí no te preguntamos</b>
       — por eso no ${plural(dudosas.length, "la contamos", "las contamos")} entre las que encajan:
-      <ul>${dudosas.map(a=>`<li><b>${esc(a.n)}</b> · ${esc(a.falta)}${
+      <ul>${dudosas.map(a=>`<li><b>${esc(a.n)}</b>${ESTADOS[a.e] ? ` <em>(${esc(ESTADOS[a.e].texto)})</em>` : ""} · ${esc(a.falta)}${
         a.id === "es-aval-ico" ? ` <a href="calculadora.html">Míralo en la calculadora del aval</a>.` : ""}</li>`).join("")}</ul></div>`;
   }
 
@@ -1639,17 +1768,7 @@ function pintar({directas, fiscales = [], municipales = [], derivaciones = [], d
       <ul>${derivaciones.map(a=>`<li><b>${esc(a.n)}</b> · ${esc(sinNotasInternas(a.da) || "sin cuantía publicada")}</li>`).join("")}</ul></div>`;
   }
 
-  if(municipales.length){
-    html += `<div class="aparte municipales">
-      <b>Lo que hay en ayuntamientos de tu provincia (${municipales.length})</b>
-      — <b>mira si el tuyo está</b>: por el código postal sabemos tu provincia, pero no tu
-      municipio, y esto solo vale en el suyo. Cuando pone que no existe, también sirve:
-      te ahorra la llamada.
-      <ul>${municipales.map(a=>`<li><b>${esc((a.n||"").split(" — ")[0])}</b> · ${esc(sinNotasInternas(a.da) || "sin cuantía publicada")}</li>`).join("")}</ul>
-      <p class="ojo">Y ojo con esto: <b>no se aplican solas.</b> Hay que pedirlas, no son
-      retroactivas, y cada ayuntamiento tiene su plazo — alguno vence en diciembre del año
-      anterior a la obra.</p></div>`;
-  }
+  html += htmlMunicipales(municipales, suMunicipio);
 
   if(fiscales.length){
     html += `<div class="aparte"><b>Además, ${fiscales.length} ventaja${fiscales.length!==1?"s":""} fiscal${fiscales.length!==1?"es":""}</b>
@@ -1664,7 +1783,7 @@ function pintar({directas, fiscales = [], municipales = [], derivaciones = [], d
   const otras = total - ensenadas;
   if(otras > 0){
     const motivos = [];
-    if(d.territorio)  motivos.push(`<li><b>${d.territorio}</b> no ${plural(d.territorio, "llega", "llegan")} a tu comunidad</li>`);
+    if(d.territorio)  motivos.push(`<li><b>${d.territorio}</b> no ${plural(d.territorio, "llega", "llegan")} a donde vives (son de otra comunidad, de otra isla o de otro ayuntamiento)</li>`);
     if(d.objetivo)    motivos.push(`<li><b>${d.objetivo}</b> ${plural(d.objetivo, "es", "son")} para otra cosa distinta de lo que buscas</li>`);
     if(d.noAyuda)     motivos.push(`<li><b>${d.noAyuda}</b> no ${plural(d.noAyuda, "es una ayuda", "son ayudas")} que pida un particular: lo dice su propia ficha (la piden ayuntamientos, entidades o promotores; o es una medida sobre viviendas vacías, un precio máximo o un programa que no está en vigor)</li>`);
     if(d.propietario) motivos.push(`<li><b>${d.propietario}</b> ${plural(d.propietario, "es", "son")} para el propietario que alquila su piso, no para el inquilino</li>`);
@@ -2159,7 +2278,7 @@ function pintarCaducidad(){
      cierre, la cuenta atrás la coge sola — y sola desaparece al pasar el
      plazo, sin que nadie tenga que acordarse de borrar nada. */
   const vivas = AYUDAS
-    .filter(a => a.fecha_fin && F.diasQueQuedan(a) !== null && F.diasQueQuedan(a) >= 0)
+    .filter(a => a.e === "abierta" && a.fecha_fin && F.diasQueQuedan(a) !== null && F.diasQueQuedan(a) >= 0)
     .sort((x,y) => F.diasQueQuedan(x) - F.diasQueQuedan(y));
   const a = vivas[0]; if(!a) return;
   const dias = F.diasQueQuedan(a);
@@ -2717,7 +2836,7 @@ montarAsistente();        /* el cuadro de texto, solo en la demo «asistente» *
 if(leerPerfilDeLaDireccion()){ marcarPuerta($("#objetivo").value); $("#calculadora").requestSubmit(); }
 pintarCaducidad();
 pintarMapa();
-pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=24b"; document.body.appendChild(s);})();
+pintarEstatal(); (function(){var s=document.createElement("script"); s.src="nucleo.js?v=18c"; document.body.appendChild(s);})(); (function(){var s=document.createElement("script"); s.src="charla.js?v=26b"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="botones_rapidos.js?v=1"; document.body.appendChild(s);})();
 (function(){var s=document.createElement("script"); s.src="casas_ia.js?v=18c"; document.body.appendChild(s);})();
 </script>
