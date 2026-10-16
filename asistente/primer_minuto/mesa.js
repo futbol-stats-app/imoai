@@ -4,9 +4,10 @@
    PRIMER MINUTO · 18/09/2026. Lo que hace:
      1. Saber de qué oficina es este ordenador, sin pedir nada: la
         llave de paso está donde la deja oficina.js
-        («immoia.oficina.cuenta.v1»), o llega en el enlace que abre el
-        botón «2_ABRIR_SU_MESA_EL_LUNES» (detrás de «#», que el
-        navegador no manda a ningún servidor) y se guarda ahí.
+        («immoia.oficina.cuenta.v1») cuando la oficina entra con su
+        usuario y su clave. Es la ÚNICA forma de entrar: una sesión que
+        venga en la dirección de la página no se lee ni se guarda
+        (orden S1, 13/10/2026; ver quitarSesionDeLaDireccion).
      2. Traer de SU cuenta del servidor sus expedientes (la cartera)
         y «Lo que llevas esta semana» (la mesa).
      3. Pasarle los expedientes a repaso.js, el de verdad, y preparar
@@ -49,30 +50,52 @@ export function leerCuenta(almacen) {
   } catch (e) { return null; }
 }
 
-function deBase64url(s) {
-  const b = String(s).replace(/-/g, "+").replace(/_/g, "/");
-  const relleno = b + "===".slice((b.length + 3) % 4);
-  const bin = atob(relleno);
-  const bytes = new Uint8Array([...bin].map((ch) => ch.charCodeAt(0)));
-  return new TextDecoder().decode(bytes);
+/* ORDEN S1 (13/10/2026) · YA NO SE ENTRA POR ENLACE.
+   Antes una sesión podía llegar en la dirección («#llave=…») y se
+   guardaba sin confirmar: compartir el enlace era compartir el acceso.
+   Ahora, si la dirección trae algo que parezca una sesión (en «#» o en
+   «?», con cualquier formato, válido o roto), solo se quita de la barra
+   y se avisa. NO se lee, NO se descifra, NO se guarda y NO se toca la
+   cuenta que ya hubiera abierta. Se entra con usuario y clave
+   (oficina.js, entrar). */
+export const AVISO_ENLACE_SIN_VALOR = "Este enlace ya no sirve; entra con tu usuario.";
+const SESION_EN_LA_DIRECCION = /(?:^|[#?&;/])(?:llave|sesion)(?:=|%3D)/i;   /* rechazo del formato antiguo «#llave=» y parecidos */
+
+/* Auditoría S1 de Codex (15/10, puntos 2 de la 1.ª y 2.ª revisión): el
+   nombre puede venir codificado («ll%61ve=», «%73esion=») y los valores
+   pueden traer porcentajes rotos. Primero se separa la dirección en trozos
+   y de cada trozo se toma SOLO el nombre; el nombre se descodifica por su
+   cuenta (solo letras ASCII %XX, hasta 3 capas, sin decodeURIComponent, así
+   que nada puede fallar). El valor nunca se lee. */
+const NOMBRE_DE_SESION = /^(?:llave|sesion)$/i;
+function nombreLimpio(t) {
+  let x = String(t);
+  for (let i = 0; i < 3; i++) {
+    const y = x.replace(/%([0-7][0-9A-Fa-f])/g, (_m, h) => String.fromCharCode(parseInt(h, 16)));
+    if (y === x) break;
+    x = y;
+  }
+  return x.split("=")[0].trim();
+}
+function traeSesion(trozo) {
+  const crudo = String(trozo || "");
+  if (!crudo) return false;
+  if (SESION_EN_LA_DIRECCION.test(crudo)) return true;
+  return crudo.split(/[#?&;/]/).some((p) => NOMBRE_DE_SESION.test(nombreLimpio(p.split("=")[0])));
 }
 
-/* La llave que trae el enlace del botón del lunes. Se guarda en el
-   mismo sitio que oficina.js y se quita de la barra de direcciones.
-   Si este ordenador ya tiene abierta OTRA oficina, no se cambia: se
-   dice, y se sigue con la que había. */
-export function tomarLlaveDelEnlace({ location, history, almacen }) {
-  const h = String((location && location.hash) || "");
-  if (h.indexOf("#llave=") !== 0) return { hay: false };
-  let c = null;
-  try { c = JSON.parse(deBase64url(h.slice(7))); } catch (e) { c = null; }
-  try { history.replaceState(null, "", String(location.href).split("#")[0]); } catch (e) {}
-  if (!sano(c)) return { hay: true, valida: false };
-  const ya = leerCuenta(almacen);
-  if (ya && ya.usuario !== c.usuario) return { hay: true, valida: true, ignorada: true, porque: "este ordenador ya tiene abierta otra oficina" };
-  const guardar = { usuario: String(c.usuario), id: c.id || null, sesion: String(c.sesion), sesion_vence: c.sesion_vence || null };
-  try { almacen.setItem(LLAVE_CUENTA, JSON.stringify(guardar)); } catch (e) {}
-  return { hay: true, valida: true, cuenta: guardar };
+export function quitarSesionDeLaDireccion({ location, history }) {
+  const hash = String((location && location.hash) || "");
+  const busca = String((location && location.search) || "");
+  if (!traeSesion(hash) && !traeSesion(busca)) return { hay: false };
+  try {
+    const u = new URL(String(location.href));
+    u.hash = "";
+    for (const k of [...u.searchParams.keys()]) if (NOMBRE_DE_SESION.test(nombreLimpio(k))) u.searchParams.delete(k);
+    if (traeSesion(u.search)) u.search = "";
+    history.replaceState(null, "", u.pathname + u.search);
+  } catch (e) {}
+  return { hay: true, aviso: AVISO_ENLACE_SIN_VALOR };
 }
 
 /* ---------- 2. hablar con su cuenta ---------- */

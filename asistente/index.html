@@ -175,6 +175,7 @@
       <button id="borrar" type="button" hidden>Borrar lo que hemos hablado</button>
     </div>
     <p class="memoria-aviso" id="memoria-aviso" role="status" hidden></p>
+    <p class="memoria-aviso" id="enlace-aviso" data-testid="enlace-sin-valor" role="status" hidden></p>
 
     <p class="legal">Esto es una demostración de IMMO IA. No gestiona trámites y no cobra nada.</p>
   </footer>
@@ -213,7 +214,7 @@ import { crearAsistente } from "./voz/main.js";
 import { FRASES, mirarPermiso, mirarMicrofono, decidirArranque, crearPortero } from "./voz/arranque_solo.js";
 import { crearCinta } from "./primer_minuto/cinta.js";
 import { crearMemoria } from "./primer_minuto/memoria.js";
-import { leerCuenta, tomarLlaveDelEnlace, pedidor } from "./primer_minuto/mesa.js";
+import { leerCuenta, quitarSesionDeLaDireccion, pedidor } from "./primer_minuto/mesa.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -453,7 +454,6 @@ async function montarMemoria() {
   let almacen;
   try { almacen = window.localStorage; almacen.getItem("x"); }
   catch (e) { const m = new Map(); almacen = { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; }
-  try { tomarLlaveDelEnlace({ location: window.location, history: window.history, almacen }); } catch (e) {}
   const cuenta = leerCuenta(almacen);
   const pedir = cuenta ? pedidor({ api: CONFIGURACION.urlCerebro, codigo: CONFIGURACION.codigo, cuenta, fetchFn: (u, o) => fetch(u, o) }) : null;
   memoria = crearMemoria({ pedir });
@@ -562,6 +562,12 @@ function enviarEscrito() {
 }
 
 /* ---------- arranque de la pagina ---------- */
+/* Orden S1: una sesión en la dirección no abre nada. Se quita de la barra
+   antes que cualquier otra cosa y solo se avisa (primer_minuto/mesa.js). */
+try {
+  const r = quitarSesionDeLaDireccion({ location: window.location, history: window.history });
+  if (r.hay) { $("enlace-aviso").textContent = r.aviso; $("enlace-aviso").hidden = false; }
+} catch (e) {}
 cinta = crearCinta({ documento: document, contenedor: $("charla"), bajar: abajo });
 crear();
 pintar();

@@ -16,7 +16,7 @@
    solo los archivos de la propia página.
    ============================================================ */
 
-const CAJA = "immoia-asistente-v4";
+const CAJA = "immoia-asistente-v5";   /* v5: orden S1, que no quede guardada la copia que entraba por enlace */
 
 /* Los archivos de la casa. Si mañana se añade uno nuevo, se apunta aquí. */
 const ARCHIVOS = [
